@@ -1,13 +1,3 @@
-# ── Data files (keep off GitHub — may contain real inventory/sales data) ──
-*.csv
-*.xlsx
-*.xls
-
-# ── Python generated files ──
-*.pyc
-__pycache__/
-generate_data.py
-
 # ── OS junk ──
 .DS_Store
 Thumbs.db
@@ -18,3 +8,7 @@ desktop.ini
 .idea/
 *.suo
 *.user
+
+# ── Python cache ──
+*.pyc
+__pycache__/

@@ -1,0 +1,141 @@
+SKU,Description,Category,Stock,OnHand,Available,Reserved,SafetyStock,ReorderPoint,Warehouse,Location,LastUpdated
+SKU-1000,Wireless Earbuds,Electronics,1100,1100,919,181,184,346,Warehouse A,A25-5,2024-12-31
+SKU-1001,Smart Speaker,Electronics,554,554,496,58,155,241,Warehouse B,D22-2,2024-12-31
+SKU-1002,USB-C Hub,Electronics,136,136,119,17,77,134,Warehouse C,C8-5,2024-12-31
+SKU-1003,Portable Charger,Electronics,998,998,958,40,192,348,Warehouse C,C17-4,2024-12-31
+SKU-1004,LED Desk Lamp,Electronics,1018,1018,938,80,197,342,Warehouse C,E11-6,2024-12-31
+SKU-1005,Mechanical Keyboard,Electronics,888,888,756,132,203,393,Warehouse A,A18-2,2024-12-31
+SKU-1006,Gaming Mouse,Electronics,145,145,134,11,123,193,Warehouse B,D4-2,2024-12-31
+SKU-1007,Webcam HD,Electronics,580,580,545,35,79,198,Warehouse C,A13-6,2024-12-31
+SKU-1008,HDMI Cable 2m,Electronics,208,208,191,17,148,264,Warehouse A,D17-1,2024-12-31
+SKU-1009,Screen Protector,Electronics,219,219,199,20,114,181,Warehouse C,C11-6,2024-12-31
+SKU-1010,Phone Stand,Electronics,1179,1179,1139,40,128,317,Warehouse B,D23-1,2024-12-31
+SKU-1011,Cable Organiser,Electronics,144,144,125,19,34,60,Warehouse B,B4-6,2024-12-31
+SKU-1012,Bluetooth Adapter,Electronics,174,174,159,15,53,87,Warehouse A,E15-1,2024-12-31
+SKU-1013,Smart Plug,Electronics,151,151,151,0,243,388,Warehouse B,C7-6,2024-12-31
+SKU-1014,Power Strip 4-Port,Electronics,373,373,339,34,91,193,Warehouse A,E16-6,2024-12-31
+SKU-1015,Monitor Arm,Electronics,1423,1423,1247,176,138,323,Warehouse A,B17-4,2024-12-31
+SKU-1016,SD Card 128GB,Electronics,278,278,263,15,132,204,Warehouse B,E16-6,2024-12-31
+SKU-1017,Laptop Stand,Electronics,71,71,67,4,41,65,Warehouse C,D23-5,2024-12-31
+SKU-1018,Ring Light 10in,Electronics,127,127,124,3,17,33,Warehouse A,A7-1,2024-12-31
+SKU-1019,Surge Protector,Electronics,576,576,558,18,57,141,Warehouse B,C6-5,2024-12-31
+SKU-1020,Coffee Maker,Home & Kitchen,307,307,276,31,111,284,Warehouse C,C15-5,2024-12-31
+SKU-1021,Blender Pro,Home & Kitchen,259,259,214,45,42,84,Warehouse C,C24-5,2024-12-31
+SKU-1022,Air Fryer 5L,Home & Kitchen,271,271,226,45,128,274,Warehouse B,D9-1,2024-12-31
+SKU-1023,Cutting Board Set,Home & Kitchen,129,129,117,12,92,161,Warehouse B,C18-1,2024-12-31
+SKU-1024,Storage Container 3pk,Home & Kitchen,127,127,122,5,52,100,Warehouse B,A11-3,2024-12-31
+SKU-1025,Knife Set 5pc,Home & Kitchen,342,342,290,52,191,358,Warehouse A,C17-6,2024-12-31
+SKU-1026,Mixing Bowls 4pk,Home & Kitchen,815,815,700,115,165,271,Warehouse C,D1-2,2024-12-31
+SKU-1027,Salad Spinner,Home & Kitchen,181,181,177,4,93,221,Warehouse A,B6-5,2024-12-31
+SKU-1028,Can Opener,Home & Kitchen,874,874,777,97,199,359,Warehouse B,A5-6,2024-12-31
+SKU-1029,Vegetable Peeler,Home & Kitchen,354,354,342,12,165,268,Warehouse B,A18-1,2024-12-31
+SKU-1030,Colander Stainless,Home & Kitchen,399,399,349,50,201,331,Warehouse B,A22-4,2024-12-31
+SKU-1031,Kitchen Scale,Home & Kitchen,112,112,106,6,22,39,Warehouse B,A10-1,2024-12-31
+SKU-1032,Dish Rack Foldable,Home & Kitchen,94,94,90,4,37,75,Warehouse A,C3-1,2024-12-31
+SKU-1033,Oven Mitts Pair,Home & Kitchen,54,54,47,7,40,71,Warehouse B,D13-5,2024-12-31
+SKU-1034,Spice Rack 12-Jar,Home & Kitchen,184,184,161,23,321,517,Warehouse A,E12-5,2024-12-31
+SKU-1035,Fruit Bowl,Home & Kitchen,1092,1092,924,168,199,356,Warehouse B,D25-3,2024-12-31
+SKU-1036,French Press 1L,Home & Kitchen,48,48,48,0,71,117,Warehouse A,B11-4,2024-12-31
+SKU-1037,Toaster 2-Slice,Home & Kitchen,560,560,506,54,109,236,Warehouse B,B3-4,2024-12-31
+SKU-1038,Electric Kettle,Home & Kitchen,156,156,136,20,16,39,Warehouse B,C2-1,2024-12-31
+SKU-1039,Bread Box,Home & Kitchen,861,861,745,116,163,349,Warehouse B,E8-6,2024-12-31
+SKU-1040,Sticky Notes 12pk,Office Supplies,257,257,241,16,93,184,Warehouse C,D8-1,2024-12-31
+SKU-1041,Ballpoint Pens 20pk,Office Supplies,381,381,320,61,201,336,Warehouse B,C2-2,2024-12-31
+SKU-1042,Desk Organiser,Office Supplies,491,491,488,3,203,331,Warehouse B,D25-1,2024-12-31
+SKU-1043,A4 Notebook,Office Supplies,249,249,218,31,53,99,Warehouse B,A18-3,2024-12-31
+SKU-1044,Stapler Heavy Duty,Office Supplies,318,318,309,9,144,248,Warehouse B,B23-4,2024-12-31
+SKU-1045,Paper Clips 200pk,Office Supplies,324,324,277,47,54,96,Warehouse A,A7-3,2024-12-31
+SKU-1046,Ruler 30cm,Office Supplies,71,71,69,2,26,50,Warehouse C,A11-1,2024-12-31
+SKU-1047,Highlighter 8pk,Office Supplies,397,397,391,6,104,182,Warehouse B,C19-3,2024-12-31
+SKU-1048,Correction Tape,Office Supplies,657,657,606,51,79,169,Warehouse C,D6-1,2024-12-31
+SKU-1049,Binder Clips 50pk,Office Supplies,1036,1036,885,151,279,479,Warehouse B,B9-1,2024-12-31
+SKU-1050,Folder Set A4,Office Supplies,408,408,355,53,217,395,Warehouse A,E13-4,2024-12-31
+SKU-1051,Index Cards 200pk,Office Supplies,1429,1429,1384,45,358,550,Warehouse A,A11-2,2024-12-31
+SKU-1052,Whiteboard Markers,Office Supplies,182,182,164,18,43,67,Warehouse B,E20-1,2024-12-31
+SKU-1053,Laminator Pouches,Office Supplies,96,96,81,15,278,478,Warehouse B,A6-2,2024-12-31
+SKU-1054,Desk Pad,Office Supplies,676,676,595,81,95,184,Warehouse C,D3-5,2024-12-31
+SKU-1055,Document Tray,Office Supplies,225,225,220,5,93,151,Warehouse B,B7-1,2024-12-31
+SKU-1056,Tape Dispenser,Office Supplies,278,278,230,48,262,417,Warehouse B,D10-2,2024-12-31
+SKU-1057,Scissors Pro,Office Supplies,533,533,491,42,64,130,Warehouse A,A23-1,2024-12-31
+SKU-1058,Rubber Bands 200g,Office Supplies,1188,1188,1015,173,213,365,Warehouse A,D11-2,2024-12-31
+SKU-1059,Pencil Case,Office Supplies,115,115,98,17,49,85,Warehouse C,A9-1,2024-12-31
+SKU-1060,Resistance Bands Set,Fitness,559,559,517,42,142,230,Warehouse C,B24-6,2024-12-31
+SKU-1061,Foam Roller 60cm,Fitness,475,475,460,15,201,376,Warehouse A,D12-1,2024-12-31
+SKU-1062,Yoga Mat 6mm,Fitness,1024,1024,853,171,234,364,Warehouse C,C9-2,2024-12-31
+SKU-1063,Jump Rope Speed,Fitness,609,609,569,40,317,513,Warehouse B,B6-2,2024-12-31
+SKU-1064,Dumbbell 5kg Pair,Fitness,161,161,136,25,254,448,Warehouse C,D7-6,2024-12-31
+SKU-1065,Pull-Up Bar Doorway,Fitness,98,98,82,16,111,210,Warehouse C,A8-1,2024-12-31
+SKU-1066,Ab Wheel Roller,Fitness,1113,1113,1071,42,197,339,Warehouse C,C3-6,2024-12-31
+SKU-1067,Water Bottle 1L,Fitness,480,480,411,69,138,307,Warehouse C,B9-5,2024-12-31
+SKU-1068,Gym Gloves,Fitness,158,158,142,16,80,127,Warehouse C,D1-3,2024-12-31
+SKU-1069,Knee Support Pair,Fitness,147,147,122,25,48,112,Warehouse C,A20-1,2024-12-31
+SKU-1070,Protein Shaker 750ml,Fitness,402,402,349,53,268,460,Warehouse A,C7-3,2024-12-31
+SKU-1071,Exercise Ball 65cm,Fitness,170,170,162,8,33,82,Warehouse B,D14-3,2024-12-31
+SKU-1072,Skipping Rope,Fitness,1078,1078,1069,9,265,444,Warehouse A,C24-1,2024-12-31
+SKU-1073,Balance Board,Fitness,595,595,552,43,259,441,Warehouse B,A1-3,2024-12-31
+SKU-1074,Push-Up Bars,Fitness,347,347,307,40,50,102,Warehouse A,C8-1,2024-12-31
+SKU-1075,Ankle Weights 2kg,Fitness,1276,1276,1055,221,210,406,Warehouse B,B4-6,2024-12-31
+SKU-1076,Massage Gun,Fitness,455,455,420,35,71,171,Warehouse B,E15-4,2024-12-31
+SKU-1077,Gym Bag,Fitness,125,125,114,11,13,33,Warehouse C,E21-5,2024-12-31
+SKU-1078,Resistance Loop Bands,Fitness,88,88,78,10,41,93,Warehouse A,C7-4,2024-12-31
+SKU-1079,Fitness Tracker Band,Fitness,623,623,530,93,308,474,Warehouse A,B7-6,2024-12-31
+SKU-1080,Face Moisturiser 50ml,Beauty & Health,291,291,263,28,100,184,Warehouse A,D20-3,2024-12-31
+SKU-1081,Sunscreen SPF50 200ml,Beauty & Health,1091,1091,986,105,147,323,Warehouse B,E9-4,2024-12-31
+SKU-1082,Vitamin C Serum 30ml,Beauty & Health,708,708,647,61,68,168,Warehouse A,C12-1,2024-12-31
+SKU-1083,Shampoo 500ml,Beauty & Health,457,457,398,59,315,495,Warehouse C,E11-6,2024-12-31
+SKU-1084,Conditioner 500ml,Beauty & Health,186,186,167,19,251,403,Warehouse A,B20-4,2024-12-31
+SKU-1085,Body Lotion 400ml,Beauty & Health,601,601,583,18,185,377,Warehouse A,D7-3,2024-12-31
+SKU-1086,Toothbrush Electric,Beauty & Health,122,122,112,10,286,452,Warehouse A,C12-4,2024-12-31
+SKU-1087,Floss Picks 100pk,Beauty & Health,756,756,679,77,251,433,Warehouse A,A22-3,2024-12-31
+SKU-1088,Hand Sanitiser 500ml,Beauty & Health,512,512,493,19,109,175,Warehouse C,E18-1,2024-12-31
+SKU-1089,Eye Cream 15ml,Beauty & Health,297,297,252,45,120,190,Warehouse B,D15-6,2024-12-31
+SKU-1090,Lip Balm 3pk,Beauty & Health,32,32,30,2,49,97,Warehouse A,C23-3,2024-12-31
+SKU-1091,Hair Mask 300ml,Beauty & Health,25,25,24,1,206,383,Warehouse A,D20-2,2024-12-31
+SKU-1092,Face Mask 10pk,Beauty & Health,1274,1274,1234,40,159,318,Warehouse A,D24-5,2024-12-31
+SKU-1093,Essential Oil Set,Beauty & Health,276,276,239,37,25,63,Warehouse A,A16-1,2024-12-31
+SKU-1094,Nail File 10pk,Beauty & Health,463,463,417,46,148,242,Warehouse A,A2-1,2024-12-31
+SKU-1095,Cotton Pads 100pk,Beauty & Health,1180,1180,1044,136,147,341,Warehouse A,C19-5,2024-12-31
+SKU-1096,Micellar Water 400ml,Beauty & Health,152,152,151,1,21,44,Warehouse B,D19-4,2024-12-31
+SKU-1097,Toner 200ml,Beauty & Health,868,868,783,85,322,513,Warehouse A,E1-4,2024-12-31
+SKU-1098,BB Cream SPF30,Beauty & Health,738,738,731,7,204,316,Warehouse C,B12-1,2024-12-31
+SKU-1099,Eyebrow Pencil,Beauty & Health,129,129,113,16,70,131,Warehouse B,A16-2,2024-12-31
+SKU-1100,Building Blocks 500pc,Toys & Games,344,344,284,60,66,122,Warehouse A,D14-3,2024-12-31
+SKU-1101,Puzzle 1000pc,Toys & Games,864,864,758,106,129,312,Warehouse A,A8-4,2024-12-31
+SKU-1102,Card Game Family,Toys & Games,493,493,476,17,157,267,Warehouse B,C12-6,2024-12-31
+SKU-1103,Board Game Classic,Toys & Games,535,535,472,63,151,238,Warehouse B,B19-4,2024-12-31
+SKU-1104,Colouring Book 100pg,Toys & Games,74,74,70,4,131,209,Warehouse C,E20-4,2024-12-31
+SKU-1105,Toy Car Set 6pk,Toys & Games,197,197,186,11,293,477,Warehouse A,D8-6,2024-12-31
+SKU-1106,Action Figure 30cm,Toys & Games,1390,1390,1312,78,237,415,Warehouse A,C5-3,2024-12-31
+SKU-1107,Stuffed Bear 40cm,Toys & Games,1103,1103,1069,34,251,445,Warehouse B,B22-5,2024-12-31
+SKU-1108,RC Car Off-Road,Toys & Games,176,176,167,9,103,165,Warehouse C,C11-3,2024-12-31
+SKU-1109,Science Experiment Kit,Toys & Games,58,58,55,3,64,125,Warehouse B,B10-3,2024-12-31
+SKU-1110,Art Supply Set,Toys & Games,29,29,28,1,19,39,Warehouse C,E15-2,2024-12-31
+SKU-1111,Magnetic Tiles 32pk,Toys & Games,116,116,114,2,252,402,Warehouse C,B2-3,2024-12-31
+SKU-1112,Water Pistol Super,Toys & Games,252,252,222,30,62,117,Warehouse B,D13-2,2024-12-31
+SKU-1113,Frisbee Pro,Toys & Games,339,339,288,51,104,201,Warehouse C,D1-6,2024-12-31
+SKU-1114,Play-Doh 6pk,Toys & Games,187,187,178,9,76,159,Warehouse A,B25-6,2024-12-31
+SKU-1115,Bubble Machine,Toys & Games,72,72,61,11,65,137,Warehouse C,B15-2,2024-12-31
+SKU-1116,Skipping Rope Kids,Toys & Games,394,394,339,55,229,421,Warehouse A,C9-2,2024-12-31
+SKU-1117,Kite Starter,Toys & Games,205,205,205,0,52,82,Warehouse C,E24-6,2024-12-31
+SKU-1118,Marble Run 100pc,Toys & Games,680,680,605,75,162,336,Warehouse C,D13-1,2024-12-31
+SKU-1119,Mini Drone,Toys & Games,38,38,38,0,45,117,Warehouse B,C1-3,2024-12-31
+SKU-1120,Potting Mix 10L,Garden,267,267,235,32,117,204,Warehouse B,D10-5,2024-12-31
+SKU-1121,Garden Gloves M,Garden,310,310,271,39,181,328,Warehouse C,A18-5,2024-12-31
+SKU-1122,Plant Pot 20cm,Garden,489,489,413,76,176,296,Warehouse A,A24-5,2024-12-31
+SKU-1123,Watering Can 8L,Garden,441,441,376,65,131,228,Warehouse C,C24-5,2024-12-31
+SKU-1124,Pruning Shears,Garden,210,210,185,25,162,316,Warehouse B,D4-4,2024-12-31
+SKU-1125,Garden Fork Steel,Garden,340,340,304,36,257,445,Warehouse A,D18-1,2024-12-31
+SKU-1126,Seed Starter Kit 72-Cell,Garden,455,455,382,73,216,341,Warehouse A,E23-5,2024-12-31
+SKU-1127,Plant Food 1L,Garden,389,389,325,64,92,175,Warehouse B,A21-5,2024-12-31
+SKU-1128,Hanging Basket 35cm,Garden,126,126,104,22,24,45,Warehouse A,D19-1,2024-12-31
+SKU-1129,Garden Hose 15m,Garden,28,28,25,3,58,97,Warehouse B,B21-1,2024-12-31
+SKU-1130,Kneeling Pad,Garden,1349,1349,1342,7,213,408,Warehouse A,E22-5,2024-12-31
+SKU-1131,Trowel Set 3pk,Garden,289,289,246,43,100,169,Warehouse B,A7-2,2024-12-31
+SKU-1132,Bird Feeder Wooden,Garden,49,49,45,4,55,107,Warehouse A,E20-2,2024-12-31
+SKU-1133,Compost Bin 220L,Garden,230,230,206,24,233,367,Warehouse B,A15-5,2024-12-31
+SKU-1134,Lawn Spreader,Garden,369,369,329,40,116,186,Warehouse A,E13-6,2024-12-31
+SKU-1135,Pest Control Spray,Garden,30,30,27,3,21,44,Warehouse A,C5-4,2024-12-31
+SKU-1136,Raised Bed Kit,Garden,49,49,46,3,55,93,Warehouse A,D23-5,2024-12-31
+SKU-1137,Solar Garden Lights 4pk,Garden,610,610,582,28,129,267,Warehouse C,A3-1,2024-12-31
+SKU-1138,Leaf Blower Cordless,Garden,292,292,247,45,98,202,Warehouse A,A13-5,2024-12-31
+SKU-1139,Weed Killer 1L,Garden,56,56,49,7,96,182,Warehouse A,D1-1,2024-12-31

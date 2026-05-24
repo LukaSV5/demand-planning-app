@@ -1,0 +1,41 @@
+PONumber,PurchaseOrder,SKU,StockCode,Description,Supplier,Vendor,OrderedQty,OrderedQuantity,OrderDate,ExpectedDelivery,DeliveryDate,Status,InTransit,Inbound,TotalValue,Currency
+PO-2024-1000,PO-2024-1000,SKU-1005,SKU-1005,Mechanical Keyboard,Apex Global Ltd,Nordic Goods AS,300,300,2024-12-24,2025-01-09,2025-01-09,Awaiting Customs,False,True,3711.0,EUR
+PO-2024-1001,PO-2024-1001,SKU-1042,SKU-1042,Desk Organiser,Nordic Goods AS,FastShip Direct,500,500,2024-12-06,2025-01-18,2025-01-18,Pending,False,True,8855.0,GBP
+PO-2024-1002,PO-2024-1002,SKU-1124,SKU-1124,Pruning Shears,FastShip Direct,Prime Source UK,1000,1000,2024-12-08,2025-01-02,2025-01-02,Awaiting Customs,False,True,29580.0,GBP
+PO-2024-1003,PO-2024-1003,SKU-1114,SKU-1114,Play-Doh 6pk,Atlas Distributors,Coastal Imports Co,750,750,2024-12-22,2025-02-04,2025-02-04,In Transit,True,True,8775.0,USD
+PO-2024-1004,PO-2024-1004,SKU-1139,SKU-1139,Weed Killer 1L,Atlas Distributors,Zhen Yue Manufacturing,200,200,2024-12-21,2025-01-12,2025-01-12,Pending,False,True,3098.0,GBP
+PO-2024-1005,PO-2024-1005,SKU-1091,SKU-1091,Hair Mask 300ml,Sunrise Trading Co,Zhen Yue Manufacturing,250,250,2024-12-14,2025-02-03,2025-02-03,Pending,False,True,9440.0,GBP
+PO-2024-1006,PO-2024-1006,SKU-1037,SKU-1037,Toaster 2-Slice,Apex Global Ltd,Prime Source UK,100,100,2024-12-08,2025-01-02,2025-01-02,Confirmed,False,True,3039.0,GBP
+PO-2024-1007,PO-2024-1007,SKU-1069,SKU-1069,Knee Support Pair,Prime Source UK,Atlas Distributors,200,200,2024-12-22,2025-01-02,2025-01-02,Confirmed,False,True,6074.0,USD
+PO-2024-1008,PO-2024-1008,SKU-1034,SKU-1034,Spice Rack 12-Jar,Meridian Supply Group,Prime Source UK,500,500,2024-12-07,2025-01-03,2025-01-03,Shipped,True,True,7415.0,USD
+PO-2024-1009,PO-2024-1009,SKU-1014,SKU-1014,Power Strip 4-Port,Prime Source UK,Apex Global Ltd,1000,1000,2024-12-27,2025-01-17,2025-01-17,Pending,False,True,42650.0,USD
+PO-2024-1010,PO-2024-1010,SKU-1046,SKU-1046,Ruler 30cm,Coastal Imports Co,Horizon Trade Ltd,250,250,2024-12-28,2025-01-25,2025-01-25,Shipped,True,True,9177.5,GBP
+PO-2024-1011,PO-2024-1011,SKU-1126,SKU-1126,Seed Starter Kit 72-Cell,Prime Source UK,Zhen Yue Manufacturing,250,250,2024-12-22,2025-01-01,2025-01-01,Confirmed,False,True,1410.0,GBP
+PO-2024-1012,PO-2024-1012,SKU-1097,SKU-1097,Toner 200ml,Euro Wholesale GmbH,Zhen Yue Manufacturing,1000,1000,2024-12-21,2025-02-02,2025-02-02,Confirmed,False,True,26330.0,EUR
+PO-2024-1013,PO-2024-1013,SKU-1013,SKU-1013,Smart Plug,Sunrise Trading Co,Coastal Imports Co,50,50,2024-12-15,2025-01-18,2025-01-18,Pending,False,True,269.0,EUR
+PO-2024-1014,PO-2024-1014,SKU-1004,SKU-1004,LED Desk Lamp,Apex Global Ltd,Meridian Supply Group,500,500,2024-12-09,2025-01-27,2025-01-27,In Transit,True,True,8315.0,GBP
+PO-2024-1015,PO-2024-1015,SKU-1123,SKU-1123,Watering Can 8L,FastShip Direct,Pacific Imports BV,750,750,2024-12-15,2025-01-29,2025-01-29,Awaiting Customs,False,True,9427.5,GBP
+PO-2024-1016,PO-2024-1016,SKU-1106,SKU-1106,Action Figure 30cm,Euro Wholesale GmbH,Euro Wholesale GmbH,250,250,2024-12-24,2025-01-29,2025-01-29,In Transit,True,True,5530.0,GBP
+PO-2024-1017,PO-2024-1017,SKU-1087,SKU-1087,Floss Picks 100pk,Meridian Supply Group,Meridian Supply Group,300,300,2024-12-23,2025-01-16,2025-01-16,Awaiting Customs,False,True,9918.0,EUR
+PO-2024-1018,PO-2024-1018,SKU-1054,SKU-1054,Desk Pad,Euro Wholesale GmbH,FastShip Direct,200,200,2024-12-09,2025-01-23,2025-01-23,Pending,False,True,5582.0,GBP
+PO-2024-1019,PO-2024-1019,SKU-1131,SKU-1131,Trowel Set 3pk,Euro Wholesale GmbH,Zhen Yue Manufacturing,200,200,2024-12-28,2025-01-07,2025-01-07,Shipped,True,True,3196.0,GBP
+PO-2024-1020,PO-2024-1020,SKU-1070,SKU-1070,Protein Shaker 750ml,Euro Wholesale GmbH,Nordic Goods AS,250,250,2024-12-09,2025-01-26,2025-01-26,Shipped,True,True,6115.0,USD
+PO-2024-1021,PO-2024-1021,SKU-1109,SKU-1109,Science Experiment Kit,Meridian Supply Group,Coastal Imports Co,100,100,2024-12-14,2025-01-09,2025-01-09,Awaiting Customs,False,True,854.0,EUR
+PO-2024-1022,PO-2024-1022,SKU-1112,SKU-1112,Water Pistol Super,Apex Global Ltd,Apex Global Ltd,500,500,2024-12-11,2025-01-03,2025-01-03,Shipped,True,True,2635.0,EUR
+PO-2024-1023,PO-2024-1023,SKU-1108,SKU-1108,RC Car Off-Road,Zhen Yue Manufacturing,Sunrise Trading Co,50,50,2024-12-25,2025-01-17,2025-01-17,Pending,False,True,1519.5,USD
+PO-2024-1024,PO-2024-1024,SKU-1121,SKU-1121,Garden Gloves M,Sunrise Trading Co,Atlas Distributors,150,150,2024-12-05,2025-01-06,2025-01-06,Shipped,True,True,4717.5,EUR
+PO-2024-1025,PO-2024-1025,SKU-1011,SKU-1011,Cable Organiser,Atlas Distributors,Horizon Trade Ltd,500,500,2024-12-02,2025-01-29,2025-01-29,Pending,False,True,7430.0,GBP
+PO-2024-1026,PO-2024-1026,SKU-1096,SKU-1096,Micellar Water 400ml,Zhen Yue Manufacturing,Euro Wholesale GmbH,100,100,2024-12-21,2025-01-13,2025-01-13,Shipped,True,True,1653.0,EUR
+PO-2024-1027,PO-2024-1027,SKU-1068,SKU-1068,Gym Gloves,Prime Source UK,Pacific Imports BV,100,100,2024-12-26,2025-01-20,2025-01-20,Pending,False,True,631.0,EUR
+PO-2024-1028,PO-2024-1028,SKU-1100,SKU-1100,Building Blocks 500pc,FastShip Direct,Coastal Imports Co,500,500,2024-12-29,2025-01-11,2025-01-11,Confirmed,False,True,27765.0,USD
+PO-2024-1029,PO-2024-1029,SKU-1063,SKU-1063,Jump Rope Speed,Coastal Imports Co,Zhen Yue Manufacturing,50,50,2024-12-22,2025-01-25,2025-01-25,Awaiting Customs,False,True,203.0,GBP
+PO-2024-1030,PO-2024-1030,SKU-1000,SKU-1000,Wireless Earbuds,Nordic Goods AS,Prime Source UK,500,500,2024-12-15,2025-01-19,2025-01-19,Shipped,True,True,12070.0,EUR
+PO-2024-1031,PO-2024-1031,SKU-1090,SKU-1090,Lip Balm 3pk,Sunrise Trading Co,Coastal Imports Co,500,500,2024-12-27,2025-01-29,2025-01-29,Pending,False,True,19120.0,USD
+PO-2024-1032,PO-2024-1032,SKU-1053,SKU-1053,Laminator Pouches,Horizon Trade Ltd,Euro Wholesale GmbH,1000,1000,2024-11-24,2025-01-11,2025-01-11,In Transit,True,True,7280.0,USD
+PO-2024-1033,PO-2024-1033,SKU-1137,SKU-1137,Solar Garden Lights 4pk,Horizon Trade Ltd,Zhen Yue Manufacturing,750,750,2024-12-21,2025-01-14,2025-01-14,Shipped,True,True,5220.0,EUR
+PO-2024-1034,PO-2024-1034,SKU-1008,SKU-1008,HDMI Cable 2m,Apex Global Ltd,Pacific Imports BV,750,750,2024-12-14,2025-01-14,2025-01-14,Pending,False,True,9712.5,GBP
+PO-2024-1035,PO-2024-1035,SKU-1001,SKU-1001,Smart Speaker,Zhen Yue Manufacturing,Euro Wholesale GmbH,250,250,2024-12-24,2025-01-21,2025-01-21,Pending,False,True,3222.5,EUR
+PO-2024-1036,PO-2024-1036,SKU-1021,SKU-1021,Blender Pro,Euro Wholesale GmbH,Zhen Yue Manufacturing,50,50,2024-12-12,2025-01-02,2025-01-02,In Transit,True,True,573.0,EUR
+PO-2024-1037,PO-2024-1037,SKU-1076,SKU-1076,Massage Gun,FastShip Direct,Apex Global Ltd,250,250,2024-11-22,2025-01-07,2025-01-07,In Transit,True,True,5600.0,GBP
+PO-2024-1038,PO-2024-1038,SKU-1098,SKU-1098,BB Cream SPF30,Nordic Goods AS,Prime Source UK,300,300,2024-12-21,2025-01-07,2025-01-07,Pending,False,True,6414.0,USD
+PO-2024-1039,PO-2024-1039,SKU-1074,SKU-1074,Push-Up Bars,Horizon Trade Ltd,Atlas Distributors,200,200,2024-11-25,2025-01-03,2025-01-03,Pending,False,True,2100.0,USD

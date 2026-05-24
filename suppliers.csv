@@ -1,0 +1,141 @@
+SKU,Description,Supplier,Vendor,LeadTime,MOQ,MinimumOrder,PurchasePrice,CostPrice,PaymentTerms,CountryOfOrigin,Currency,ActiveSupplier
+SKU-1000,Wireless Earbuds,Zhen Yue Manufacturing,Euro Wholesale GmbH,60,200,250,24.14,24.14,Net 90,Vietnam,USD,False
+SKU-1001,Smart Speaker,Meridian Supply Group,Prime Source UK,21,50,25,12.89,12.89,2/10 Net 30,Netherlands,EUR,False
+SKU-1002,USB-C Hub,Coastal Imports Co,Horizon Trade Ltd,45,20,150,38.66,38.66,Net 45,Netherlands,GBP,False
+SKU-1003,Portable Charger,Coastal Imports Co,Pacific Imports BV,10,150,200,34.19,34.19,Net 30,Turkey,GBP,False
+SKU-1004,LED Desk Lamp,Meridian Supply Group,Meridian Supply Group,45,50,100,16.63,16.63,Net 45,Poland,GBP,True
+SKU-1005,Mechanical Keyboard,Apex Global Ltd,Coastal Imports Co,7,50,10,12.37,12.37,Net 30,Taiwan,GBP,True
+SKU-1006,Gaming Mouse,Prime Source UK,Pacific Imports BV,35,200,25,3.16,3.16,Net 90,Taiwan,USD,True
+SKU-1007,Webcam HD,Horizon Trade Ltd,Atlas Distributors,45,150,200,32.42,32.42,Net 30,India,USD,True
+SKU-1008,HDMI Cable 2m,Meridian Supply Group,Euro Wholesale GmbH,10,10,100,12.95,12.95,Prepaid,Turkey,GBP,False
+SKU-1009,Screen Protector,Euro Wholesale GmbH,Sunrise Trading Co,10,10,200,29.7,29.7,Net 60,Netherlands,GBP,True
+SKU-1010,Phone Stand,FastShip Direct,Pacific Imports BV,45,10,50,42.44,42.44,Prepaid,China,EUR,False
+SKU-1011,Cable Organiser,Atlas Distributors,Sunrise Trading Co,60,10,25,14.86,14.86,Prepaid,Bangladesh,EUR,True
+SKU-1012,Bluetooth Adapter,Atlas Distributors,FastShip Direct,28,50,25,42.0,42.0,Net 90,China,USD,True
+SKU-1013,Smart Plug,Coastal Imports Co,Coastal Imports Co,60,10,100,5.38,5.38,Prepaid,Bangladesh,EUR,True
+SKU-1014,Power Strip 4-Port,Nordic Goods AS,Prime Source UK,7,100,20,42.65,42.65,Net 30,Germany,EUR,True
+SKU-1015,Monitor Arm,Euro Wholesale GmbH,Euro Wholesale GmbH,45,200,150,43.1,43.1,Net 60,United Kingdom,EUR,True
+SKU-1016,SD Card 128GB,Zhen Yue Manufacturing,Apex Global Ltd,21,200,20,32.67,32.67,Net 60,Poland,USD,True
+SKU-1017,Laptop Stand,FastShip Direct,Horizon Trade Ltd,45,100,250,20.02,20.02,Net 45,Poland,USD,False
+SKU-1018,Ring Light 10in,Meridian Supply Group,Prime Source UK,35,25,50,42.09,42.09,2/10 Net 30,China,GBP,True
+SKU-1019,Surge Protector,Prime Source UK,Apex Global Ltd,35,100,500,42.8,42.8,Net 90,Bangladesh,EUR,True
+SKU-1020,Coffee Maker,FastShip Direct,Meridian Supply Group,28,20,500,26.74,26.74,Net 30,Vietnam,USD,True
+SKU-1021,Blender Pro,Nordic Goods AS,Pacific Imports BV,60,500,500,11.46,11.46,Net 60,Netherlands,GBP,True
+SKU-1022,Air Fryer 5L,Apex Global Ltd,Horizon Trade Ltd,21,500,10,5.3,5.3,Net 30,Bangladesh,EUR,True
+SKU-1023,Cutting Board Set,Pacific Imports BV,Horizon Trade Ltd,7,20,50,6.29,6.29,Net 90,Taiwan,EUR,True
+SKU-1024,Storage Container 3pk,Horizon Trade Ltd,Euro Wholesale GmbH,10,10,20,29.08,29.08,Prepaid,Vietnam,USD,True
+SKU-1025,Knife Set 5pc,Coastal Imports Co,Nordic Goods AS,14,500,10,16.48,16.48,2/10 Net 30,Bangladesh,USD,True
+SKU-1026,Mixing Bowls 4pk,Horizon Trade Ltd,Apex Global Ltd,10,50,200,17.55,17.55,Net 30,Vietnam,GBP,True
+SKU-1027,Salad Spinner,Nordic Goods AS,Horizon Trade Ltd,14,500,200,33.31,33.31,2/10 Net 30,China,USD,False
+SKU-1028,Can Opener,Sunrise Trading Co,Euro Wholesale GmbH,14,150,20,11.32,11.32,Net 45,China,GBP,True
+SKU-1029,Vegetable Peeler,Meridian Supply Group,Euro Wholesale GmbH,35,25,20,9.28,9.28,Net 45,Germany,GBP,True
+SKU-1030,Colander Stainless,Prime Source UK,Pacific Imports BV,10,100,25,50.19,50.19,Net 45,India,GBP,True
+SKU-1031,Kitchen Scale,Sunrise Trading Co,Sunrise Trading Co,45,20,50,30.0,30.0,Net 60,Vietnam,GBP,False
+SKU-1032,Dish Rack Foldable,Meridian Supply Group,Atlas Distributors,28,500,500,45.78,45.78,Net 45,China,EUR,True
+SKU-1033,Oven Mitts Pair,Pacific Imports BV,Nordic Goods AS,7,50,150,9.93,9.93,Net 60,Vietnam,EUR,True
+SKU-1034,Spice Rack 12-Jar,Nordic Goods AS,Euro Wholesale GmbH,10,200,500,14.83,14.83,2/10 Net 30,Bangladesh,GBP,True
+SKU-1035,Fruit Bowl,Atlas Distributors,Pacific Imports BV,60,250,500,14.54,14.54,Net 60,Bangladesh,EUR,False
+SKU-1036,French Press 1L,Apex Global Ltd,Prime Source UK,7,20,500,38.2,38.2,Net 45,Bangladesh,USD,True
+SKU-1037,Toaster 2-Slice,FastShip Direct,Zhen Yue Manufacturing,10,100,500,30.39,30.39,Net 30,Poland,USD,True
+SKU-1038,Electric Kettle,Sunrise Trading Co,FastShip Direct,45,500,200,42.79,42.79,Net 45,Poland,EUR,True
+SKU-1039,Bread Box,Prime Source UK,Horizon Trade Ltd,60,20,25,12.66,12.66,Net 30,Poland,EUR,True
+SKU-1040,Sticky Notes 12pk,Euro Wholesale GmbH,Zhen Yue Manufacturing,28,250,250,24.59,24.59,Net 30,China,USD,True
+SKU-1041,Ballpoint Pens 20pk,Zhen Yue Manufacturing,Atlas Distributors,60,500,200,34.3,34.3,Net 90,China,EUR,False
+SKU-1042,Desk Organiser,Euro Wholesale GmbH,Pacific Imports BV,7,200,20,17.71,17.71,Net 90,Poland,USD,True
+SKU-1043,A4 Notebook,Atlas Distributors,Sunrise Trading Co,28,20,250,47.6,47.6,Net 45,Netherlands,GBP,True
+SKU-1044,Stapler Heavy Duty,Coastal Imports Co,Coastal Imports Co,28,500,150,5.15,5.15,2/10 Net 30,Bangladesh,USD,True
+SKU-1045,Paper Clips 200pk,Sunrise Trading Co,Pacific Imports BV,45,10,10,7.88,7.88,Net 90,Netherlands,EUR,False
+SKU-1046,Ruler 30cm,Apex Global Ltd,Meridian Supply Group,14,10,200,36.71,36.71,Net 30,Germany,EUR,True
+SKU-1047,Highlighter 8pk,Horizon Trade Ltd,Sunrise Trading Co,7,25,50,5.05,5.05,2/10 Net 30,India,GBP,True
+SKU-1048,Correction Tape,Euro Wholesale GmbH,Pacific Imports BV,14,25,500,47.98,47.98,Net 60,Turkey,USD,True
+SKU-1049,Binder Clips 50pk,FastShip Direct,Sunrise Trading Co,45,10,500,54.19,54.19,2/10 Net 30,Germany,USD,True
+SKU-1050,Folder Set A4,Nordic Goods AS,Nordic Goods AS,28,200,50,3.33,3.33,2/10 Net 30,Turkey,EUR,True
+SKU-1051,Index Cards 200pk,Meridian Supply Group,Prime Source UK,45,150,150,33.76,33.76,Net 90,Taiwan,USD,True
+SKU-1052,Whiteboard Markers,Horizon Trade Ltd,Pacific Imports BV,14,500,250,15.48,15.48,Net 30,Taiwan,GBP,True
+SKU-1053,Laminator Pouches,Horizon Trade Ltd,Meridian Supply Group,7,50,50,7.28,7.28,Net 45,Vietnam,EUR,True
+SKU-1054,Desk Pad,Prime Source UK,FastShip Direct,60,200,20,27.91,27.91,Net 45,Bangladesh,EUR,False
+SKU-1055,Document Tray,Euro Wholesale GmbH,Coastal Imports Co,35,20,10,37.15,37.15,Net 90,India,USD,True
+SKU-1056,Tape Dispenser,Sunrise Trading Co,Nordic Goods AS,10,10,150,21.16,21.16,Net 60,India,EUR,False
+SKU-1057,Scissors Pro,Zhen Yue Manufacturing,Prime Source UK,28,150,100,51.31,51.31,2/10 Net 30,India,USD,True
+SKU-1058,Rubber Bands 200g,Euro Wholesale GmbH,Horizon Trade Ltd,14,10,25,16.99,16.99,Net 30,Germany,USD,False
+SKU-1059,Pencil Case,Pacific Imports BV,Pacific Imports BV,60,50,100,24.92,24.92,2/10 Net 30,Vietnam,USD,True
+SKU-1060,Resistance Bands Set,Pacific Imports BV,Coastal Imports Co,28,500,20,37.51,37.51,Net 60,Taiwan,GBP,True
+SKU-1061,Foam Roller 60cm,Sunrise Trading Co,FastShip Direct,14,20,250,38.08,38.08,Prepaid,India,GBP,False
+SKU-1062,Yoga Mat 6mm,Zhen Yue Manufacturing,Nordic Goods AS,28,20,150,2.31,2.31,Net 45,Germany,GBP,True
+SKU-1063,Jump Rope Speed,Euro Wholesale GmbH,Zhen Yue Manufacturing,45,25,100,4.06,4.06,Net 90,Taiwan,GBP,True
+SKU-1064,Dumbbell 5kg Pair,Apex Global Ltd,Horizon Trade Ltd,60,250,20,48.73,48.73,Net 45,Taiwan,EUR,True
+SKU-1065,Pull-Up Bar Doorway,Zhen Yue Manufacturing,Apex Global Ltd,60,10,200,12.87,12.87,Net 30,Netherlands,EUR,True
+SKU-1066,Ab Wheel Roller,FastShip Direct,Zhen Yue Manufacturing,45,150,20,51.02,51.02,Net 45,Germany,GBP,True
+SKU-1067,Water Bottle 1L,Sunrise Trading Co,Euro Wholesale GmbH,35,25,100,6.31,6.31,Prepaid,Turkey,EUR,True
+SKU-1068,Gym Gloves,Nordic Goods AS,Euro Wholesale GmbH,21,150,200,6.31,6.31,2/10 Net 30,Bangladesh,EUR,True
+SKU-1069,Knee Support Pair,Nordic Goods AS,Zhen Yue Manufacturing,7,25,25,30.37,30.37,Prepaid,Turkey,EUR,True
+SKU-1070,Protein Shaker 750ml,Meridian Supply Group,Atlas Distributors,7,100,50,24.46,24.46,Net 60,Turkey,GBP,True
+SKU-1071,Exercise Ball 65cm,Zhen Yue Manufacturing,Nordic Goods AS,45,25,200,17.0,17.0,2/10 Net 30,Poland,GBP,False
+SKU-1072,Skipping Rope,Atlas Distributors,Atlas Distributors,14,10,150,18.56,18.56,2/10 Net 30,India,EUR,False
+SKU-1073,Balance Board,Apex Global Ltd,Euro Wholesale GmbH,21,20,200,29.72,29.72,Net 45,Vietnam,GBP,True
+SKU-1074,Push-Up Bars,Euro Wholesale GmbH,Apex Global Ltd,7,100,25,10.5,10.5,2/10 Net 30,Poland,EUR,True
+SKU-1075,Ankle Weights 2kg,Nordic Goods AS,Euro Wholesale GmbH,35,250,10,50.68,50.68,Prepaid,Netherlands,GBP,True
+SKU-1076,Massage Gun,Apex Global Ltd,Sunrise Trading Co,45,25,50,22.4,22.4,Net 90,India,EUR,False
+SKU-1077,Gym Bag,Horizon Trade Ltd,Coastal Imports Co,35,150,250,6.89,6.89,Net 90,Bangladesh,EUR,True
+SKU-1078,Resistance Loop Bands,Horizon Trade Ltd,Horizon Trade Ltd,28,50,200,18.46,18.46,Net 45,Vietnam,USD,True
+SKU-1079,Fitness Tracker Band,Zhen Yue Manufacturing,Horizon Trade Ltd,35,150,10,11.12,11.12,Net 60,Germany,GBP,True
+SKU-1080,Face Moisturiser 50ml,Meridian Supply Group,Zhen Yue Manufacturing,7,150,100,6.05,6.05,Net 45,Bangladesh,EUR,True
+SKU-1081,Sunscreen SPF50 200ml,Meridian Supply Group,Atlas Distributors,7,10,500,15.28,15.28,Net 45,India,EUR,True
+SKU-1082,Vitamin C Serum 30ml,Zhen Yue Manufacturing,Zhen Yue Manufacturing,45,10,100,32.7,32.7,Prepaid,Germany,EUR,False
+SKU-1083,Shampoo 500ml,FastShip Direct,FastShip Direct,10,500,20,14.28,14.28,Prepaid,China,USD,True
+SKU-1084,Conditioner 500ml,Sunrise Trading Co,Nordic Goods AS,28,25,100,9.99,9.99,2/10 Net 30,Netherlands,GBP,False
+SKU-1085,Body Lotion 400ml,Nordic Goods AS,Zhen Yue Manufacturing,10,200,20,46.12,46.12,Net 90,India,USD,False
+SKU-1086,Toothbrush Electric,Coastal Imports Co,Nordic Goods AS,14,10,250,27.01,27.01,Prepaid,China,GBP,True
+SKU-1087,Floss Picks 100pk,Horizon Trade Ltd,Zhen Yue Manufacturing,7,150,20,33.06,33.06,Net 60,India,EUR,True
+SKU-1088,Hand Sanitiser 500ml,Sunrise Trading Co,Meridian Supply Group,28,200,10,6.63,6.63,2/10 Net 30,United Kingdom,USD,False
+SKU-1089,Eye Cream 15ml,Zhen Yue Manufacturing,Prime Source UK,60,100,200,21.21,21.21,Net 30,China,EUR,True
+SKU-1090,Lip Balm 3pk,Meridian Supply Group,Horizon Trade Ltd,35,20,50,38.24,38.24,Net 90,Turkey,GBP,True
+SKU-1091,Hair Mask 300ml,Nordic Goods AS,Coastal Imports Co,28,150,200,37.76,37.76,Net 60,Bangladesh,USD,False
+SKU-1092,Face Mask 10pk,Coastal Imports Co,FastShip Direct,35,200,25,19.02,19.02,Net 60,Germany,USD,True
+SKU-1093,Essential Oil Set,Coastal Imports Co,Horizon Trade Ltd,7,25,100,36.29,36.29,2/10 Net 30,Germany,EUR,True
+SKU-1094,Nail File 10pk,Euro Wholesale GmbH,Zhen Yue Manufacturing,7,200,500,10.78,10.78,Net 60,Vietnam,GBP,True
+SKU-1095,Cotton Pads 100pk,Meridian Supply Group,Coastal Imports Co,45,25,250,19.2,19.2,Net 60,Vietnam,EUR,True
+SKU-1096,Micellar Water 400ml,Nordic Goods AS,Meridian Supply Group,35,100,25,16.53,16.53,2/10 Net 30,Taiwan,GBP,True
+SKU-1097,Toner 200ml,Zhen Yue Manufacturing,Atlas Distributors,60,50,500,26.33,26.33,Net 60,Germany,USD,True
+SKU-1098,BB Cream SPF30,Prime Source UK,Euro Wholesale GmbH,10,20,200,21.38,21.38,Net 30,Germany,EUR,True
+SKU-1099,Eyebrow Pencil,Euro Wholesale GmbH,Zhen Yue Manufacturing,10,25,150,55.12,55.12,Net 90,Turkey,EUR,True
+SKU-1100,Building Blocks 500pc,Prime Source UK,Pacific Imports BV,14,250,50,55.53,55.53,Net 60,China,USD,False
+SKU-1101,Puzzle 1000pc,Prime Source UK,FastShip Direct,21,150,200,34.17,34.17,Net 45,Poland,EUR,False
+SKU-1102,Card Game Family,Prime Source UK,Coastal Imports Co,7,100,100,21.0,21.0,Net 45,Bangladesh,EUR,True
+SKU-1103,Board Game Classic,Pacific Imports BV,Zhen Yue Manufacturing,28,150,10,16.19,16.19,Net 30,Germany,EUR,True
+SKU-1104,Colouring Book 100pg,Zhen Yue Manufacturing,Pacific Imports BV,21,20,150,24.1,24.1,Net 90,India,EUR,True
+SKU-1105,Toy Car Set 6pk,Euro Wholesale GmbH,Atlas Distributors,14,250,100,16.4,16.4,Net 60,India,USD,True
+SKU-1106,Action Figure 30cm,Meridian Supply Group,Nordic Goods AS,28,200,100,22.12,22.12,Net 45,United Kingdom,USD,True
+SKU-1107,Stuffed Bear 40cm,FastShip Direct,Pacific Imports BV,35,200,250,56.41,56.41,2/10 Net 30,India,EUR,True
+SKU-1108,RC Car Off-Road,Meridian Supply Group,FastShip Direct,60,150,200,30.39,30.39,2/10 Net 30,India,EUR,True
+SKU-1109,Science Experiment Kit,Zhen Yue Manufacturing,Meridian Supply Group,21,20,200,8.54,8.54,Net 30,Germany,GBP,True
+SKU-1110,Art Supply Set,Prime Source UK,Nordic Goods AS,28,200,200,47.84,47.84,Prepaid,United Kingdom,USD,True
+SKU-1111,Magnetic Tiles 32pk,FastShip Direct,Euro Wholesale GmbH,7,150,500,30.1,30.1,2/10 Net 30,Turkey,USD,True
+SKU-1112,Water Pistol Super,Horizon Trade Ltd,Nordic Goods AS,28,50,50,5.27,5.27,Prepaid,Bangladesh,EUR,True
+SKU-1113,Frisbee Pro,Prime Source UK,Horizon Trade Ltd,35,10,500,29.38,29.38,2/10 Net 30,India,USD,True
+SKU-1114,Play-Doh 6pk,Zhen Yue Manufacturing,Meridian Supply Group,21,250,500,11.7,11.7,Net 45,Netherlands,GBP,False
+SKU-1115,Bubble Machine,Pacific Imports BV,Apex Global Ltd,60,250,50,5.18,5.18,Net 45,Vietnam,EUR,True
+SKU-1116,Skipping Rope Kids,FastShip Direct,Meridian Supply Group,35,250,500,31.73,31.73,Net 60,Vietnam,GBP,True
+SKU-1117,Kite Starter,Horizon Trade Ltd,Horizon Trade Ltd,28,150,50,10.69,10.69,2/10 Net 30,United Kingdom,USD,True
+SKU-1118,Marble Run 100pc,Euro Wholesale GmbH,Horizon Trade Ltd,45,200,100,37.38,37.38,Net 60,Vietnam,EUR,True
+SKU-1119,Mini Drone,Apex Global Ltd,Coastal Imports Co,35,100,20,30.93,30.93,Net 30,Vietnam,USD,True
+SKU-1120,Potting Mix 10L,Nordic Goods AS,Zhen Yue Manufacturing,21,50,100,22.22,22.22,Net 90,Netherlands,USD,True
+SKU-1121,Garden Gloves M,FastShip Direct,Horizon Trade Ltd,7,10,200,31.45,31.45,Net 60,Bangladesh,GBP,True
+SKU-1122,Plant Pot 20cm,Zhen Yue Manufacturing,Atlas Distributors,7,150,200,12.9,12.9,Net 60,China,GBP,True
+SKU-1123,Watering Can 8L,Prime Source UK,Nordic Goods AS,45,100,200,12.57,12.57,Net 60,United Kingdom,GBP,True
+SKU-1124,Pruning Shears,Prime Source UK,Coastal Imports Co,10,20,500,29.58,29.58,Net 60,Bangladesh,GBP,False
+SKU-1125,Garden Fork Steel,Meridian Supply Group,Prime Source UK,14,50,500,18.75,18.75,Prepaid,Netherlands,USD,True
+SKU-1126,Seed Starter Kit 72-Cell,Apex Global Ltd,Euro Wholesale GmbH,60,100,25,5.64,5.64,Net 30,China,EUR,True
+SKU-1127,Plant Food 1L,Pacific Imports BV,Zhen Yue Manufacturing,21,200,200,58.72,58.72,Prepaid,Germany,GBP,True
+SKU-1128,Hanging Basket 35cm,Zhen Yue Manufacturing,FastShip Direct,21,500,500,4.99,4.99,Net 30,India,GBP,True
+SKU-1129,Garden Hose 15m,Sunrise Trading Co,Prime Source UK,10,500,20,17.43,17.43,Net 60,Turkey,GBP,True
+SKU-1130,Kneeling Pad,Meridian Supply Group,Pacific Imports BV,28,25,500,49.81,49.81,Net 45,Turkey,EUR,True
+SKU-1131,Trowel Set 3pk,FastShip Direct,Meridian Supply Group,45,200,500,15.98,15.98,Net 30,Taiwan,EUR,False
+SKU-1132,Bird Feeder Wooden,Atlas Distributors,Nordic Goods AS,60,150,25,43.92,43.92,Prepaid,China,GBP,True
+SKU-1133,Compost Bin 220L,FastShip Direct,Coastal Imports Co,10,50,10,37.04,37.04,2/10 Net 30,United Kingdom,USD,True
+SKU-1134,Lawn Spreader,Prime Source UK,Prime Source UK,10,200,20,24.38,24.38,Net 60,Poland,USD,True
+SKU-1135,Pest Control Spray,Horizon Trade Ltd,Prime Source UK,28,200,500,35.48,35.48,Prepaid,Turkey,EUR,True
+SKU-1136,Raised Bed Kit,Atlas Distributors,Euro Wholesale GmbH,10,150,20,39.16,39.16,Net 30,Germany,GBP,True
+SKU-1137,Solar Garden Lights 4pk,Zhen Yue Manufacturing,Apex Global Ltd,60,500,200,6.96,6.96,Net 45,China,USD,True
+SKU-1138,Leaf Blower Cordless,Horizon Trade Ltd,Coastal Imports Co,60,25,100,7.5,7.5,Net 90,Poland,USD,True
+SKU-1139,Weed Killer 1L,Pacific Imports BV,Coastal Imports Co,45,200,25,15.49,15.49,2/10 Net 30,Taiwan,USD,True
