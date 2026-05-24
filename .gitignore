@@ -1,0 +1,20 @@
+# ── Data files (keep off GitHub — may contain real inventory/sales data) ──
+*.csv
+*.xlsx
+*.xls
+
+# ── Python generated files ──
+*.pyc
+__pycache__/
+generate_data.py
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor ──
+.vscode/
+.idea/
+*.suo
+*.user

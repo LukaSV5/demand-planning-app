@@ -1,0 +1,3928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demand Forecasting | Abazadze Forecasting Lab</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d0f14;
+      --sidebar:   #0b0d11;
+      --surface:   #13161e;
+      --surface-2: #1a1d27;
+      --border:    rgba(255,255,255,0.06);
+      --border-2:  rgba(255,255,255,0.1);
+      --purple:    #7c3aed;
+      --purple-lt: #a78bfa;
+      --purple-dim:rgba(124,58,237,0.15);
+      --text-1:    #e8eaf0;
+      --text-2:    #6b7280;
+      --text-3:    #3a3d4a;
+      --green:     #22c55e;
+      --amber:     #f59e0b;
+      --red:       #ef4444;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      overflow: hidden;
+    }
+
+    /* App content uses 13px base; nav inherits from explicit declarations */
+    /* ── NAV ── */
+    .nav-wrapper {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 32px;
+      pointer-events: none;
+    }
+    .nav-logo-outer {
+      pointer-events: all;
+      position: absolute;
+      left: 32px;
+      display: flex;
+      align-items: center;
+    }
+    nav {
+      pointer-events: all;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      height: 52px;
+      padding: 0 10px 0 10px;
+      background: rgba(18,18,22,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--text-1);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .nav-logo-mark {
+      width: 28px; height: 28px;
+      background: var(--purple);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+      justify-content: center;
+    }
+    .nav-link {
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #9ca3af;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+      cursor: pointer;
+      background: none;
+    }
+    .nav-link:hover {
+      color: var(--text-1);
+      background: rgba(255,255,255,0.05);
+      border-color: rgba(255,255,255,0.07);
+    }
+    .nav-link.active {
+      color: var(--text-1);
+      background: rgba(124,58,237,0.15);
+      border-color: rgba(124,58,237,0.3);
+    }
+    .nav-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      margin-left: 8px;
+      border-radius: 10px;
+      background: var(--purple);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .nav-cta:hover { background: #6d28d9; transform: translateY(-1px); }
+    .nav-cta:active { transform: scale(0.97); }
+    .nav-updated { font-size: 12px; color: var(--text-2); pointer-events: all; position: absolute; right: 32px; }
+
+    /* ── APP SHELL (below nav) ── */
+    .app-shell {
+      display: flex;
+      height: 100vh;
+      padding-top: 80px;
+      font-size: 13px;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: var(--sidebar);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow-y: auto;
+    }
+    .sidebar::-webkit-scrollbar { width: 0; }
+
+    .sidebar-section {
+      padding: 8px;
+      flex: 1;
+    }
+    .sidebar-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--text-3);
+      padding: 12px 10px 6px;
+    }
+    .sidebar-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px; border-radius: 8px;
+      color: var(--text-2); font-size: 13px; font-weight: 500;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+      border: 1px solid transparent;
+    }
+    .sidebar-item:hover { background: rgba(255,255,255,0.04); color: var(--text-1); }
+    .sidebar-item.active {
+      background: var(--purple-dim);
+      color: var(--purple-lt);
+      border-color: rgba(124,58,237,0.2);
+    }
+    .sidebar-item svg { flex-shrink: 0; opacity: 0.7; }
+    .sidebar-item.active svg { opacity: 1; }
+    .sidebar-badge {
+      margin-left: auto; font-size: 10px; font-weight: 700;
+      padding: 1px 7px; border-radius: 999px;
+      white-space: nowrap; flex-shrink: 0;
+      background: var(--purple-dim); color: var(--purple-lt);
+      border: 1px solid rgba(124,58,237,0.2);
+    }
+
+    .sidebar-bottom {
+      padding: 8px;
+      border-top: 1px solid var(--border);
+    }
+    .sidebar-user {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: 8px;
+      cursor: pointer; transition: background 0.15s;
+    }
+    .sidebar-user:hover { background: rgba(255,255,255,0.04); }
+    .sidebar-avatar {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: var(--purple); display: flex; align-items: center;
+      justify-content: center; font-size: 11px; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ── MAIN AREA ── */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* gradient banner */
+    .banner {
+      height: 80px; flex-shrink: 0;
+      background: linear-gradient(135deg, #1a0a3e 0%, #2d1060 40%, #1a0a3e 100%);
+      position: relative; overflow: hidden;
+    }
+    .banner::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse at 25% 50%, rgba(124,58,237,0.45) 0%, transparent 55%),
+                  radial-gradient(ellipse at 75% 50%, rgba(167,139,250,0.2) 0%, transparent 55%);
+    }
+
+    /* warehouse bar */
+    .warehouse-bar {
+      display: flex; align-items: center; gap: 16px;
+      padding: 0 20px; height: 44px; flex-shrink: 0;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .warehouse-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
+    .warehouse-select {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: 7px; padding: 4px 10px; cursor: pointer;
+      font-size: 12px; color: var(--text-1); font-weight: 600;
+      transition: border-color 0.15s;
+    }
+    .warehouse-select:hover { border-color: rgba(124,58,237,0.4); }
+    .warehouse-select svg { opacity: 0.5; }
+
+    /* toolbar */
+    .toolbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; flex-shrink: 0;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+    }
+    .search-wrap {
+      position: relative; flex: 1; max-width: 380px;
+    }
+    .search-wrap svg {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      opacity: 0.35;
+    }
+    .search-input {
+      width: 100%; background: var(--surface-2);
+      border: 1px solid var(--border-2); border-radius: 8px;
+      color: var(--text-1); font-size: 12px; padding: 7px 10px 7px 32px;
+      outline: none; transition: border-color 0.15s;
+    }
+    .search-input::placeholder { color: var(--text-2); }
+    .search-input:focus { border-color: rgba(124,58,237,0.5); }
+    .toolbar-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: 8px; padding: 6px 12px; cursor: pointer;
+      font-size: 12px; color: var(--text-2); font-weight: 500;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .toolbar-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--text-1); }
+    .toolbar-btn svg { opacity: 0.6; }
+    .toolbar-spacer { flex: 1; }
+
+    /* table area */
+    .table-wrap {
+      flex: 1; overflow: auto;
+      background: var(--bg);
+    }
+    .table-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
+    .table-wrap::-webkit-scrollbar-track { background: transparent; }
+    .table-wrap::-webkit-scrollbar-thumb { background: #2a2d3a; border-radius: 9px; }
+
+    table {
+      width: 100%; border-collapse: collapse;
+      min-width: 1100px;
+    }
+    thead { position: sticky; top: 0; z-index: 5; }
+    th {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      font-size: 11px; font-weight: 600; color: var(--text-2);
+      text-align: left; white-space: nowrap;
+      letter-spacing: 0.03em;
+      position: relative;   /* needed for resize handle */
+    }
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--text-1); }
+    th.sort-asc  { color: var(--text-1); }
+    th.sort-desc { color: var(--text-1); }
+    .sort-icon {
+      display: inline-flex; flex-direction: column;
+      vertical-align: middle; margin-left: 4px;
+      gap: 1px; line-height: 1;
+    }
+    .sort-icon span {
+      display: block; font-size: 7px; line-height: 1;
+      color: var(--text-3); transition: color 0.12s;
+    }
+    th.sort-asc  .sort-icon span.sa { color: var(--purple); }
+    th.sort-desc .sort-icon span.sd { color: var(--purple); }
+    th:first-child { width: 36px; padding: 10px 8px; }
+    th.right, td.right { text-align: right; }
+    th.center, td.center { text-align: center; }
+
+    /* ── Column resize handle ── */
+    .col-resizer {
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 10px;
+      cursor: col-resize;
+      z-index: 20;
+    }
+    /* always-visible subtle border tick */
+    .col-resizer::before {
+      content: '';
+      position: absolute;
+      right: 3px; top: 0; bottom: 0;
+      width: 1px;
+      background: rgba(255,255,255,0.08);
+      transition: background 0.15s, width 0.1s;
+    }
+    /* hover: wider + purple glow */
+    .col-resizer:hover::before {
+      width: 2px;
+      background: rgba(124,58,237,0.6);
+      box-shadow: 0 0 4px rgba(124,58,237,0.35);
+    }
+    /* drag: solid purple */
+    .col-resizer.col-resizing::before {
+      width: 2px;
+      background: var(--purple) !important;
+      box-shadow: 0 0 6px rgba(124,58,237,0.55) !important;
+    }
+    /* keep ::after for the grip dots */
+    .col-resizer::after {
+      content: '⋮';
+      position: absolute;
+      right: 0; top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      line-height: 1;
+      color: rgba(255,255,255,0);
+      transition: color 0.15s;
+      pointer-events: none;
+    }
+    .col-resizer:hover::after { color: rgba(124,58,237,0.7); }
+    .col-resizer.col-resizing::after { color: var(--purple) !important; }
+
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      color: #c4c8d4; font-size: 12px; vertical-align: middle;
+      white-space: nowrap;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    tr.selected td { background: rgba(124,58,237,0.06); }
+
+    /* checkbox */
+    .cb {
+      width: 14px; height: 14px; border-radius: 4px;
+      border: 1px solid #3a3d4a; background: transparent;
+      cursor: pointer; appearance: none; -webkit-appearance: none;
+      display: block; transition: background 0.15s, border-color 0.15s;
+    }
+    .cb:checked { background: var(--purple); border-color: var(--purple); }
+
+    /* product image placeholder */
+    .img-placeholder {
+      width: 36px; height: 36px; border-radius: 8px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* health badges */
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 999px;
+      font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .badge-healthy  { background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .badge-atrisk   { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .badge-stockout { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .badge-warning  { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .badge-risk     { background: rgba(239,68,68,0.12);  color: #ef4444; }
+    .badge-neutral  { background: rgba(255,255,255,0.06); color: #6b7280; }
+
+    /* Settings panel */
+    #settings-overlay { position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:950;opacity:0;pointer-events:none;transition:opacity 0.22s; }
+    #settings-overlay.open { opacity:1;pointer-events:auto; }
+    #settings-panel { position:fixed;top:0;right:0;bottom:0;width:320px;background:#13161e;border-left:1px solid rgba(255,255,255,0.08);z-index:951;display:flex;flex-direction:column;transform:translateX(100%);transition:transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+    #settings-panel.open { transform:translateX(0); }
+    .sp-header { display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0; }
+    .sp-header span { font-size:13px;font-weight:700;color:#e8eaf0; }
+    .sp-header button { background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#9ca3af;width:28px;height:28px;border-radius:7px;cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center; }
+    .sp-body { flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px; }
+    .sp-section { display:flex;flex-direction:column;gap:8px; }
+    .sp-section-label { font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#4b5563; }
+    .sp-section-desc  { font-size:11px;color:#4b5563;margin:0;line-height:1.5; }
+    .sp-row { display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background 0.12s; }
+    .sp-row:hover { background:rgba(255,255,255,0.04); }
+    .sp-cb { accent-color:#7c3aed;width:14px;height:14px;cursor:pointer;flex-shrink:0; }
+    .sp-row-label { flex:1;font-size:12px;color:#9ca3af; }
+    .sp-row-file  { font-size:10px;color:#374151;font-style:italic; }
+
+    /* Dashboard KPI cards */
+    .kpi-card { flex:1;background:var(--surface);padding:16px 20px;display:flex;flex-direction:column;gap:4px;min-width:0; }
+    .kpi-label { font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-2); }
+    .kpi-value { font-size:24px;font-weight:800;color:var(--text-1);letter-spacing:-0.02em;line-height:1.1; }
+    .kpi-sub   { font-size:11px;color:var(--text-2); }
+    .health-card { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px 12px;background:var(--surface);border-radius:0; }
+    .health-count { font-size:28px;font-weight:800;letter-spacing:-0.02em; }
+    .health-label { font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+    /* empty state */
+    .empty-row td {
+      padding: 48px 12px; text-align: center;
+      color: var(--text-3); font-size: 13px;
+    }
+    .empty-icon {
+      margin: 0 auto 12px;
+      width: 40px; height: 40px; border-radius: 10px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center; opacity: 0.5;
+    }
+
+    /* ── BOTTOM ACTION BAR ── */
+    .action-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 10px 20px; flex-shrink: 0;
+      background: var(--surface); border-top: 1px solid var(--border);
+    }
+    .action-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 7px 14px; border-radius: 8px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      border: 1px solid transparent; transition: all 0.15s;
+    }
+    .action-btn-primary {
+      background: var(--purple); color: #fff; border-color: var(--purple);
+    }
+    .action-btn-primary:hover { background: #6d28d9; }
+    .action-btn-secondary {
+      background: var(--surface-2); color: var(--text-1); border-color: var(--border-2);
+    }
+    .action-btn-secondary:hover { border-color: rgba(255,255,255,0.18); }
+    .action-btn-ghost {
+      background: transparent; color: var(--text-2); border-color: var(--border);
+    }
+    .action-btn-ghost:hover { color: var(--text-1); border-color: var(--border-2); }
+    .action-spacer { flex: 1; }
+    .action-summary { font-size: 11px; color: var(--text-2); }
+    .action-summary span { color: var(--text-1); font-weight: 600; }
+  </style>
+  <!-- Chart.js for forecast visualisation -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── TOP NAV ── -->
+  <div class="nav-wrapper">
+
+    <!-- Logo — sits outside the pill, floated left -->
+    <a class="nav-logo nav-logo-outer" href="index.html">
+      <div class="nav-logo-mark">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+      </div>
+      <span style="font-weight:800;color:#f4f4f5;">LA</span><span style="font-weight:500;color:#6b7280;">&nbsp;Forecasting Lab</span>
+    </a>
+
+    <!-- Floating pill — links + CTA -->
+    <nav>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link active" href="dashboard.html">Demand Forecasting</a>
+        <a class="nav-link" href="#">Warehouse Overview</a>
+        <a class="nav-link" href="#">Procurement Operations</a>
+        <a class="nav-link" href="#">About Me</a>
+      </div>
+      <a class="nav-cta" href="mailto:abazadzeluka@outlook.com">Contact Me</a>
+    </nav>
+
+    <!-- Status — absolutely right -->
+    <span class="nav-updated" id="last-updated">Ready</span>
+
+  </div>
+
+  <!-- ── APP SHELL ── -->
+  <div class="app-shell">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Main</div>
+
+        <a class="sidebar-item" id="nav-dashboard" onclick="app.showView('dashboard')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a>
+
+        <a class="sidebar-item active" id="nav-replenishment" onclick="app.showView('replenishment')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Replenishment
+          <span class="sidebar-badge">Live</span>
+        </a>
+
+        <a class="sidebar-item" id="nav-products" onclick="app.showView('products')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          Products
+        </a>
+
+        <a class="sidebar-item" id="nav-suppliers" onclick="app.showView('suppliers')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          Suppliers
+        </a>
+
+        <div class="sidebar-label">Operations</div>
+
+        <a class="sidebar-item" id="nav-purchase-orders" onclick="app.showView('purchase-orders')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Purchase Orders
+        </a>
+
+        <a class="sidebar-item" id="nav-shipping-orders" onclick="app.showView('shipping-orders')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          Shipping Orders
+        </a>
+
+        <a class="sidebar-item" id="nav-inbounds" onclick="app.showView('inbounds')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg>
+          Inbounds
+        </a>
+
+        <a class="sidebar-item" id="nav-outbounds" onclick="app.showView('outbounds')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg>
+          Outbounds
+        </a>
+
+        <div class="sidebar-label" style="margin-top:8px;">Data</div>
+        <a class="sidebar-item" id="nav-upload" onclick="app.showView('upload')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          Upload Data
+        </a>
+      </div>
+
+      <!-- Bottom items -->
+      <div class="sidebar-bottom">
+        <a class="sidebar-item" id="nav-settings" onclick="app.showView('settings')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+          Settings
+        </a>
+        <a class="sidebar-item" id="nav-integrations" onclick="app.showView('integrations')" href="#">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="9" height="9"/><rect x="13" y="2" width="9" height="9"/><rect x="2" y="13" width="9" height="9"/><path d="M13 17h9M17 13v9"/></svg>
+          Integrations
+        </a>
+        <div class="sidebar-user">
+          <div class="sidebar-avatar">LA</div>
+          <div style="display:flex;flex-direction:column;gap:1px;">
+            <span style="font-size:12px;font-weight:600;color:var(--text-1);">Luka Abazadze</span>
+            <span style="font-size:10px;color:var(--text-2);">Supply Chain Analyst</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main" id="view-replenishment">
+
+      <!-- gradient banner -->
+      <div class="banner"></div>
+
+      <!-- warehouse selector bar -->
+      <div class="warehouse-bar">
+        <span class="warehouse-label">Warehouse:</span>
+        <div class="warehouse-select">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="warehouse-name">All Warehouses</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <div class="toolbar-btn" style="font-size:11px;cursor:pointer;" onclick="openSettings()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+            Settings
+          </div>
+          <div class="toolbar-btn" style="font-size:11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+            Expand
+          </div>
+        </div>
+      </div>
+
+      <!-- search + filter toolbar -->
+      <div class="toolbar">
+        <div class="search-wrap">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" id="replenishment-search" type="text" placeholder="Search by SKU or Product Name..." />
+        </div>
+
+        <button class="toolbar-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+          Refresh
+        </button>
+
+        <button class="toolbar-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+          Filter
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <div class="toolbar-spacer"></div>
+
+        <button class="toolbar-btn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          Columns
+        </button>
+      </div>
+
+      <!-- DATA TABLE -->
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr id="table-head-row">
+              <th style="width:36px;padding:10px 8px;"><input type="checkbox" class="cb" /></th>
+              <th>Image</th>
+              <th class="sortable">SKU ↕</th>
+              <th class="sortable">Item Name ↕</th>
+              <th class="sortable right">Stock ↕</th>
+              <th class="sortable center">Stock Cover</th>
+              <th class="sortable right">Monthly Sales ↕</th>
+              <th class="sortable right">Safety Stock</th>
+              <th class="sortable center">Lead Time (days)</th>
+              <th class="sortable right">MOQ</th>
+              <th class="sortable right">Purchase Price</th>
+              <th class="sortable right">To Order Qty</th>
+              <th class="sortable center">Health</th>
+              <th class="sortable center">Replenish Date</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Empty state -->
+            <tr class="empty-row">
+              <td colspan="14">
+                <div class="empty-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                </div>
+                <div style="font-size:13px;color:#4b5563;font-weight:600;">No products loaded</div>
+                <div style="font-size:12px;color:#374151;margin-top:4px;">Upload a dataset or connect a data source to populate the replenishment table.</div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- BOTTOM ACTION BAR -->
+      <div class="action-bar">
+        <button class="action-btn action-btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Create PO
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <button class="action-btn action-btn-secondary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+
+        <button class="action-btn action-btn-secondary" onclick="ForecastDashboard.openDrawer(null)">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Forecast Models
+        </button>
+
+        <button class="action-btn action-btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+          Bulk Operations
+        </button>
+
+        <div class="action-spacer"></div>
+
+        <span class="action-summary">
+          Total: <span>0</span> products &nbsp;·&nbsp; Selected: <span>0</span> &nbsp;·&nbsp; Value: <span>$0.00</span>
+        </span>
+      </div>
+
+    </div><!-- end .main (replenishment view) -->
+
+    <!-- ── UPLOAD DATA VIEW ── -->
+    <div id="view-upload" class="main" style="display:none;">
+
+      <!-- gradient banner -->
+      <div class="banner"></div>
+
+      <!-- warehouse selector bar -->
+      <div class="warehouse-bar">
+        <span class="warehouse-label">Warehouse:</span>
+        <div class="warehouse-select">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span class="warehouse-name">All Warehouses</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <div class="toolbar-btn" style="font-size:11px;cursor:pointer;" onclick="openSettings()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+            Settings
+          </div>
+          <div class="toolbar-btn" style="font-size:11px;">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>
+            Expand
+          </div>
+        </div>
+      </div>
+
+      <div style="flex:1;overflow-y:auto;">
+      <div style="max-width:760px;margin:0 auto;padding:36px 32px 60px;">
+
+        <!-- Page title -->
+        <div style="margin-bottom:24px;">
+          <h1 style="font-size:22px;font-weight:800;color:#e8eaf0;letter-spacing:-0.02em;">Upload Data</h1>
+          <p style="font-size:13px;color:#6b7280;margin-top:4px;">Upload your dataset — the system will analyse what's present and tell you what's missing.</p>
+        </div>
+
+        <!-- DISCLAIMER BANNER -->
+        <div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.22);
+                    border-radius:14px;padding:18px 20px;margin-bottom:28px;
+                    display:flex;gap:14px;align-items:flex-start;">
+          <div style="flex-shrink:0;margin-top:2px;width:32px;height:32px;border-radius:8px;
+               background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <div>
+            <p style="font-size:13px;font-weight:700;color:#fbbf24;margin-bottom:8px;">Manual Upload Mode — No Live Data Connection</p>
+            <p style="font-size:12px;color:#d97706;line-height:1.7;margin-bottom:8px;">
+              This is a <strong style="color:#fbbf24;">portfolio showcase and statistical testing environment</strong>. It is not connected to any live data warehouse, ERP, or WMS — no real-time sync, no automated data feeds.
+            </p>
+            <p style="font-size:12px;color:#d97706;line-height:1.7;margin-bottom:8px;">
+              To test the forecasting models, <strong style="color:#fbbf24;">manually upload your datasets</strong> below. The system will analyse your files and tell you exactly what data is present and what's missing for accurate forecasts.
+            </p>
+            <p style="font-size:12px;color:#b45309;line-height:1.7;font-style:italic;">
+              All data is processed locally in your browser — nothing is stored or transmitted.
+            </p>
+          </div>
+        </div>
+
+        <!-- MAIN DROP ZONE -->
+        <div id="main-dropzone" class="main-drop"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleDrop(event)"
+             onclick="document.getElementById('file-main').click()">
+          <div class="main-drop-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:#e8eaf0;margin-bottom:6px;">Drop files here or click to browse</div>
+          <div style="font-size:12px;color:#6b7280;">Upload one or multiple files — CSV or Excel (.xlsx, .xls)</div>
+          <div style="font-size:11px;color:#4b5563;margin-top:2px;">The system will analyse all files together and tell you what's missing</div>
+          <input type="file" id="file-main" accept=".csv,.xlsx,.xls" multiple style="display:none" onchange="handleFileInput(this)"/>
+        </div>
+
+        <!-- ANALYSIS RESULTS (hidden until file uploaded) -->
+        <div id="analysis-results" style="display:none;margin-top:28px;">
+
+          <!-- Uploaded files list -->
+          <div style="margin-bottom:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#3a3d4a;">Uploaded Files</div>
+              <button onclick="addMoreFiles()" style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);color:#a78bfa;cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='rgba(124,58,237,0.2)'" onmouseout="this.style.background='rgba(124,58,237,0.12)'">+ Add More Files</button>
+              <input type="file" id="file-add-more" accept=".csv,.xlsx,.xls" multiple style="display:none" onchange="handleFileInput(this, true)"/>
+            </div>
+            <div id="files-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+          </div>
+
+          <!-- Detected columns -->
+          <div style="margin-bottom:20px;">
+            <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#3a3d4a;margin-bottom:10px;">All Detected Columns</div>
+            <div id="columns-list" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+          </div>
+
+          <!-- Coverage grid -->
+          <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#3a3d4a;margin-bottom:10px;">Data Coverage Analysis</div>
+          <div id="coverage-grid" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;"></div>
+
+          <!-- Missing data callout -->
+          <div id="missing-callout" style="display:none;"></div>
+
+        </div><!-- end analysis results -->
+
+        <!-- COLUMN MAPPER — rendered by renderColumnMapper() -->
+        <div id="column-mapper" style="display:none;margin-top:28px;"></div>
+
+        <!-- LOAD TO VIEWS BUTTON -->
+        <div id="load-btn-wrap" style="display:none;margin-top:20px;padding-bottom:32px;text-align:center;"></div>
+
+      </div>
+      </div><!-- end scroll wrapper -->
+    </div><!-- end upload view -->
+
+  <!-- ── DEMAND FORECASTING (DASHBOARD) VIEW ── -->
+  <div id="view-dashboard" class="main" style="display:none;">
+    <div class="banner"></div>
+    <div class="warehouse-bar">
+      <span class="warehouse-label">Dashboard</span>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+        <div class="toolbar-btn" style="font-size:11px;cursor:pointer;" onclick="openSettings()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>
+          Settings
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI stat row -->
+    <div style="display:flex;gap:1px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--border);">
+      <div class="kpi-card">
+        <div class="kpi-label">Total SKUs</div>
+        <div class="kpi-value" id="db-total-skus">—</div>
+        <div class="kpi-sub" id="db-total-skus-sub">no data loaded</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Inventory Value</div>
+        <div class="kpi-value" id="db-inv-value">—</div>
+        <div class="kpi-sub" id="db-inv-value-sub">stock × purchase price</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Items to Reorder</div>
+        <div class="kpi-value" id="db-reorder-count" style="color:#a78bfa;">—</div>
+        <div class="kpi-sub" id="db-reorder-sub">to_order &gt; 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Sales History</div>
+        <div class="kpi-value" id="db-sales-skus">—</div>
+        <div class="kpi-sub" id="db-sales-sub">SKUs with sales data</div>
+      </div>
+    </div>
+
+    <!-- Health summary + top reorder table -->
+    <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
+
+      <!-- Left: health breakdown -->
+      <div style="width:220px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
+        <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#4b5563;">Stock Health</div>
+        <div style="display:flex;flex-direction:column;flex:1;gap:1px;background:var(--border);">
+          <div class="health-card">
+            <div class="health-count" id="db-h-healthy" style="color:#22c55e;">—</div>
+            <div class="health-label" style="color:#22c55e;">Healthy</div>
+          </div>
+          <div class="health-card">
+            <div class="health-count" id="db-h-atrisk" style="color:#f59e0b;">—</div>
+            <div class="health-label" style="color:#f59e0b;">At Risk</div>
+          </div>
+          <div class="health-card">
+            <div class="health-count" id="db-h-stockout" style="color:#ef4444;">—</div>
+            <div class="health-label" style="color:#ef4444;">Stockout</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: top reorder items table -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
+        <div style="padding:12px 18px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#4b5563;flex-shrink:0;display:flex;align-items:center;gap:10px;">
+          Top Items to Reorder
+          <span style="font-size:10px;font-weight:500;color:#374151;text-transform:none;letter-spacing:0;">sorted by qty needed</span>
+        </div>
+        <div style="flex:1;overflow-y:auto;" class="table-wrap">
+          <table id="db-reorder-table" style="width:100%;border-collapse:collapse;">
+            <thead>
+              <tr style="background:#0d0f14;">
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:left;">SKU</th>
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:left;">Product</th>
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:right;">Stock</th>
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:right;">To Order</th>
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:center;">Health</th>
+                <th style="padding:9px 14px;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;text-align:center;">Replenish By</th>
+              </tr>
+            </thead>
+            <tbody id="db-reorder-body">
+              <tr><td colspan="6" style="text-align:center;padding:40px 20px;color:#374151;font-size:12px;">Upload your inventory data to populate this dashboard</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- end dashboard view -->
+
+  <!-- Analytics engine — dependency order: data → models → charts → app -->
+  <script src="js/data.js"></script>
+  <script src="js/models.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- ── EMPTY VIEWS (warehouse bar + coming soon) ── -->
+  <script>
+    (function() {
+      var EMPTY_PAGES = [
+        { id: 'products',        label: 'Products',         icon: '<path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>' },
+        { id: 'suppliers',       label: 'Suppliers',        icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>' },
+        { id: 'purchase-orders', label: 'Purchase Orders',  icon: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>' },
+        { id: 'shipping-orders', label: 'Shipping Orders',  icon: '<rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/>' },
+        { id: 'inbounds',        label: 'Inbounds',         icon: '<polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/>' },
+        { id: 'outbounds',       label: 'Outbounds',        icon: '<polyline points="16 17 12 21 8 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/>' },
+        { id: 'settings',        label: 'Settings',         icon: '<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M12 2v2M12 20v2M2 12h2M20 12h2"/>' },
+        { id: 'integrations',    label: 'Integrations',     icon: '<rect x="2" y="2" width="9" height="9"/><rect x="13" y="2" width="9" height="9"/><rect x="2" y="13" width="9" height="9"/><path d="M13 17h9M17 13v9"/>' }
+      ];
+
+      var warehouseBar =
+        '<div class="warehouse-bar">' +
+          '<span class="warehouse-label">Warehouse:</span>' +
+          '<div class="warehouse-select">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>' +
+            '<span class="warehouse-name">All Warehouses</span>' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>' +
+          '</div>' +
+          '<div style="margin-left:auto;display:flex;align-items:center;gap:8px;">' +
+            '<div class="toolbar-btn" style="font-size:11px;cursor:pointer;" onclick="openSettings()">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M2 12h2M20 12h2"/></svg>' +
+              'Settings' +
+            '</div>' +
+            '<div class="toolbar-btn" style="font-size:11px;">' +
+              '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>' +
+              'Expand' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+
+      var shell = document.querySelector('.app-shell');
+
+      EMPTY_PAGES.forEach(function(page) {
+        var div = document.createElement('div');
+        div.id = 'view-' + page.id;
+        div.className = 'main';
+        div.style.display = 'none';
+        div.innerHTML =
+          '<div class="banner"></div>' +
+          warehouseBar +
+          '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">' +
+            '<div class="empty-icon">' +
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + page.icon + '</svg>' +
+            '</div>' +
+            '<div style="font-size:15px;font-weight:700;color:#4b5563;">' + page.label + '</div>' +
+            '<div style="font-size:12px;color:#374151;">This section is coming soon.</div>' +
+          '</div>';
+        shell.appendChild(div);
+      });
+    })();
+  </script>
+
+  <!-- ══════════════════════════════════════════════════════════════════
+       FORECAST MODELS VIEW
+  ══════════════════════════════════════════════════════════════════ -->
+  <!-- ══════════════════ FORECAST DRAWER ══════════════════ -->
+  <div id="fc-backdrop" onclick="ForecastDashboard.closeDrawer()"
+       style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:900;backdrop-filter:blur(3px);transition:opacity 0.2s;"></div>
+
+  <div id="fc-drawer"
+       style="display:none;position:fixed;top:0;right:0;bottom:0;width:75vw;min-width:860px;max-width:100vw;
+              background:#13161e;border-left:1px solid rgba(255,255,255,0.08);
+              z-index:901;flex-direction:column;
+              box-shadow:-24px 0 80px rgba(0,0,0,0.6);
+              transform:translateX(100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);">
+
+    <!-- ── Drawer header ── -->
+    <div style="display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0;flex-wrap:wrap;">
+      <!-- SKU title -->
+      <div style="display:flex;flex-direction:column;gap:1px;min-width:120px;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Demand Forecast</div>
+        <div id="fc-drawer-sku" style="font-size:14px;font-weight:800;color:#c4b5fd;font-family:monospace;letter-spacing:0.02em;">—</div>
+      </div>
+      <!-- Model pills -->
+      <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;">
+        <button class="fc-mpill" data-model="sma"     onclick="ForecastDashboard.selectModel('sma')">SMA</button>
+        <button class="fc-mpill" data-model="wma"     onclick="ForecastDashboard.selectModel('wma')">WMA</button>
+        <button class="fc-mpill" data-model="ema"     onclick="ForecastDashboard.selectModel('ema')">EMA</button>
+        <button class="fc-mpill" data-model="sarimax" onclick="ForecastDashboard.selectModel('sarimax')">SARIMAX</button>
+        <button class="fc-mpill" data-model="prophet" onclick="ForecastDashboard.selectModel('prophet')">Prophet</button>
+        <button class="fc-mpill active" data-model="xgboost" onclick="ForecastDashboard.selectModel('xgboost')">XGBoost</button>
+      </div>
+      <!-- Export -->
+      <div class="toolbar-btn" id="fc-export-btn" style="font-size:11px;cursor:pointer;white-space:nowrap;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export PNG
+      </div>
+      <!-- Fullscreen toggle -->
+      <button id="fc-fs-btn" onclick="ForecastDashboard.toggleFullscreen()"
+              title="Toggle fullscreen"
+              style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#9ca3af;
+                     width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:13px;line-height:1;
+                     display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="fc-fs-icon-expand"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="fc-fs-icon-compress" style="display:none"><path d="M8 3v3a2 2 0 01-2 2H3m18 0h-3a2 2 0 01-2-2V3m0 18v-3a2 2 0 012-2h3M3 16h3a2 2 0 012 2v3"/></svg>
+      </button>
+      <!-- Close -->
+      <button onclick="ForecastDashboard.closeDrawer()"
+              style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:#9ca3af;
+                     width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:16px;line-height:1;
+                     display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(255,255,255,0.1)'"
+              onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
+    </div>
+
+    <!-- ── Metrics row ── -->
+    <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
+      <div class="fc-metric-card"><div class="fc-metric-label">MAE</div><div class="fc-metric-value" id="fc-v-mae">—</div><div class="fc-metric-sub">Mean Abs Error</div></div>
+      <div class="fc-metric-card"><div class="fc-metric-label">RMSE</div><div class="fc-metric-value" id="fc-v-rmse">—</div><div class="fc-metric-sub">Root Mean Sq Error</div></div>
+      <div class="fc-metric-card"><div class="fc-metric-label">MAPE</div><div class="fc-metric-value" id="fc-v-mape">—</div><div class="fc-metric-sub">Mean Abs % Error</div></div>
+      <div class="fc-metric-card" style="border-right:none;"><div class="fc-metric-label">Next Period</div><div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div><div class="fc-metric-sub" id="fc-v-next-label">units forecast</div></div>
+    </div>
+
+    <!-- ── Body: params panel + chart area ── -->
+    <div style="display:flex;flex:1;overflow:hidden;min-height:0;">
+
+      <!-- Parameters panel -->
+      <div id="fc-params-panel" style="width:216px;min-width:216px;background:#0b0d11;border-right:1px solid rgba(255,255,255,0.06);overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:11px;">
+
+        <!-- ── Global Configuration ── -->
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Global Configuration</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div>
+            <label class="fc-param-label">History Horizon</label>
+            <select id="fc-history-horizon" class="fc-param-input" style="padding:5px 8px;cursor:pointer;"
+                    onchange="ForecastDashboard.run()">
+              <option value="0">Full Available History</option>
+              <option value="24">Last 24 Months</option>
+              <option value="12">Last 12 Months</option>
+            </select>
+            <div class="fc-param-help">Slice historical data before any model runs.</div>
+          </div>
+          <div>
+            <label class="fc-param-label">Forecast Horizon</label>
+            <select id="fc-horizon" class="fc-param-input" style="padding:5px 8px;cursor:pointer;"
+                    onchange="ForecastDashboard.run()">
+              <option value="3">3 Months</option>
+              <option value="6" selected>6 Months</option>
+              <option value="12">12 Months</option>
+            </select>
+            <div class="fc-param-help">How many future periods to predict.</div>
+          </div>
+        </div>
+
+        <!-- ── Divider ── -->
+        <div style="height:1px;background:rgba(255,255,255,0.05);margin:2px 0;"></div>
+
+        <!-- ── Model Parameters ── -->
+        <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Model Parameters</div>
+        <div id="fc-param-fields" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+        <div id="fc-model-explain" style="padding:10px 11px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:8px;font-size:11px;color:#6b7280;line-height:1.6;"></div>
+      </div>
+
+      <!-- Chart + table -->
+      <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
+        <div style="flex:1;padding:14px 18px;min-height:0;position:relative;">
+          <div id="fc-empty-state" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;pointer-events:none;">
+            <div class="empty-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div style="font-size:13px;font-weight:700;color:#4b5563;">No sales data</div>
+            <div style="font-size:11px;color:#374151;">Upload a sales_history.csv to enable forecasting</div>
+          </div>
+          <canvas id="fc-chart" style="width:100%;height:100%;"></canvas>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.06);max-height:150px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;">
+            <thead id="fc-table-head"></thead>
+            <tbody id="fc-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div><!-- end fc-drawer -->
+
+  <style>
+    /* Clickable replenishment rows */
+    .repl-row { cursor: pointer; transition: background 0.12s; }
+    .repl-row:hover { background: rgba(124,58,237,0.08) !important; }
+    .repl-row:hover td:first-child { border-left: 2px solid #7c3aed; }
+
+    .fc-mpill {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.09);
+      color: #9ca3af;
+      font-size: 11px; font-weight: 700;
+      padding: 4px 11px; border-radius: 999px;
+      cursor: pointer; transition: all 0.15s;
+      letter-spacing: 0.03em;
+    }
+    .fc-mpill:hover { background: rgba(124,58,237,0.12); color: #e8eaf0; border-color: rgba(124,58,237,0.3); }
+    .fc-mpill.active { background: rgba(124,58,237,0.2); color: #c4b5fd; border-color: rgba(124,58,237,0.5); }
+    .fc-metric-card {
+      flex: 1; padding: 12px 18px;
+      border-right: 1px solid rgba(255,255,255,0.06);
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .fc-metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4b5563; }
+    .fc-metric-value { font-size: 20px; font-weight: 800; color: #e8eaf0; letter-spacing: -0.02em; }
+    .fc-metric-sub   { font-size: 10px; color: #374151; }
+    .fc-param-label  { font-size: 11px; font-weight: 600; color: #9ca3af; margin-bottom: 4px; display: block; }
+    .fc-param-help   { font-size: 10px; color: #4b5563; margin-top: 3px; line-height: 1.4; }
+    .fc-param-input  {
+      width: 100%; background: #13161e;
+      border: 1px solid rgba(255,255,255,0.1); color: #e8eaf0;
+      font-size: 12px; padding: 5px 8px; border-radius: 6px; outline: none;
+    }
+    .fc-param-input:focus { border-color: rgba(124,58,237,0.5); }
+    .fc-param-input option { background: #13161e; }
+    @keyframes fc-pulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 5px currentColor; }
+      50%       { opacity: 0.5; box-shadow: 0 0 12px currentColor; }
+    }
+  </style>
+
+  <script>
+  /* ══════════════════════════════════════════════════════════════
+     FORECAST DASHBOARD CONTROLLER
+  ══════════════════════════════════════════════════════════════ */
+  const ForecastDashboard = (function() {
+    let _chart     = null;
+    let _model     = 'xgboost';
+    let _sku       = null;
+    let _params    = {};
+    let _initialized = false;
+
+    /* ── Init (wires up static event listeners once) ── */
+    function init() {
+      if (_initialized) return;
+      _initialized = true;
+      _buildParamFields(_model);
+      var exportBtn = document.getElementById('fc-export-btn');
+      if (exportBtn) exportBtn.addEventListener('click', exportPNG);
+    }
+
+    function onDataReady() {
+      /* no-op: drawer always receives SKU via openDrawer() */
+    }
+
+    /* ── Open the drawer for a specific SKU ── */
+    function openDrawer(sku) {
+      _sku = sku || (window._monthlySalesBySKU ? Object.keys(window._monthlySalesBySKU).sort()[0] : null);
+      init();
+      /* Update SKU label in header */
+      var label = document.getElementById('fc-drawer-sku');
+      if (label) label.textContent = _sku || '—';
+      /* Show backdrop */
+      var backdrop = document.getElementById('fc-backdrop');
+      var drawer   = document.getElementById('fc-drawer');
+      if (backdrop) { backdrop.style.display = 'block'; backdrop.style.opacity = '1'; }
+      if (drawer)   {
+        drawer.style.display = 'flex';
+        /* Wait two frames so the browser has painted and the canvas has real dimensions */
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            drawer.style.transform = 'translateX(0)';
+            run(); /* run AFTER layout is complete */
+          });
+        });
+      }
+      document.body.style.overflow = 'hidden';
+    }
+
+    /* ── Close the drawer ── */
+    function closeDrawer() {
+      var drawer   = document.getElementById('fc-drawer');
+      var backdrop = document.getElementById('fc-backdrop');
+      if (drawer) {
+        drawer.style.transform = 'translateX(100%)';
+        setTimeout(function() { drawer.style.display = 'none'; }, 280);
+      }
+      if (backdrop) {
+        backdrop.style.opacity = '0';
+        setTimeout(function() { backdrop.style.display = 'none'; backdrop.style.opacity = '1'; }, 280);
+      }
+      document.body.style.overflow = '';
+      if (_chart) { _chart.destroy(); _chart = null; }
+      /* Reset fullscreen state */
+      _isFullscreen = false;
+      var drawer2 = document.getElementById('fc-drawer');
+      if (drawer2) { drawer2.style.width='75vw'; drawer2.style.minWidth='860px'; drawer2.style.left=''; drawer2.style.borderLeft='1px solid rgba(255,255,255,0.08)'; }
+      var ex2 = document.getElementById('fc-fs-icon-expand');
+      var co2 = document.getElementById('fc-fs-icon-compress');
+      if (ex2) ex2.style.display='block'; if (co2) co2.style.display='none';
+    }
+
+    /* ── Model pill selection ── */
+    function selectModel(key) {
+      _model = key;
+      document.querySelectorAll('.fc-mpill').forEach(function(b) {
+        b.classList.toggle('active', b.dataset.model === key);
+      });
+      _buildParamFields(key);
+      run();
+    }
+
+    /* ── Build param input fields for selected model ── */
+    function _buildParamFields(key) {
+      var meta      = (typeof Models !== 'undefined') ? Models.getMeta(key) : null;
+      var container = document.getElementById('fc-param-fields');
+      var explainEl = document.getElementById('fc-model-explain');
+      if (!container) return;
+      if (!meta) { container.innerHTML = ''; return; }
+
+      var html = '';
+
+      if (meta.autopilot) {
+        /* ── Autopilot badge ── */
+        html +=
+          '<div style="display:flex;flex-direction:column;gap:8px;">' +
+            '<div style="display:flex;align-items:center;gap:7px;padding:9px 11px;' +
+                        'background:' + meta.autopilotColor + '14;border:1px solid ' + meta.autopilotColor + '40;' +
+                        'border-radius:9px;">' +
+              '<div style="width:8px;height:8px;border-radius:50%;background:' + meta.autopilotColor + ';' +
+                          'box-shadow:0 0 6px ' + meta.autopilotColor + ';flex-shrink:0;' +
+                          'animation:fc-pulse 2s infinite;"></div>' +
+              '<span style="font-size:11px;font-weight:700;color:' + meta.autopilotColor + ';letter-spacing:0.01em;">AI Autopilot Active</span>' +
+            '</div>' +
+            '<div style="font-size:10.5px;color:#6b7280;line-height:1.55;padding:0 2px;">' +
+              'Automatically running <strong style="color:#9ca3af;">spike detection</strong> (IQR fencing) ' +
+              'and <strong style="color:#9ca3af;">grid search</strong> across hyperparameter combinations to find the ' +
+              'lowest MAE configuration for this SKU.' +
+            '</div>' +
+            '<div id="fc-autopilot-result" style="display:none;padding:9px 11px;background:rgba(255,255,255,0.03);' +
+                 'border:1px solid rgba(255,255,255,0.07);border-radius:8px;font-size:10px;color:#6b7280;line-height:1.6;">' +
+            '</div>' +
+          '</div>';
+      } else {
+        /* ── Manual param controls ── */
+        /* Tag badge */
+        if (meta.tag) {
+          html += '<div style="display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.06em;' +
+            'text-transform:uppercase;padding:2px 8px;border-radius:999px;border:1px solid ' + meta.tagColor + ';' +
+            'color:' + meta.tagColor + ';background:' + meta.tagColor + '18;margin-bottom:2px;">' + meta.tag + '</div>';
+        }
+
+        html += meta.params.map(function(p) {
+          var cur = _params[p.id] != null ? _params[p.id] : p.default;
+
+          if (p.type === 'range') {
+            /* Slider with left/right labels */
+            return '<div>' +
+              '<label class="fc-param-label">' + p.label +
+                ' <span id="fc-p-' + p.id + '-val" style="color:var(--purple);font-weight:700;">' + cur + '</span>' +
+              '</label>' +
+              '<div style="display:flex;align-items:center;gap:5px;">' +
+                '<span style="font-size:9px;color:#4b5563;white-space:nowrap;">' + (p.leftLabel||'') + '</span>' +
+                '<input type="range" id="fc-p-' + p.id + '" min="' + p.min + '" max="' + p.max + '" step="' + (p.step||0.05) + '" value="' + cur + '"' +
+                  ' style="flex:1;accent-color:var(--purple);cursor:pointer;"' +
+                  ' oninput="document.getElementById(\'fc-p-' + p.id + '-val\').textContent=this.value;ForecastDashboard.onParamChange(\'' + p.id + '\',this.value)">' +
+                '<span style="font-size:9px;color:#4b5563;white-space:nowrap;">' + (p.rightLabel||'') + '</span>' +
+              '</div>' +
+              '<div class="fc-param-help">' + p.help + '</div>' +
+            '</div>';
+          } else if (p.type === 'select') {
+            return '<div>' +
+              '<label class="fc-param-label">' + p.label + '</label>' +
+              '<select class="fc-param-input" id="fc-p-' + p.id + '"' +
+                ' style="padding:5px 8px;cursor:pointer;"' +
+                ' onchange="ForecastDashboard.onParamChange(\'' + p.id + '\',this.value)">' +
+                p.options.map(function(o) {
+                  return '<option value="' + o.value + '"' + (o.value == cur ? ' selected' : '') + '>' + o.label + '</option>';
+                }).join('') +
+              '</select>' +
+              '<div class="fc-param-help">' + p.help + '</div>' +
+            '</div>';
+          } else {
+            /* number input */
+            return '<div>' +
+              '<label class="fc-param-label">' + p.label + '</label>' +
+              '<input class="fc-param-input" type="number"' +
+                ' id="fc-p-' + p.id + '"' +
+                ' value="' + cur + '" min="' + p.min + '" max="' + p.max + '"' +
+                (p.step ? ' step="' + p.step + '"' : '') +
+                ' onchange="ForecastDashboard.onParamChange(\'' + p.id + '\',this.value)">' +
+              '<div class="fc-param-help">' + p.help + '</div>' +
+            '</div>';
+          }
+        }).join('');
+      }
+
+      container.innerHTML = html;
+
+      if (explainEl && meta.explain) {
+        explainEl.innerHTML =
+          '<strong style="color:#9ca3af;">' + meta.explain.title + '</strong><br>' +
+          '<span style="font-size:10.5px;">' + meta.explain.body + '</span>';
+      }
+    }
+
+    function onParamChange(id, value) {
+      var num = parseFloat(value);
+      if (!isNaN(num)) { _params[id] = num; run(); }
+    }
+
+    /* ── Show autopilot result card after a run ── */
+    function _showAutopilotResult(result) {
+      var el = document.getElementById('fc-autopilot-result');
+      if (!el) return;
+      var ap = result.autoParams || {};
+      var si = result.spikeInfo  || {};
+      var lines = [];
+
+      if (si.spikes && si.spikes.length > 0) {
+        lines.push('<span style="color:#f59e0b;">⚡ ' + si.spikes.length + ' spike' +
+          (si.spikes.length > 1 ? 's' : '') + ' detected & capped</span>');
+        lines.push('<span style="color:#4b5563;">IQR fence: ≤ ' + si.upper + ' units</span>');
+      } else {
+        lines.push('<span style="color:#22c55e;">✓ No anomalous spikes detected</span>');
+      }
+
+      if (ap._gridTrials && ap._gridTrials.length) {
+        lines.push('<span style="color:#9ca3af;margin-top:4px;display:block;">Best config:</span>');
+        if (ap.learning_rate != null) {
+          lines.push('LR: <strong style="color:#e8eaf0;">' + ap.learning_rate + '</strong>  ' +
+                     'Depth: <strong style="color:#e8eaf0;">' + ap.max_depth + '</strong>');
+        }
+        if (ap.changepoints != null) {
+          lines.push('Changepoints: <strong style="color:#e8eaf0;">' + ap.changepoints + '</strong>  ' +
+                     'Fourier: <strong style="color:#e8eaf0;">' + ap.fourier_order + '</strong>');
+        }
+        if (ap._gridMAE != null) {
+          lines.push('Grid val MAE: <strong style="color:#a78bfa;">' + ap._gridMAE + '</strong>');
+        }
+      }
+
+      el.style.display = 'block';
+      el.innerHTML = lines.join('<br>');
+    }
+
+    /* ── Run the selected model on the selected SKU ── */
+    function run() {
+      if (typeof Models === 'undefined') return;
+      var skuData = window._monthlySalesBySKU && _sku
+        ? window._monthlySalesBySKU[_sku]
+        : null;
+
+      var emptyEl = document.getElementById('fc-empty-state');
+      if (!skuData || !skuData.values.length) {
+        if (emptyEl) emptyEl.style.display = 'flex';
+        _clearMetrics();
+        return;
+      }
+      if (emptyEl) emptyEl.style.display = 'none';
+
+      /* ── History Horizon slice ── */
+      var histHorizon = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
+      var allValues   = skuData.values;
+      var allMonths   = skuData.months;
+      var values, months;
+      if (histHorizon > 0 && allValues.length > histHorizon) {
+        values = allValues.slice(-histHorizon);
+        months = allMonths.slice(-histHorizon);
+      } else {
+        values = allValues;
+        months = allMonths;
+      }
+
+      /* ── Forecast horizon ── */
+      var horizon = parseInt((document.getElementById('fc-horizon') || {}).value) || 6;
+
+      /* ── Collect manual params for non-autopilot models ── */
+      var meta   = Models.getMeta(_model);
+      var params = {};
+      if (meta && !meta.autopilot) {
+        meta.params.forEach(function(p) {
+          var el = document.getElementById('fc-p-' + p.id);
+          params[p.id] = el
+            ? (p.type === 'select' ? (parseInt(el.value) || p.default) : (parseFloat(el.value) || p.default))
+            : p.default;
+        });
+      } else {
+        /* autopilot models — signal the engine */
+        params.__autopilot = true;
+      }
+
+      /* ── Run model ── */
+      var result;
+      try {
+        result = Models.run(_model, values, params, horizon);
+      } catch(e) {
+        console.warn('Forecast error:', e);
+        return;
+      }
+
+      /* Show autopilot result card if applicable */
+      if (meta && meta.autopilot) _showAutopilotResult(result);
+
+      _renderChart(months, values, result, horizon);
+      _renderMetrics(result.metrics, result.forecast[0]);
+      _renderTable(months, values, result, horizon);
+    }
+
+    /* ── Chart ── */
+    function _renderChart(months, values, result, horizon) {
+      var ctx = document.getElementById('fc-chart');
+      if (!ctx) return;
+
+      /* Generate future month labels */
+      var futureMonths = _futureMonths(months[months.length - 1], horizon);
+      var allLabels    = months.concat(futureMonths);
+
+      /* Confidence bands (±1 sigma of residuals) */
+      var residuals = [];
+      result.inSample.forEach(function(v, i) {
+        if (v != null) residuals.push(Math.abs(values[i] - v));
+      });
+      var sigma = residuals.length
+        ? residuals.reduce(function(a,b){return a+b;},0) / residuals.length
+        : 0;
+
+      var forecastWithNulls = new Array(values.length).fill(null).concat(result.forecast);
+      var upperBand = new Array(values.length).fill(null)
+        .concat(result.forecast.map(function(v){ return Math.round(v + sigma); }));
+      var lowerBand = new Array(values.length).fill(null)
+        .concat(result.forecast.map(function(v){ return Math.max(0, Math.round(v - sigma)); }));
+
+      var datasets = [
+        {
+          label: 'Actual',
+          data: values,
+          borderColor: '#6366f1',
+          backgroundColor: 'rgba(99,102,241,0.08)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.3,
+          fill: false,
+          order: 3
+        },
+        {
+          label: 'Fitted',
+          data: result.inSample,
+          borderColor: 'rgba(34,197,94,0.7)',
+          borderWidth: 1.5,
+          borderDash: [4, 3],
+          pointRadius: 0,
+          tension: 0.3,
+          fill: false,
+          order: 2,
+          spanGaps: false
+        },
+        {
+          label: 'Forecast',
+          data: forecastWithNulls,
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.15)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: '#f59e0b',
+          tension: 0.3,
+          fill: false,
+          order: 1,
+          spanGaps: false
+        },
+        {
+          label: 'Upper band',
+          data: upperBand,
+          borderColor: 'rgba(245,158,11,0.2)',
+          backgroundColor: 'rgba(245,158,11,0.07)',
+          borderWidth: 0,
+          pointRadius: 0,
+          fill: '+1',
+          order: 4,
+          spanGaps: false
+        },
+        {
+          label: 'Lower band',
+          data: lowerBand,
+          borderColor: 'rgba(167,139,250,0.2)',
+          borderWidth: 0,
+          pointRadius: 0,
+          fill: false,
+          order: 5,
+          spanGaps: false
+        }
+      ];
+
+      if (_chart) { _chart.destroy(); _chart = null; }
+
+      _chart = new Chart(ctx, {
+        type: 'line',
+        data: { labels: allLabels, datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: {
+              labels: { color: '#6b7280', font: { size: 11 },
+                filter: function(item) { return item.text !== 'Upper band' && item.text !== 'Lower band'; } }
+            },
+            tooltip: {
+              backgroundColor: '#13161e',
+              borderColor: 'rgba(255,255,255,0.1)',
+              borderWidth: 1,
+              titleColor: '#e8eaf0',
+              bodyColor: '#9ca3af',
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.parsed.y == null) return null;
+                  return ctx.dataset.label + ': ' + Math.round(ctx.parsed.y).toLocaleString() + ' units';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#4b5563', font: { size: 10 }, maxTicksLimit: 12 },
+              grid:  { color: 'rgba(255,255,255,0.04)' }
+            },
+            y: {
+              ticks: { color: '#4b5563', font: { size: 10 },
+                callback: function(v){ return v.toLocaleString(); } },
+              grid:  { color: 'rgba(255,255,255,0.04)' }
+            }
+          }
+        }
+      });
+    }
+
+    function _futureMonths(lastMonth, n) {
+      var parts  = lastMonth.split('-');
+      var year   = parseInt(parts[0]);
+      var month  = parseInt(parts[1]);
+      var result = [];
+      for (var i = 0; i < n; i++) {
+        month++;
+        if (month > 12) { month = 1; year++; }
+        result.push(year + '-' + String(month).padStart(2, '0'));
+      }
+      return result;
+    }
+
+    /* ── Metrics ── */
+    function _renderMetrics(metrics, nextVal) {
+      function set(id, val) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = val != null ? val : '—';
+      }
+      set('fc-v-mae',  metrics.mae  != null ? metrics.mae.toLocaleString()  : null);
+      set('fc-v-rmse', metrics.rmse != null ? metrics.rmse.toLocaleString() : null);
+      set('fc-v-mape', metrics.mape != null ? metrics.mape + '%'            : null);
+      set('fc-v-next', nextVal != null ? Math.round(nextVal).toLocaleString() + ' units' : null);
+    }
+
+    function _clearMetrics() {
+      ['fc-v-mae','fc-v-rmse','fc-v-mape','fc-v-next'].forEach(function(id){
+        var el = document.getElementById(id); if (el) el.textContent = '—';
+      });
+    }
+
+    /* ── Forecast table ── */
+    function _renderTable(months, values, result, horizon) {
+      var head = document.getElementById('fc-table-head');
+      var body = document.getElementById('fc-table-body');
+      if (!head || !body) return;
+
+      var futureMonths = _futureMonths(months[months.length - 1], horizon);
+
+      head.innerHTML = '<tr style="background:#0d0f14;">' +
+        '<th class="tbl-cell" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Month</th>' +
+        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Forecast (units)</th>' +
+        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">vs Last Year</th>' +
+        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Confidence Band</th>' +
+        '</tr>';
+
+      var residuals = [];
+      result.inSample.forEach(function(v, i) {
+        if (v != null) residuals.push(Math.abs(values[i] - v));
+      });
+      var sigma = residuals.length
+        ? Math.round(residuals.reduce(function(a,b){return a+b;},0) / residuals.length)
+        : 0;
+
+      body.innerHTML = result.forecast.map(function(fc, i) {
+        var m       = futureMonths[i];
+        /* find same month last year */
+        var lyMonth = (parseInt(m.substring(0,4))-1) + m.substring(4);
+        var lyIdx2  = months.indexOf(lyMonth);
+        var ly      = lyIdx2 >= 0 ? values[lyIdx2] : null;
+        var diff    = ly != null ? Math.round(fc) - Math.round(ly) : null;
+        var diffStr = diff != null
+          ? (diff >= 0 ? '+' : '') + diff.toLocaleString() + ' (' + (ly > 0 ? ((diff/ly*100).toFixed(1)+'%') : 'N/A') + ')'
+          : '—';
+        var diffColor = diff == null ? '#4b5563' : diff > 0 ? '#22c55e' : diff < 0 ? '#ef4444' : '#4b5563';
+        var upper = Math.round(fc + sigma), lower = Math.max(0, Math.round(fc - sigma));
+        return '<tr>' +
+          '<td class="tbl-cell" style="font-family:monospace;font-size:11px;color:#9ca3af;">' + m + '</td>' +
+          '<td class="tbl-cell right" style="font-weight:700;color:#a78bfa;">' + Math.round(fc).toLocaleString() + '</td>' +
+          '<td class="tbl-cell right" style="font-size:11px;color:' + diffColor + ';">' + diffStr + '</td>' +
+          '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + lower.toLocaleString() + ' – ' + upper.toLocaleString() + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function exportPNG() {
+      var canvas = document.getElementById('fc-chart');
+      if (!canvas || !_chart) return;
+      var a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = 'forecast-' + (_sku || 'chart') + '.png';
+      a.click();
+    }
+
+    /* ── Toggle fullscreen ── */
+    var _isFullscreen = false;
+    function toggleFullscreen() {
+      var drawer = document.getElementById('fc-drawer');
+      var expand = document.getElementById('fc-fs-icon-expand');
+      var compress = document.getElementById('fc-fs-icon-compress');
+      if (!drawer) return;
+      _isFullscreen = !_isFullscreen;
+      if (_isFullscreen) {
+        drawer.style.width    = '100vw';
+        drawer.style.minWidth = '0';
+        drawer.style.left     = '0';
+        drawer.style.borderLeft = 'none';
+        if (expand)   expand.style.display   = 'none';
+        if (compress) compress.style.display = 'block';
+      } else {
+        drawer.style.width    = '75vw';
+        drawer.style.minWidth = '860px';
+        drawer.style.left     = '';
+        drawer.style.borderLeft = '1px solid rgba(255,255,255,0.08)';
+        if (expand)   expand.style.display   = 'block';
+        if (compress) compress.style.display = 'none';
+      }
+      /* Redraw chart to fit new container width */
+      if (_chart) { setTimeout(function(){ _chart.resize(); }, 50); }
+    }
+
+    /* Close drawer on Escape key */
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeDrawer();
+    });
+
+    return { init, onDataReady, openDrawer, closeDrawer, toggleFullscreen, selectModel, onParamChange, run };
+  })();
+  </script>
+
+  </div><!-- end .app-shell -->
+
+  <style>
+    .main-drop {
+      border: 1.5px dashed rgba(124,58,237,0.35);
+      border-radius: 14px;
+      padding: 40px 24px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+      cursor: pointer;
+      text-align: center;
+      transition: border-color 0.2s, background 0.2s;
+      background: rgba(124,58,237,0.03);
+    }
+    .main-drop:hover, .main-drop.drag-over {
+      border-color: rgba(124,58,237,0.75);
+      background: rgba(124,58,237,0.07);
+    }
+    .main-drop-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: rgba(124,58,237,0.12);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 4px;
+    }
+    .col-pill {
+      display: inline-flex; align-items: center;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px; padding: 3px 9px;
+      font-size: 11px; font-weight: 500; color: #9ca3af;
+      font-family: monospace;
+    }
+    .coverage-row {
+      background: #13161e; border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .coverage-icon {
+      width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .coverage-check {
+      width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      margin-left: auto;
+    }
+    .coverage-check.ok   { background: rgba(34,197,94,0.12);  color: #22c55e; }
+    .coverage-check.warn { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .coverage-check.miss { background: rgba(239,68,68,0.10);  color: #ef4444; }
+
+    /* ── FORECAST VIEW: model pills ── */
+    .fc-pill {
+      display: inline-flex; align-items: center;
+      padding: 5px 14px; border-radius: 8px;
+      font-size: 12px; font-weight: 600;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      color: var(--text-2); cursor: pointer;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .fc-pill:hover { color: var(--text-1); border-color: rgba(255,255,255,0.18); }
+    .fc-pill.active {
+      background: var(--purple-dim); color: var(--purple-lt);
+      border-color: rgba(124,58,237,0.3);
+    }
+
+    /* ── FORECAST VIEW: editable number inputs ── */
+    #data-table-body input[type=number] {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-1);
+      font-size: 12px; font-weight: 500;
+      text-align: right;
+      width: 76px; padding: 3px 6px;
+      border-radius: 5px; outline: none;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    #data-table-body input[type=number]:hover,
+    #data-table-body input[type=number]:focus {
+      border-color: rgba(124,58,237,0.4);
+      background: rgba(124,58,237,0.05);
+    }
+    #data-table-body input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
+  </style>
+
+  <script>
+    /* ── DATA CATEGORY DEFINITIONS ── */
+    var CATEGORIES = [
+      {
+        id: 'sales', name: 'Sales History', sub: 'Historical demand data',
+        color: '#a78bfa', bg: 'rgba(124,58,237,0.15)',
+        icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
+        keywords: ['invoicedate','invoice date','date','invoiceno','invoice','stockcode','stock code','sku','description','product','quantity','qty','units sold','unitprice','unit price','price','revenue','sales','country','region','channel','customerid','customer'],
+        matchThreshold: 3,
+        why: 'Core input for all forecasting models (SMA, WMA, EMA). Without this, no forecast can be generated.'
+      },
+      {
+        id: 'stock', name: 'Stock Levels', sub: 'Current inventory snapshot',
+        color: '#22c55e', bg: 'rgba(34,197,94,0.12)',
+        icon: '<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>',
+        keywords: ['stock','inventory','on hand','units on hand','onhand','available','reserved','safety stock','safetystock','reorder point','reorderpoint','warehouse','location'],
+        matchThreshold: 2,
+        why: 'Required to calculate days of cover and trigger replenishment alerts in the table.'
+      },
+      {
+        id: 'suppliers', name: 'Supplier & Lead Times', sub: 'Sourcing and delivery data',
+        color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',
+        icon: '<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+        keywords: ['supplier','vendor','lead time','leadtime','moq','minimum order','payment terms','cost price','purchase price','purchaseprice','country of origin'],
+        matchThreshold: 2,
+        why: 'Needed for accurate reorder point and safety stock calculations based on supplier reliability.'
+      },
+      {
+        id: 'po', name: 'Open Purchase Orders', sub: 'In-transit and pending stock',
+        color: '#60a5fa', bg: 'rgba(96,165,250,0.12)',
+        icon: '<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+        keywords: ['ponumber','purchaseorder','po number','purchase order','orderedqty','orderedquantity','orderdate','expecteddelivery','deliverydate','intransit','in transit','status','inbound'],
+        matchThreshold: 4,
+        why: 'Prevents over-ordering by accounting for stock already on its way from suppliers.'
+      }
+    ];
+
+    var uploadedFiles = [];
+    var pendingCount  = 0;
+
+    function normalise(str) {
+      return str.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+    }
+
+    function detectCategories(headers) {
+      var norm = headers.map(normalise);
+      return CATEGORIES.map(function(cat) {
+        var hits = cat.keywords.filter(function(kw) {
+          return norm.some(function(h) { return h.includes(kw) || kw.includes(h); });
+        });
+        return { cat: cat, hits: hits, matched: hits.length >= cat.matchThreshold };
+      });
+    }
+
+    /* Parse one CSV/TSV line respecting quoted fields */
+    function parseLine(line, delim) {
+      var result = [], cur = '', inQ = false;
+      for (var i = 0; i < line.length; i++) {
+        var c = line[i];
+        if (c === '"') {
+          if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQ = !inQ;
+        } else if (c === delim && !inQ) { result.push(cur.trim()); cur = ''; }
+        else cur += c;
+      }
+      result.push(cur.trim());
+      return result;
+    }
+
+    /* Read FULL file — headers + all row data (array of plain objects) */
+    function parseFile(file, callback) {
+      var ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'csv') {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var lines = e.target.result.split('\n');
+          var first = lines[0] || '';
+          var delim = first.includes('\t') ? '\t' : ',';
+          var headers = parseLine(first, delim);
+          var data = [];
+          for (var i = 1; i < lines.length; i++) {
+            var line = lines[i].trim();
+            if (!line) continue;
+            var cells = parseLine(line, delim);
+            var row = {};
+            headers.forEach(function(h, j) { row[h] = cells[j] != null ? cells[j] : ''; });
+            data.push(row);
+          }
+          callback(headers, data.length, data);
+        };
+        reader.readAsText(file);
+      } else {
+        if (typeof XLSX === 'undefined') {
+          var s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.onload = function() { readExcelFull(file, callback); };
+          document.head.appendChild(s);
+        } else {
+          readExcelFull(file, callback);
+        }
+      }
+    }
+
+    function readExcelFull(file, callback) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        var wb  = XLSX.read(e.target.result, { type: 'array' });
+        var ws  = wb.Sheets[wb.SheetNames[0]];
+        var raw = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        var headers = (raw[0] || []).map(String);
+        var data = [];
+        for (var i = 1; i < raw.length; i++) {
+          var row = {};
+          headers.forEach(function(h, j) { row[h] = raw[i][j] != null ? String(raw[i][j]) : ''; });
+          data.push(row);
+        }
+        callback(headers, data.length, data);
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    /* Accept a FileList, optionally appending to existing set */
+    function processFileList(fileList, append) {
+      if (!append) uploadedFiles = [];
+      var files = Array.from(fileList);
+      pendingCount = files.length;
+      files.forEach(function(file) {
+        /* Skip duplicates */
+        if (uploadedFiles.some(function(u) { return u.file.name === file.name; })) {
+          pendingCount--;
+          if (pendingCount === 0) { renderAnalysis(); renderFilesList(); }
+          return;
+        }
+        parseFile(file, function(headers, rowCount, data) {
+          uploadedFiles.push({ file: file, headers: headers, rows: rowCount, data: data });
+          pendingCount--;
+          if (pendingCount === 0) { renderAnalysis(); renderFilesList(); }
+        });
+      });
+    }
+
+    function handleFileInput(input, append) {
+      if (!input.files || !input.files.length) return;
+      processFileList(input.files, !!append);
+      input.value = '';
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      document.getElementById('main-dropzone').classList.remove('drag-over');
+      if (e.dataTransfer.files.length) processFileList(e.dataTransfer.files, false);
+    }
+
+    function addMoreFiles() {
+      document.getElementById('file-add-more').click();
+    }
+
+    function removeFile(idx) {
+      uploadedFiles.splice(idx, 1);
+      if (uploadedFiles.length === 0) {
+        document.getElementById('analysis-results').style.display = 'none';
+      } else {
+        renderAnalysis();
+        renderFilesList();
+      }
+    }
+
+    function getAllHeaders() {
+      var all = [];
+      uploadedFiles.forEach(function(f) { all = all.concat(f.headers); });
+      /* deduplicate */
+      return all.filter(function(h, i, arr) { return arr.indexOf(h) === i; });
+    }
+
+    function renderFilesList() {
+      document.getElementById('files-list').innerHTML = uploadedFiles.map(function(f, i) {
+        return '<div style="display:flex;align-items:center;gap:10px;background:#13161e;' +
+          'border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:10px 14px;">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+          '<span style="font-size:13px;font-weight:600;color:#e8eaf0;flex:1;">' + f.file.name + '</span>' +
+          '<span style="font-size:11px;color:#6b7280;">' + f.rows.toLocaleString() + ' rows · ' + f.headers.length + ' cols</span>' +
+          '<button onclick="removeFile(' + i + ')" title="Remove" style="background:none;border:none;color:#4b5563;cursor:pointer;font-size:13px;padding:0 4px;margin-left:6px;transition:color 0.15s;" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'#4b5563\'">✕</button>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderAnalysis() {
+      var allHeaders = getAllHeaders();
+
+      /* Columns pills */
+      document.getElementById('columns-list').innerHTML = allHeaders.map(function(h) {
+        return '<span class="col-pill">' + h + '</span>';
+      }).join('');
+
+      /* Category detection */
+      var results = detectCategories(allHeaders);
+      var missing = results.filter(function(r) { return !r.matched; });
+
+      /* Coverage grid */
+      document.getElementById('coverage-grid').innerHTML = results.map(function(r) {
+        var c = r.cat;
+        var statusClass = r.matched ? 'ok' : 'miss';
+        var statusIcon  = r.matched
+          ? '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          : '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        return '<div class="coverage-row">' +
+          '<div class="coverage-icon" style="background:' + c.bg + '">' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="' + c.color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + c.icon + '</svg>' +
+          '</div>' +
+          '<div style="flex:1;">' +
+          '<div style="font-size:13px;font-weight:600;color:#e8eaf0;">' + c.name + '</div>' +
+          '<div style="font-size:11px;color:#6b7280;margin-top:2px;">' + c.sub + '</div>' +
+          '</div>' +
+          '<span style="font-size:11px;font-weight:600;color:' + (r.matched ? '#22c55e' : '#6b7280') + ';margin-right:8px;">' + (r.matched ? 'Detected' : 'Not found') + '</span>' +
+          '<div class="coverage-check ' + statusClass + '">' + statusIcon + '</div>' +
+          '</div>';
+      }).join('');
+
+      /* Missing callout */
+      var callout = document.getElementById('missing-callout');
+      if (missing.length > 0) {
+        var missingItems = missing.map(function(r) {
+          return '<li style="margin-bottom:10px;">' +
+            '<span style="font-weight:700;color:#f59e0b;">' + r.cat.name + '</span>' +
+            '<span style="color:#d97706;"> — ' + r.cat.why + '</span>' +
+            '</li>';
+        }).join('');
+        callout.innerHTML =
+          '<div style="background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.22);border-radius:12px;padding:18px 20px;">' +
+          '<div style="display:flex;gap:10px;align-items:flex-start;">' +
+          '<svg style="flex-shrink:0;margin-top:2px;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+          '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>' +
+          '<line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' +
+          '</svg>' +
+          '<div style="flex:1;">' +
+          '<p style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:8px;">For accurate forecasts, the following data is missing:</p>' +
+          '<ul style="list-style:none;padding:0;margin:0;font-size:12px;line-height:1.65;">' + missingItems + '</ul>' +
+          '<p style="font-size:12px;color:#b45309;margin-top:10px;">Click <strong style="color:#f59e0b;">+ Add More Files</strong> above to upload additional datasets and improve forecast accuracy.</p>' +
+          '</div></div></div>';
+        callout.style.display = 'block';
+      } else {
+        callout.innerHTML =
+          '<div style="background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:14px 18px;display:flex;gap:10px;align-items:center;">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+          '<p style="font-size:13px;font-weight:700;color:#22c55e;">All data categories detected — ready to run forecasts.</p>' +
+          '</div>';
+        callout.style.display = 'block';
+      }
+
+      document.getElementById('analysis-results').style.display = 'block';
+      renderColumnMapper();
+    }
+
+    /* ════════════════════════════════════════════════════════
+       DATA MAPPING & ROUTING
+       ════════════════════════════════════════════════════════ */
+
+    /* ── DISPLAY COLUMN DEFINITIONS ── */
+    var DISPLAY_COLS = [
+      { key:'img',      label:'Image',            align:'left',   sortable:false },
+      { key:'sku',      label:'SKU',              align:'left',   sortable:true  },
+      { key:'name',     label:'Item Name',        align:'left',   sortable:true  },
+      { key:'stock',    label:'Stock',            align:'right',  sortable:true  },
+      { key:'cover',    label:'Stock Cover',      align:'center', sortable:true  },
+      { key:'monthly',  label:'Monthly Sales',    align:'right',  sortable:true  },
+      { key:'safety',   label:'Safety Stock',     align:'right',  sortable:true  },
+      { key:'leadtime', label:'Lead Time (days)', align:'center', sortable:true  },
+      { key:'moq',      label:'MOQ',              align:'right',  sortable:true  },
+      { key:'price',    label:'Purchase Price',   align:'right',  sortable:true  },
+      { key:'toorder',  label:'Replenishment Qty', align:'right',  sortable:true  },
+      { key:'health',   label:'Health',           align:'center', sortable:false },
+      { key:'repdate',  label:'Replenish Date',   align:'center', sortable:false }
+    ];
+
+    /* Initialize column visibility state (all on by default) */
+    window._colState      = window._colState      || {};
+    window._extraColState = window._extraColState || {};
+    window._allUploadedCols = [];
+    window._rawDataBySKU    = {};
+    DISPLAY_COLS.forEach(function(c){ if (window._colState[c.key] == null) window._colState[c.key] = true; });
+
+    var SYSTEM_FIELDS = {
+      sales: [
+        { key:'sku',      label:'SKU / Product Code', req:true,  hints:['stockcode','sku','itemcode','asin','code','productcode','product_id','articleno','reference','item_id'] },
+        { key:'name',     label:'Product Name',        req:false, hints:['description','productname','itemname','name','title','product','articlename','item','item_name'] },
+        { key:'quantity', label:'Sales Quantity',      req:true,  hints:['quantity','qty','unitssold','units_sold','demand','sales_qty','unitsold','amount','units','sold'] },
+        { key:'price',    label:'Unit Price',          req:false, hints:['unitprice','price','cost','purchaseprice','costprice','unitcost','saleprice','unit_price'] },
+        { key:'date',     label:'Date / Period',       req:false, hints:['invoicedate','date','orderdate','transactiondate','saledate','month','period','datetime','created_at','invoice_date'] }
+      ],
+      stock: [
+        { key:'sku',          label:'SKU / Product Code', req:true,  hints:['stockcode','sku','itemcode','asin','code','productcode','product_id'] },
+        { key:'name',         label:'Product Name',        req:false, hints:['description','productname','itemname','name','title','product','item_name'] },
+        { key:'stock',        label:'Stock on Hand',       req:true,  hints:['stock','inventory','onhand','unitsonhand','qty','available','currentstock','stockonhand','qty_on_hand','units_on_hand','oh','quantity_on_hand'] },
+        { key:'safety_stock', label:'Safety Stock',        req:false, hints:['safetystock','safety_stock','minstock','reorderpoint','ss','reorder_point','min_stock','safety'] },
+        { key:'lead_time',    label:'Lead Time (days)',    req:false, hints:['leadtime','lead_time','lt','deliverytime','lead','days','supplier_lead','lead_days'] }
+      ],
+      suppliers: [
+        { key:'supplier',  label:'Supplier Name',      req:true,  hints:['supplier','vendor','suppliername','vendorname','manufacturer','source','supplier_name'] },
+        { key:'sku',       label:'SKU / Product Code', req:false, hints:['stockcode','sku','itemcode','asin','code','productcode'] },
+        { key:'lead_time', label:'Lead Time (days)',   req:true,  hints:['leadtime','lead_time','lt','deliverytime','days','lead','lead_days'] },
+        { key:'moq',       label:'MOQ',                req:false, hints:['moq','minimumorderquantity','minimum_order','minqty','minorder','min_order_qty','min_qty'] },
+        { key:'price',     label:'Purchase Price',     req:false, hints:['purchaseprice','costprice','unitcost','price','cost','buyprice','buy_price','unit_cost'] }
+      ],
+      po: [
+        { key:'sku',       label:'SKU / Product Code', req:true,  hints:['stockcode','sku','itemcode','asin','code','productcode'] },
+        { key:'qty',       label:'Ordered Qty',        req:true,  hints:['orderedqty','orderedquantity','qty','quantity','units','ordered_qty','order_qty','quantity_ordered'] },
+        { key:'delivery',  label:'Expected Delivery',  req:false, hints:['expecteddelivery','deliverydate','eta','arrival','expecteddate','due_date','deliver_by','expected_date'] },
+        { key:'po_number', label:'PO Number',          req:false, hints:['ponumber','po_number','ordernumber','order_no','purchaseorder','po','order_id','po_id'] }
+      ]
+    };
+
+    var CAT_META = {
+      sales:     { label:'Sales History',         color:'#a78bfa' },
+      stock:     { label:'Stock Levels',          color:'#22c55e' },
+      suppliers: { label:'Supplier & Lead Times', color:'#f59e0b' },
+      po:        { label:'Open Purchase Orders',  color:'#60a5fa' }
+    };
+
+    /* Normalise string for fuzzy matching */
+    function nm(s) { return (s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+    /* Find best header match for a set of hints */
+    function autoMap(hints, headers) {
+      var normed = headers.map(function(h){ return { h:h, n:nm(h) }; });
+      for (var i=0; i<hints.length; i++) {
+        var hn = nm(hints[i]);
+        for (var j=0; j<normed.length; j++) {
+          if (normed[j].n === hn || normed[j].n.includes(hn) || hn.includes(normed[j].n)) return normed[j].h;
+        }
+      }
+      return '';
+    }
+
+    /* Which category best fits a file? */
+    function getBestCategory(fileObj) {
+      var results = detectCategories(fileObj.headers);
+      var matched = results.filter(function(r){ return r.matched; });
+      if (!matched.length) return null;
+      matched.sort(function(a,b){ return b.hits.length - a.hits.length; });
+      return matched[0].cat.id;
+    }
+
+    /* Build per-category file assignment */
+    function getCatFiles() {
+      var catFiles = {};
+      uploadedFiles.forEach(function(f) {
+        var catId = getBestCategory(f);
+        if (catId) catFiles[catId] = f;
+      });
+      return catFiles;
+    }
+
+    /* Render the column mapper panel */
+    /* Render the column mapper panel */
+    /* ════════════════════════════════════════════════════════
+       SIDEBAR-VIEW DRAG-AND-DROP MAPPER
+       ════════════════════════════════════════════════════ */
+
+    /* View definitions — mirrors the sidebar */
+    var SIDEBAR_VIEWS = [
+      { id: 'replenishment',   label: 'Replenishment',    icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', color: '#6366f1' },
+      { id: 'products',        label: 'Products',         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',  color: '#8b5cf6' },
+      { id: 'suppliers',       label: 'Suppliers',        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', color: '#f59e0b' },
+      { id: 'purchase-orders', label: 'Purchase Orders',  icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', color: '#60a5fa' },
+      { id: 'inbounds',        label: 'Inbounds',         icon: 'M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4', color: '#34d399' },
+      { id: 'outbounds',       label: 'Outbounds',        icon: 'M17 16V4m0 12l4-4m-4 4l-4-4M7 8v12m0 0l4-4M7 20l-4-4', color: '#fb923c' }
+    ];
+
+    /* Keywords to auto-assign columns to a view */
+    var VIEW_AUTO_KEYWORDS = {
+      'replenishment':   ['sku','stock','onhand','available','safety','reorder','cover','description','product','item','code','qty','quantity','demand','forecast'],
+      'products':        ['description','productname','name','category','brand','weight','dimension','barcode','ean','upc','asin'],
+      'suppliers':       ['supplier','vendor','leadtime','lead','moq','minimum','purchaseprice','cost','currency','origin','terms','payment','contact'],
+      'purchase-orders': ['ponumber','purchaseorder','orderdate','delivery','expected','received','eta','status','price','value'],
+      'inbounds':        ['inbound','received','arrival','grn','receiptnote','asn','incomingqty'],
+      'outbounds':       ['outbound','shipped','dispatch','customer','orderid','salesorder','fulfilment']
+    };
+
+    /* State: { viewId → [ {col, file, fileIdx} ] } */
+    window._viewAssignments = window._viewAssignments || {};
+
+    function autoAssignCol(colName) {
+      var norm = colName.toLowerCase().replace(/[^a-z0-9]/g, '');
+      var best = null, bestScore = 0;
+      Object.keys(VIEW_AUTO_KEYWORDS).forEach(function(vid) {
+        var score = VIEW_AUTO_KEYWORDS[vid].filter(function(kw) {
+          return norm.indexOf(kw) !== -1 || kw.indexOf(norm) !== -1;
+        }).length;
+        if (score > bestScore) { bestScore = score; best = vid; }
+      });
+      return bestScore > 0 ? best : null;
+    }
+
+    /* ── Render the new mapper ── */
+    function renderColumnMapper() {
+      var mapper  = document.getElementById('column-mapper');
+      var btnWrap = document.getElementById('load-btn-wrap');
+      if (!mapper || !btnWrap) return;
+
+      if (!uploadedFiles.length) {
+        mapper.style.display = 'none';
+        btnWrap.style.display = 'none';
+        return;
+      }
+
+      /* Build pool of all columns across all files */
+      var allCols = [];
+      uploadedFiles.forEach(function(f, fi) {
+        (f.headers || []).forEach(function(h) {
+          allCols.push({ col: h, file: f.file.name, fileIdx: fi });
+        });
+      });
+
+      /* Auto-assign if assignments are empty */
+      if (!Object.keys(window._viewAssignments).length) {
+        window._viewAssignments = {};
+        SIDEBAR_VIEWS.forEach(function(v) { window._viewAssignments[v.id] = []; });
+        allCols.forEach(function(item) {
+          var vid = autoAssignCol(item.col);
+          if (vid) {
+            /* avoid duplicates */
+            var already = window._viewAssignments[vid].some(function(x){ return x.col===item.col && x.fileIdx===item.fileIdx; });
+            if (!already) window._viewAssignments[vid].push(item);
+          }
+        });
+      }
+
+      /* Columns already assigned */
+      var assignedKeys = {};
+      Object.keys(window._viewAssignments).forEach(function(vid) {
+        (window._viewAssignments[vid]||[]).forEach(function(item) {
+          assignedKeys[item.fileIdx + '|' + item.col] = true;
+        });
+      });
+      var unassigned = allCols.filter(function(item) {
+        return !assignedKeys[item.fileIdx + '|' + item.col];
+      });
+
+      /* ── Build HTML ── */
+      var html = '<div style="background:#13161e;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:22px 24px;">' +
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>' +
+          '<span style="font-size:12px;font-weight:700;color:#e8eaf0;">Assign Columns to Views</span>' +
+        '</div>' +
+        '<p style="font-size:12px;color:#6b7280;margin-bottom:18px;padding-left:24px;">We\'ve auto-assigned columns based on their names. Drag any chip to re-assign, or drop unassigned columns into the right view.</p>';
+
+      /* Unassigned pool */
+      html += '<div id="unassigned-pool" style="margin-bottom:20px;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;">' +
+        '<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;margin-bottom:10px;">Unassigned Columns</div>' +
+        '<div id="unassigned-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">';
+
+      unassigned.forEach(function(item) {
+        html += chipHtml(item.col, item.file, item.fileIdx, null);
+      });
+      if (!unassigned.length) {
+        html += '<span style="font-size:11px;color:#374151;font-style:italic;">All columns assigned</span>';
+      }
+      html += '</div></div>';
+
+      /* Sidebar view drop zones — 2-column grid */
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">';
+
+      SIDEBAR_VIEWS.forEach(function(view) {
+        var assigned = window._viewAssignments[view.id] || [];
+        html += '<div id="vzone-' + view.id + '" ' +
+          'ondragover="event.preventDefault();this.classList.add(\'vzone-over\')" ' +
+          'ondragleave="this.classList.remove(\'vzone-over\')" ' +
+          'ondrop="dropOnView(event,\'' + view.id + '\')" ' +
+          'style="background:#0d0f14;border:1.5px dashed rgba(255,255,255,0.07);border-radius:10px;padding:12px 14px;min-height:90px;transition:border-color 0.15s,background 0.15s;">' +
+          '<div style="display:flex;align-items:center;gap:7px;margin-bottom:10px;">' +
+            '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="' + view.color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="' + view.icon + '"/></svg>' +
+            '<span style="font-size:11px;font-weight:700;color:' + view.color + ';">' + view.label + '</span>' +
+          '</div>' +
+          '<div id="vzone-chips-' + view.id + '" style="display:flex;flex-wrap:wrap;gap:5px;">';
+
+        assigned.forEach(function(item) {
+          html += chipHtml(item.col, item.file, item.fileIdx, view.id);
+        });
+
+        if (!assigned.length) {
+          html += '<span class="vzone-empty" style="font-size:10px;color:#374151;font-style:italic;padding:2px 0;">Drop columns here</span>';
+        }
+        html += '</div></div>';
+      });
+
+      html += '</div></div>';
+
+      mapper.innerHTML = html;
+      mapper.style.display = 'block';
+
+      /* inject .vzone-over CSS once */
+      if (!document.getElementById('vzone-style')) {
+        var st = document.createElement('style');
+        st.id = 'vzone-style';
+        st.textContent = '.vzone-over { border-color: rgba(124,58,237,0.6) !important; background: rgba(124,58,237,0.06) !important; }';
+        document.head.appendChild(st);
+      }
+
+      /* Load button */
+      btnWrap.innerHTML =
+        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#7c3aed;color:#fff;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(124,58,237,0.35);transition:background 0.15s;" onmouseover="this.style.background=\'#6d28d9\'" onmouseout="this.style.background=\'#7c3aed\'">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>' +
+        'Load to Views</button>' +
+        '<p style="font-size:11px;color:#4b5563;margin-top:8px;">Assigned columns will appear as table columns in each view.</p>';
+      btnWrap.style.display = 'block';
+    }
+
+    /* ── Chip HTML helper ── */
+    function chipHtml(col, file, fileIdx, fromView) {
+      var fromAttr = fromView ? ' data-from="' + fromView + '"' : '';
+      /* actions shown only on view-zone chips (not unassigned pool chips) */
+      var actions = fromView
+        ? /* duplicate ⊕ */ '<span title="Duplicate to another view" onclick="duplicateChip(\'' + escHtml(col) + '\',' + fileIdx + ',\'' + fromView + '\')" ' +
+            'style="margin-left:3px;opacity:0;font-size:11px;cursor:pointer;line-height:1;color:#a78bfa;transition:opacity 0.12s;" ' +
+            'onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0" ' +
+            'class="chip-btn-dup">&#x2295;</span>' +
+          /* remove ✕ */ '<span title="Remove from this view" onclick="removeFromView(\'' + escHtml(col) + '\',' + fileIdx + ',\'' + fromView + '\',this)" ' +
+            'style="margin-left:1px;opacity:0;font-size:10px;cursor:pointer;line-height:1;color:#9ca3af;transition:opacity 0.12s;" ' +
+            'onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0" ' +
+            'class="chip-btn-rm">&#x2715;</span>'
+        : '';
+
+      return '<span draggable="true" data-col="' + escHtml(col) + '" data-file="' + escHtml(file) + '" data-fidx="' + fileIdx + '"' + fromAttr + ' ' +
+        'ondragstart="dragChip(event)" ondragend="dragChipEnd(event)" ' +
+        'onmouseenter="this.querySelectorAll(\'.chip-btn-dup,.chip-btn-rm\').forEach(function(b){b.style.opacity=1});this.style.background=\'rgba(124,58,237,0.15)\';this.style.borderColor=\'rgba(124,58,237,0.4)\';" ' +
+        'onmouseleave="this.querySelectorAll(\'.chip-btn-dup,.chip-btn-rm\').forEach(function(b){b.style.opacity=0});this.style.background=\'rgba(255,255,255,0.05)\';this.style.borderColor=\'rgba(255,255,255,0.1)\';" ' +
+        'style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);font-size:11px;color:#cbd5e1;cursor:grab;user-select:none;transition:background 0.12s,border-color 0.12s;">' +
+        '<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" stroke="none" opacity="0.4"><circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/></svg>' +
+        escHtml(col) + actions +
+        '</span>';
+    }
+
+    /* Duplicate: keep chip in its current view AND add a copy to the unassigned pool */
+    function duplicateChip(col, fileIdx, fromView) {
+      var pool = document.getElementById('unassigned-chips');
+      if (!pool) return;
+      /* remove "all assigned" placeholder if present */
+      var placeholder = pool.querySelector('span[style*="italic"]');
+      if (placeholder) placeholder.remove();
+      /* only add to pool if not already there */
+      var existing = pool.querySelectorAll('[data-col]');
+      for (var i = 0; i < existing.length; i++) {
+        if (existing[i].dataset.col === col && parseInt(existing[i].dataset.fidx) === fileIdx) return;
+      }
+      var file = uploadedFiles[fileIdx] ? uploadedFiles[fileIdx].file.name : '';
+      var newChip = document.createElement('span');
+      newChip.innerHTML = chipHtml(col, file, fileIdx, null);
+      pool.appendChild(newChip.firstChild);
+      /* brief flash on the pool to signal where the copy went */
+      var poolWrap = document.getElementById('unassigned-pool');
+      if (poolWrap) {
+        poolWrap.style.borderColor = 'rgba(167,139,250,0.5)';
+        setTimeout(function(){ poolWrap.style.borderColor = 'rgba(255,255,255,0.08)'; }, 600);
+      }
+    }
+
+    /* ── Drag/drop handlers ── */
+    var _dragging = null;
+    function dragChip(e) {
+      _dragging = {
+        col:      e.currentTarget.dataset.col,
+        file:     e.currentTarget.dataset.file,
+        fileIdx:  parseInt(e.currentTarget.dataset.fidx),
+        fromView: e.currentTarget.dataset.from || null
+      };
+      e.currentTarget.style.opacity = '0.4';
+      e.dataTransfer.effectAllowed = 'move';
+    }
+    function dragChipEnd(e) { e.currentTarget.style.opacity = ''; }
+
+    function dropOnView(e, viewId) {
+      e.preventDefault();
+      document.getElementById('vzone-' + viewId).classList.remove('vzone-over');
+      if (!_dragging) return;
+
+      var d = _dragging; _dragging = null;
+
+      /* ── Determine copy vs move ──
+         view → view  = COPY  (stays in source, added to destination)
+         pool → view  = MOVE  (removed from pool, added to destination)
+      ── */
+      var isCopy = !!d.fromView;   /* dragging from a view zone = copy */
+
+      if (!isCopy) {
+        /* MOVE: remove from unassigned pool */
+        var pool = document.getElementById('unassigned-chips');
+        if (pool) {
+          var chips = pool.querySelectorAll('[data-col]');
+          for (var ci = 0; ci < chips.length; ci++) {
+            if (chips[ci].dataset.col === d.col && parseInt(chips[ci].dataset.fidx) === d.fileIdx) {
+              chips[ci].remove(); break;
+            }
+          }
+          if (pool.children.length === 0)
+            pool.innerHTML = '<span style="font-size:11px;color:#374151;font-style:italic;">All columns assigned</span>';
+        }
+      }
+      /* COPY: source view chip stays — nothing to remove */
+
+      /* Add to destination view if not already there */
+      if (!window._viewAssignments[viewId]) window._viewAssignments[viewId] = [];
+      var alreadyThere = window._viewAssignments[viewId].some(function(x){ return x.col===d.col && x.fileIdx===d.fileIdx; });
+      if (!alreadyThere) {
+        window._viewAssignments[viewId].push({ col: d.col, file: d.file, fileIdx: d.fileIdx });
+        /* Add chip to destination zone */
+        var chipsEl = document.getElementById('vzone-chips-' + viewId);
+        if (chipsEl) {
+          var emptyEl = chipsEl.querySelector('.vzone-empty');
+          if (emptyEl) emptyEl.remove();
+          var newChip = document.createElement('span');
+          newChip.innerHTML = chipHtml(d.col, d.file, d.fileIdx, viewId);
+          chipsEl.appendChild(newChip.firstChild);
+        }
+      }
+    }
+
+    function removeFromView(col, fileIdx, viewId, btn) {
+      window._viewAssignments[viewId] = (window._viewAssignments[viewId]||[]).filter(function(x){
+        return !(x.col===col && x.fileIdx===fileIdx);
+      });
+      /* put chip back in unassigned pool */
+      var pool = document.getElementById('unassigned-chips');
+      if (pool) {
+        var emptyMsg = pool.querySelector('span[style*="italic"]');
+        if (emptyMsg) emptyMsg.remove();
+        var file = uploadedFiles[fileIdx] ? uploadedFiles[fileIdx].file.name : '';
+        var newChip = document.createElement('span');
+        newChip.innerHTML = chipHtml(col, file, fileIdx, null);
+        pool.appendChild(newChip.firstChild);
+      }
+      /* remove chip from view zone */
+      var chip = btn.closest('[data-col]');
+      if (chip) {
+        var parent = chip.parentNode;
+        chip.remove();
+        if (parent && !parent.querySelector('[data-col]')) {
+          parent.innerHTML = '<span class="vzone-empty" style="font-size:10px;color:#374151;font-style:italic;padding:2px 0;">Drop columns here</span>';
+        }
+      }
+    }
+
+    /* ── LOAD DATA TO VIEWS ── */
+    function loadDataToViews() {
+      var assignments = window._viewAssignments || {};
+
+      /* Views with dedicated rich renderers — renderDynamicView must NOT touch these,
+         as their internal DOM structure (e.g. #table-body) would be overwritten.
+         routeAllFiles() handles them below. */
+      var DEDICATED_VIEWS = { 'replenishment': true, 'purchase-orders': true, 'suppliers': true, 'products': true, 'inbounds': true, 'outbounds': true };
+
+      var totalRows      = 0;
+      var viewsPopulated = 0;
+
+      /* ── Step 1: Route uploaded files into dedicated views first ── */
+      if (typeof window.routeAllFiles === 'function') window.routeAllFiles();
+
+      /* ── Step 2: Use column mapper assignments for non-dedicated views ── */
+      SIDEBAR_VIEWS.forEach(function(view) {
+        /* Skip dedicated views — already handled above */
+        if (DEDICATED_VIEWS[view.id]) return;
+
+        var cols = assignments[view.id] || [];
+        if (!cols.length) return;
+
+        /* Group columns by fileIdx */
+        var byFile = {};
+        cols.forEach(function(c) {
+          if (!byFile[c.fileIdx]) byFile[c.fileIdx] = [];
+          byFile[c.fileIdx].push(c.col);
+        });
+
+        /* Merge rows: use first file as base, join others by SKU key */
+        var skuKeywords = ['sku','productcode','itemcode','stockcode','code','id'];
+        var fileIdxs = Object.keys(byFile).map(Number);
+        var baseIdx  = fileIdxs[0];
+        var baseFile = uploadedFiles[baseIdx];
+        if (!baseFile || !baseFile.data) return;
+
+        var skuCol = null;
+        byFile[baseIdx].forEach(function(h) {
+          if (!skuCol) {
+            var norm = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+            if (skuKeywords.some(function(k){ return norm.indexOf(k)!==-1 || k.indexOf(norm)!==-1; })) skuCol = h;
+          }
+        });
+
+        var rows = baseFile.data.map(function(row) {
+          var merged = {};
+          byFile[baseIdx].forEach(function(h) { merged[h] = row[h] != null ? row[h] : ''; });
+          fileIdxs.slice(1).forEach(function(fi) {
+            var otherFile = uploadedFiles[fi];
+            if (!otherFile || !otherFile.data) return;
+            var otherSkuCol = null;
+            byFile[fi].forEach(function(h) {
+              if (!otherSkuCol) {
+                var norm = h.toLowerCase().replace(/[^a-z0-9]/g,'');
+                if (skuKeywords.some(function(k){ return norm.indexOf(k)!==-1; })) otherSkuCol = h;
+              }
+            });
+            var myKey = skuCol ? (row[skuCol]||'').trim().toUpperCase() : null;
+            var match = myKey && otherSkuCol ? otherFile.data.find(function(or){
+              return (or[otherSkuCol]||'').trim().toUpperCase() === myKey;
+            }) : null;
+            byFile[fi].forEach(function(h) {
+              merged[h] = match ? (match[h] != null ? match[h] : '') : '';
+            });
+          });
+          return merged;
+        });
+
+        var allColNames = [];
+        fileIdxs.forEach(function(fi) { byFile[fi].forEach(function(h){ if(allColNames.indexOf(h)===-1) allColNames.push(h); }); });
+
+        renderDynamicView(view.id, allColNames, rows);
+        viewsPopulated++;
+        totalRows += rows.length;
+
+        var nav = document.getElementById('nav-' + view.id);
+        if (nav) {
+          var b = nav.querySelector('.sidebar-badge');
+          if (!b) { b = document.createElement('span'); b.className='sidebar-badge'; nav.appendChild(b); }
+          b.textContent = rows.length + ' rows';
+          b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);';
+        }
+      });
+
+      /* Count dedicated views that received data */
+      uploadedFiles.forEach(function(f) {
+        if (f.data && f.data.length) { viewsPopulated++; totalRows += f.data.length; }
+      });
+
+      /* Upload badge */
+      var uploadNav = document.getElementById('nav-upload');
+      if (uploadNav) {
+        var ub = uploadNav.querySelector('.sidebar-badge');
+        if (!ub) { ub = document.createElement('span'); ub.className='sidebar-badge'; uploadNav.appendChild(ub); }
+        ub.textContent = '✓';
+        ub.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(34,197,94,0.08);color:#22c55e;border:1px solid rgba(34,197,94,0.2);';
+      }
+
+      /* Success banner */
+      var btnWrap = document.getElementById('load-btn-wrap');
+      if (btnWrap) {
+        btnWrap.innerHTML =
+          '<div style="display:flex;align-items:flex-start;gap:14px;background:rgba(34,197,94,0.07);border:1px solid rgba(34,197,94,0.25);border-radius:12px;padding:16px 20px;">' +
+            '<div style="width:32px;height:32px;border-radius:50%;background:rgba(34,197,94,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>' +
+            '</div>' +
+            '<div style="flex:1;">' +
+              '<div style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:3px;">Data loaded successfully</div>' +
+              '<div style="font-size:11px;color:#4b5563;">' + totalRows.toLocaleString() + ' rows across ' + viewsPopulated + ' view' + (viewsPopulated!==1?'s':'') + '</div>' +
+            '</div>' +
+            '<button onclick="app.showView(\'replenishment\')" style="flex-shrink:0;background:#7c3aed;color:#fff;font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;">View Tables &#8594;</button>' +
+          '</div>' +
+          '<button onclick="resetAndReload()" style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:transparent;color:#6b7280;font-size:11px;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#e8eaf0\'" onmouseout="this.style.color=\'#6b7280\'">&#x21BA; Reassign &amp; reload</button>';
+      }
+    }
+
+    function resetAndReload() {
+      window._viewAssignments = {};
+      renderColumnMapper();
+      var btnWrap = document.getElementById('load-btn-wrap');
+      if (btnWrap) btnWrap.innerHTML =
+        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#7c3aed;color:#fff;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(124,58,237,0.35);" onmouseover="this.style.background=\'#6d28d9\'" onmouseout="this.style.background=\'#7c3aed\'">' +
+        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Load to Views</button>' +
+        '<p style="font-size:11px;color:#4b5563;margin-top:8px;">Confirmed mappings will populate the tables.</p>';
+    }
+
+    /* ── Per-view column state: { viewId: { allCols, visible, rows } } ── */
+    window._dynViewColState = window._dynViewColState || {};
+
+    /* ── Get all unique columns from every uploaded file ── */
+    function getAllUploadedCols() {
+      var all = [], seen = {};
+      uploadedFiles.forEach(function(f, fi) {
+        (f.headers || []).forEach(function(h) {
+          var key = fi + '|' + h;
+          if (!seen[key]) { seen[key] = true; all.push({ col: h, file: f.file.name, fileIdx: fi }); }
+        });
+      });
+      return all;
+    }
+
+    /* ── Render any view as a fully dynamic table ── */
+    function renderDynamicView(viewId, colNames, rows) {
+      /* Save state for settings panel & re-render */
+      window._dynViewColState[viewId] = window._dynViewColState[viewId] || {};
+      var state = window._dynViewColState[viewId];
+      state.allCols = colNames.slice();
+      state.rows    = rows;
+      /* Initialise visibility — new cols default to visible */
+      state.visible = state.visible || {};
+      colNames.forEach(function(c) { if (state.visible[c] == null) state.visible[c] = true; });
+
+      var visCols   = colNames.filter(function(c) { return state.visible[c] !== false; });
+      var theadCells = visCols.map(function(c) { return '<th class="sortable">' + escHtml(c) + ' ↕</th>'; }).join('');
+      var tbodyRows  = rows.map(function(row) {
+        return '<tr>' + visCols.map(function(c) {
+          return '<td class="tbl-cell">' + escHtml(row[c] != null ? String(row[c]) : '—') + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+
+      buildTableView('view-' + viewId,
+        '<div class="toolbar">' +
+          '<div class="search-wrap">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+            '<input class="search-input" type="text" placeholder="Search..." oninput="filterTable(this,\'dyn-tbody-' + viewId + '\')">' +
+          '</div>' +
+          '<div class="toolbar-spacer"></div>' +
+          '<button class="toolbar-btn" onclick="openSettings()">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' +
+            'Columns' +
+          '</button>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+        '</div>' +
+        '<div class="table-wrap">' +
+          '<table><thead><tr id="dyn-thead-' + viewId + '">' + theadCells + '</tr></thead>' +
+          '<tbody id="dyn-tbody-' + viewId + '">' + tbodyRows + '</tbody></table>' +
+        '</div>' +
+        '<div class="action-bar"><div class="action-spacer"></div>' +
+          '<span class="action-summary">Total: <span>' + rows.length + '</span> rows &nbsp;·&nbsp; <span>' + visCols.length + '</span> columns</span>' +
+        '</div>'
+      );
+    }
+
+    function renderReplenishmentTable(skuArray) {
+      var theadRow = document.getElementById('table-head-row');
+      var tbody    = document.getElementById('table-body');
+      if (!tbody) return;
+
+      var colState   = window._colState   || {};
+      var extraState = window._extraColState || {};
+      var rawBySKU   = window._rawDataBySKU  || {};
+
+      var visCols   = DISPLAY_COLS.filter(function(c){ return colState[c.key] !== false; });
+      var extraKeys = Object.keys(extraState).filter(function(k){ return extraState[k]; });
+      var totalCols = 1 + visCols.length + extraKeys.length;
+
+      /* THEAD */
+      if (theadRow) {
+        var thHtml = '<th style="width:36px;padding:10px 8px;"><input type="checkbox" class="cb"/></th>';
+        visCols.forEach(function(c) {
+          var align = c.align === 'right' ? ' right' : c.align === 'center' ? ' center' : '';
+          var ico   = c.sortable ? '<span class="sort-icon"><span class="sa">▲</span><span class="sd">▼</span></span>' : '';
+          thHtml += '<th class="sortable' + align + '" data-sort-key="' + c.key + '">' + c.label + ico + '<span class="col-resizer"></span></th>';
+        });
+        extraKeys.forEach(function(k) {
+          thHtml += '<th class="sortable" style="color:#a78bfa;font-size:11px;font-weight:700;" data-sort-key="__extra__' + escHtml(k) + '">' + escHtml(k) + '<span class="sort-icon"><span class="sa">▲</span><span class="sd">▼</span></span><span class="col-resizer"></span></th>';
+        });
+        theadRow.innerHTML = thHtml;
+        /* reattach resizers */
+        var repl_table = theadRow.closest('table');
+        if (repl_table && typeof ColResizer !== 'undefined') ColResizer.reattach(repl_table);
+      }
+
+      /* EMPTY STATE */
+      if (!skuArray || !skuArray.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="' + totalCols + '">' +
+          '<div class="empty-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>' +
+          '<div style="font-size:13px;color:#4b5563;font-weight:600;">No products loaded</div>' +
+          '<div style="font-size:12px;color:#374151;margin-top:4px;">Upload a dataset or connect a data source to populate the replenishment table.</div>' +
+          '</td></tr>';
+        return;
+      }
+
+      var HCFG = {
+        healthy:  { cls:'badge-healthy',  label:'Healthy'  },
+        atrisk:   { cls:'badge-atrisk',   label:'At Risk'  },
+        stockout: { cls:'badge-stockout', label:'Stockout' }
+      };
+
+      function cell(key, d) {
+        switch (key) {
+          case 'img':
+            return '<td><div class="img-placeholder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg></div></td>';
+          case 'sku':
+            return '<td style="font-family:monospace;font-size:11px;color:#a78bfa;font-weight:600;">' + escHtml(d.sku) + '</td>';
+          case 'name':
+            return '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="' + escHtml(d.name) + '">' + escHtml(d.name) + '</td>';
+          case 'stock':
+            return '<td style="text-align:right;font-weight:600;">' + (d.stock||0).toLocaleString() + '</td>';
+          case 'cover':
+            var cvr = d.cover_days === '—' ? '<span style="color:#4b5563;">—</span>' :
+              '<span style="color:' + (d.cover_days<14?'#ef4444':d.cover_days<30?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
+            return '<td style="text-align:center;">' + cvr + '</td>';
+          case 'monthly':
+            return '<td style="text-align:right;">' + (d.monthly_sales>0 ? d.monthly_sales.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+          case 'safety':
+            return '<td style="text-align:right;">' + (d.safety_stock>0 ? d.safety_stock.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+          case 'leadtime':
+            return '<td style="text-align:center;">' + (d.lead_time>0 ? d.lead_time+'d' : '<span style="color:#4b5563;">14d</span>') + '</td>';
+          case 'moq':
+            return '<td style="text-align:right;">' + (d.moq>0 ? d.moq.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+          case 'price':
+            return '<td style="text-align:right;">' + (d.price>0 ? '$'+d.price.toFixed(2) : '<span style="color:#4b5563;">—</span>') + '</td>';
+          case 'toorder':
+            return '<td style="text-align:right;">' + (d.to_order>0 ? '<span style="color:#a78bfa;font-weight:700;">'+d.to_order.toLocaleString()+'</span>' : '<span style="color:#4b5563;">0</span>') + '</td>';
+          case 'health':
+            var hc = HCFG[d.health] || HCFG.healthy;
+            return '<td style="text-align:center;"><span class="badge ' + hc.cls + '"><span class="badge-dot"></span>' + hc.label + '</span></td>';
+          case 'repdate':
+            return '<td style="text-align:center;font-size:11px;color:#6b7280;">' + d.replenish_date + '</td>';
+          default: return '<td>—</td>';
+        }
+      }
+
+      tbody.innerHTML = skuArray.map(function(d) {
+        var cells = '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb"/></td>';
+        visCols.forEach(function(c) { cells += cell(c.key, d); });
+        extraKeys.forEach(function(k) {
+          var val = (rawBySKU[d.sku] && rawBySKU[d.sku][k] != null) ? rawBySKU[d.sku][k] : '—';
+          cells += '<td style="color:#9ca3af;font-size:11px;">' + escHtml(String(val)) + '</td>';
+        });
+        return '<tr class="repl-row" onclick="ForecastDashboard.openDrawer(\'' + d.sku + '\')">'               + cells + '</tr>';
+      }).join('');
+
+      /* Action bar summary */
+      var sumEl = document.querySelector('.action-summary');
+      if (sumEl) {
+        var val = skuArray.reduce(function(s,d){ return s + (d.stock||0)*(d.price||0); }, 0);
+        sumEl.innerHTML = 'Total: <span>' + skuArray.length + '</span> products &nbsp;·&nbsp; Selected: <span>0</span> &nbsp;·&nbsp; Value: <span>$' +
+          val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</span>';
+      }
+
+      /* Wire search (once) */
+      var searchEl = document.getElementById('replenishment-search');
+      if (searchEl && !searchEl._wired) {
+        searchEl._wired = true;
+        searchEl.addEventListener('input', function() {
+          var q = this.value.toLowerCase();
+          if (!window._loadedSKUs) return;
+          var filtered = q ? window._loadedSKUs.filter(function(d){ return d.sku.toLowerCase().includes(q)||d.name.toLowerCase().includes(q); }) : window._loadedSKUs;
+          renderReplenishmentTable(filtered);
+        });
+      }
+    }
+
+
+    /* ── SIDEBAR BADGES ── */
+    function updateSidebarBadges(skuCount, supplierCount, poCount) {
+      /* Upserts a single .sidebar-badge node — never duplicates, never touches SVG siblings */
+      function setBadge(navId, text, color, bg, border) {
+        var nav = document.getElementById(navId);
+        if (!nav) return;
+        var b = nav.querySelector('.sidebar-badge');
+        if (!b) {
+          b = document.createElement('span');
+          b.className = 'sidebar-badge';
+          nav.appendChild(b);   /* appended after existing text/SVG nodes, layout is flex */
+        }
+        b.textContent = text;
+        b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:'+bg+';color:'+color+';border:1px solid '+border+';';
+      }
+
+      /* Only write badges for data that was actually loaded — avoids stale "0 SKUs" text */
+      if (skuCount      > 0) setBadge('nav-replenishment',  skuCount      + ' SKUs', '#22c55e','rgba(34,197,94,0.10)','rgba(34,197,94,0.25)');
+      if (supplierCount > 0) setBadge('nav-suppliers',      supplierCount + ' rows', '#f59e0b','rgba(245,158,11,0.10)','rgba(245,158,11,0.25)');
+      if (poCount       > 0) setBadge('nav-purchase-orders',poCount       + ' POs',  '#60a5fa','rgba(96,165,250,0.10)','rgba(96,165,250,0.25)');
+      /* Upload confirmation badge always shows once any data is loaded */
+      setBadge('nav-upload', '✓ loaded', '#22c55e','rgba(34,197,94,0.08)','rgba(34,197,94,0.2)');
+    }
+
+    /* ── UTILITIES ── */
+    /* ── SETTINGS PANEL ── */
+    function openSettings() {
+      renderSettingsPanel();
+      document.getElementById('settings-panel').classList.add('open');
+      document.getElementById('settings-overlay').classList.add('open');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-panel').classList.remove('open');
+      document.getElementById('settings-overlay').classList.remove('open');
+    }
+
+    function renderSettingsPanel() {
+      var body = document.getElementById('settings-body');
+      if (!body) return;
+
+      var viewId = window._currentView || 'replenishment';
+
+      /* ── REPLENISHMENT: existing DISPLAY_COLS + extra uploaded cols ── */
+      if (viewId === 'replenishment') {
+        var colState   = window._colState   || {};
+        var extraState = window._extraColState || {};
+
+        var html = '<div class="sp-section">' +
+          '<div class="sp-section-label">Table Columns</div>' +
+          '<p class="sp-section-desc">Toggle which columns appear in the Replenishment table.</p>';
+
+        DISPLAY_COLS.forEach(function(c) {
+          var checked = colState[c.key] !== false;
+          html += '<label class="sp-row">' +
+            '<input type="checkbox" class="sp-cb"' + (checked ? ' checked' : '') +
+            ' onchange="toggleCol(\'' + c.key + '\',this.checked)">' +
+            '<span class="sp-row-label">' + c.label + '</span>' +
+            '</label>';
+        });
+        html += '</div>';
+
+        /* Additional Columns — all uploaded columns not already a DISPLAY_COL */
+        var allUp = getAllUploadedCols();
+        var dispKeys = DISPLAY_COLS.map(function(c){ return c.key; });
+        /* de-duplicate by col name */
+        var seen = {}, uniqueUp = [];
+        allUp.forEach(function(u){ if (!seen[u.col]) { seen[u.col]=1; uniqueUp.push(u); } });
+
+        html += '<div class="sp-section">' +
+          '<div class="sp-section-label">Additional Columns</div>' +
+          '<p class="sp-section-desc">Add any raw column from your uploaded files as an extra column.</p>';
+
+        if (uniqueUp.length) {
+          uniqueUp.forEach(function(u) {
+            var checked = !!(extraState[u.col]);
+            var safeCol = u.col.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            html += '<label class="sp-row">' +
+              '<input type="checkbox" class="sp-cb"' + (checked ? ' checked' : '') +
+              ' onchange="toggleExtraCol(\'' + safeCol + '\',this.checked)">' +
+              '<span class="sp-row-label">' + escHtml(u.col) + '</span>' +
+              '<span class="sp-row-file">' + escHtml(u.file) + '</span>' +
+              '</label>';
+          });
+        } else {
+          html += '<p class="sp-section-desc" style="color:#3a3d4a;">Upload data files first to unlock additional column options.</p>';
+        }
+        html += '</div>';
+        body.innerHTML = html;
+        return;
+      }
+
+      /* ── DYNAMIC VIEWS (Products, Suppliers, Inbounds, Outbounds, etc.) ── */
+      var state = (window._dynViewColState || {})[viewId];
+      var viewLabel = (SIDEBAR_VIEWS.find(function(v){ return v.id === viewId; }) || {}).label || viewId;
+
+      if (!state || !state.allCols || !state.allCols.length) {
+        body.innerHTML =
+          '<div class="sp-section">' +
+          '<div class="sp-section-label">' + escHtml(viewLabel) + '</div>' +
+          '<p class="sp-section-desc" style="color:#3a3d4a;">No data loaded for this view yet. Upload files and click "Load to Views" first.</p>' +
+          '</div>';
+        return;
+      }
+
+      /* Section 1 — Active Columns (toggle visibility) */
+      var html = '<div class="sp-section">' +
+        '<div class="sp-section-label">Active Columns</div>' +
+        '<p class="sp-section-desc">Toggle which columns are visible in the ' + escHtml(viewLabel) + ' table.</p>';
+
+      state.allCols.forEach(function(col) {
+        var checked = state.visible[col] !== false;
+        var safeViewId = viewId.replace(/'/g,"\\'");
+        var safeCol    = col.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        html += '<label class="sp-row">' +
+          '<input type="checkbox" class="sp-cb"' + (checked ? ' checked' : '') +
+          ' onchange="toggleDynCol(\'' + safeViewId + '\',\'' + safeCol + '\',this.checked)">' +
+          '<span class="sp-row-label">' + escHtml(col) + '</span>' +
+          '</label>';
+      });
+      html += '</div>';
+
+      /* Section 2 — Additional Columns (all uploaded cols NOT yet in this view) */
+      var allUp   = getAllUploadedCols();
+      var inView  = {};
+      state.allCols.forEach(function(c){ inView[c] = true; });
+      /* de-duplicate by col name, skip cols already in this view */
+      var seenAdd = {}, addable = [];
+      allUp.forEach(function(u) {
+        if (!inView[u.col] && !seenAdd[u.col]) { seenAdd[u.col] = true; addable.push(u); }
+      });
+
+      html += '<div class="sp-section">' +
+        '<div class="sp-section-label">Additional Columns</div>' +
+        '<p class="sp-section-desc">Add any column from your uploaded files. It will be joined to this view by the SKU key where possible.</p>';
+
+      if (addable.length) {
+        addable.forEach(function(u) {
+          var safeViewId = viewId.replace(/'/g,"\\'");
+          var safeCol    = u.col.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+          html += '<label class="sp-row">' +
+            '<input type="checkbox" class="sp-cb"' +
+            ' onchange="if(this.checked){addColToDynView(\'' + safeViewId + '\',\'' + safeCol + '\',' + u.fileIdx + ')}else{removeColFromDynView(\'' + safeViewId + '\',\'' + safeCol + '\')}">' +
+            '<span class="sp-row-label">' + escHtml(u.col) + '</span>' +
+            '<span class="sp-row-file">' + escHtml(u.file) + '</span>' +
+            '</label>';
+        });
+      } else {
+        html += '<p class="sp-section-desc" style="color:#3a3d4a;">All available columns are already in this view.</p>';
+      }
+      html += '</div>';
+      body.innerHTML = html;
+    }
+
+    function toggleCol(key, visible) {
+      if (!window._colState) window._colState = {};
+      window._colState[key] = visible;
+      if (window._loadedSKUs) renderReplenishmentTable(window._loadedSKUs);
+    }
+
+    function toggleExtraCol(colName, enabled) {
+      if (!window._extraColState) window._extraColState = {};
+      window._extraColState[colName] = enabled;
+      if (window._loadedSKUs) renderReplenishmentTable(window._loadedSKUs);
+    }
+
+    /* ── Re-render a dynamic view applying current column visibility ── */
+    function rerenderDynamicView(viewId) {
+      var state = (window._dynViewColState || {})[viewId];
+      if (!state || !state.allCols) return;
+      var visCols = state.allCols.filter(function(c) { return state.visible[c] !== false; });
+      var rows    = state.rows || [];
+
+      var thead = document.getElementById('dyn-thead-' + viewId);
+      var tbody = document.getElementById('dyn-tbody-' + viewId);
+      if (!thead || !tbody) return;
+
+      thead.innerHTML = visCols.map(function(c) {
+        return '<th class="sortable" data-sort-col="' + escHtml(c) + '" data-view-id="' + escHtml(viewId) + '">' +
+          escHtml(c) +
+          '<span class="sort-icon"><span class="sa">▲</span><span class="sd">▼</span></span>' +
+          '<span class="col-resizer"></span></th>';
+      }).join('');
+
+      tbody.innerHTML = rows.map(function(row) {
+        return '<tr>' + visCols.map(function(c) {
+          return '<td class="tbl-cell">' + escHtml(row[c] != null ? String(row[c]) : '—') + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+
+      /* Update action bar column count */
+      var bar = document.querySelector('#view-' + viewId + ' .action-summary');
+      if (bar) bar.innerHTML = 'Total: <span>' + rows.length + '</span> rows &nbsp;·&nbsp; <span>' + visCols.length + '</span> columns';
+
+      /* reattach resizers after thead rebuild */
+      var table = thead.closest('table');
+      if (table) ColResizer.reattach(table);
+    }
+
+    /* ── Toggle a column on/off in a dynamic view ── */
+    function toggleDynCol(viewId, col, visible) {
+      window._dynViewColState = window._dynViewColState || {};
+      window._dynViewColState[viewId] = window._dynViewColState[viewId] || { allCols:[], rows:[], visible:{} };
+      window._dynViewColState[viewId].visible[col] = visible;
+      rerenderDynamicView(viewId);
+    }
+
+    /* ── Add any uploaded column into a dynamic view (joins by best SKU key) ── */
+    function addColToDynView(viewId, col, fileIdx) {
+      window._dynViewColState = window._dynViewColState || {};
+      var state = window._dynViewColState[viewId];
+      if (!state || !state.allCols) return;
+
+      /* If col is already tracked, just make it visible and bail */
+      if (state.allCols.indexOf(col) !== -1) {
+        state.visible[col] = true;
+        rerenderDynamicView(viewId);
+        renderSettingsPanel();
+        return;
+      }
+
+      /* Find the source file */
+      var srcFile = uploadedFiles[fileIdx];
+      if (!srcFile || !srcFile.data) return;
+
+      /* SKU-like join key candidates — ordered from most to least specific */
+      var skuKws = ['sku','stockcode','productcode','itemcode','asin','code'];
+
+      function findSkuCol(headers) {
+        /* Exact normalised match first (e.g. 'SKU' → 'sku') */
+        for (var i = 0; i < headers.length; i++) {
+          var n = headers[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+          for (var j = 0; j < skuKws.length; j++) {
+            if (n === skuKws[j]) return headers[i];
+          }
+        }
+        /* Substring match second */
+        for (var i = 0; i < headers.length; i++) {
+          var n = headers[i].toLowerCase().replace(/[^a-z0-9]/g, '');
+          for (var j = 0; j < skuKws.length; j++) {
+            if (n.indexOf(skuKws[j]) !== -1) return headers[i];
+          }
+        }
+        return null;
+      }
+
+      /* Look for join key in ALL row keys (full underlying data),
+         not just the currently visible allCols subset */
+      var allRowKeys  = state.rows.length ? Object.keys(state.rows[0]) : state.allCols;
+      var baseSkuCol  = findSkuCol(allRowKeys);
+      var addSkuCol   = findSkuCol(srcFile.headers);
+
+      /* Build lookup from source file keyed by its SKU column */
+      var lookup = {};
+      if (addSkuCol) {
+        srcFile.data.forEach(function(r) {
+          var key = (r[addSkuCol] || '').toString().trim().toUpperCase();
+          if (key) lookup[key] = r;
+        });
+      }
+
+      /* Enrich each row — three tiers:
+         1. Column already exists on the row (same-file add)  → use it directly
+         2. Cross-file join via SKU key found a match         → use matched value
+         3. No match                                          → '—'             */
+      state.rows = state.rows.map(function(row) {
+        var out = Object.assign({}, row);
+
+        /* Tier 1: column value already lives on this row */
+        if (row[col] != null && String(row[col]).trim() !== '') {
+          out[col] = row[col];
+          return out;
+        }
+
+        /* Tier 2: cross-file join */
+        var key   = baseSkuCol ? (row[baseSkuCol] || '').toString().trim().toUpperCase() : null;
+        var match = (key && lookup[key]) ? lookup[key] : null;
+        out[col]  = (match && match[col] != null) ? match[col] : '—';
+        return out;
+      });
+
+      state.allCols.push(col);
+      state.visible[col] = true;
+      rerenderDynamicView(viewId);
+      renderSettingsPanel();   /* refresh panel so col moves from Additional → Active */
+    }
+
+    /* ── Remove a column from a dynamic view ── */
+    function removeColFromDynView(viewId, col) {
+      var state = (window._dynViewColState || {})[viewId];
+      if (!state) return;
+      state.visible[col] = false;
+      rerenderDynamicView(viewId);
+      renderSettingsPanel();
+    }
+
+    /* ── Dashboard KPI renderer ── */
+    function renderDashboard() {
+      var skus = window._loadedSKUs || [];
+      var salesSkus = window._monthlySalesBySKU ? Object.keys(window._monthlySalesBySKU).length : 0;
+
+      function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+      if (!skus.length) {
+        set('db-total-skus', '—'); set('db-inv-value', '—');
+        set('db-reorder-count', '—'); set('db-sales-skus', salesSkus > 0 ? salesSkus : '—');
+        return;
+      }
+
+      var invVal   = skus.reduce(function(s,d){ return s + (d.stock||0)*(d.price||0); }, 0);
+      var reorders = skus.filter(function(d){ return (d.to_order||0) > 0; });
+      var healthy  = skus.filter(function(d){ return d.health === 'healthy'; }).length;
+      var atrisk   = skus.filter(function(d){ return d.health === 'atrisk'; }).length;
+      var stockout = skus.filter(function(d){ return d.health === 'stockout'; }).length;
+
+      set('db-total-skus',   skus.length.toLocaleString());
+      set('db-total-skus-sub', skus.length + ' products tracked');
+      set('db-inv-value',    '$' + invVal.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
+      set('db-reorder-count', reorders.length.toLocaleString());
+      set('db-reorder-sub',  reorders.length + ' items need ordering');
+      set('db-sales-skus',   salesSkus > 0 ? salesSkus.toLocaleString() : '—');
+      set('db-sales-sub',    salesSkus > 0 ? salesSkus + ' SKUs with history' : 'upload sales_history.csv');
+      set('db-h-healthy',  healthy.toLocaleString());
+      set('db-h-atrisk',   atrisk.toLocaleString());
+      set('db-h-stockout', stockout.toLocaleString());
+
+      var HCFG = { healthy:'badge-healthy', atrisk:'badge-atrisk', stockout:'badge-stockout' };
+      var tbody = document.getElementById('db-reorder-body');
+      if (!tbody) return;
+      var items = reorders.slice().sort(function(a,b){ return (b.to_order||0)-(a.to_order||0); }).slice(0,50);
+      if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px 20px;color:#374151;font-size:12px;">No reorder items — all stock levels are healthy</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map(function(d) {
+        var hc = HCFG[d.health] || 'badge-neutral';
+        return '<tr class="repl-row" onclick="app.showView(\'replenishment\')" style="cursor:pointer;">' +
+          '<td style="padding:9px 14px;font-family:monospace;font-size:11px;color:#a78bfa;font-weight:600;">' + escHtml(d.sku) + '</td>' +
+          '<td style="padding:9px 14px;font-size:12px;color:#9ca3af;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(d.name) + '</td>' +
+          '<td style="padding:9px 14px;text-align:right;font-weight:600;font-size:12px;">' + (d.stock||0).toLocaleString() + '</td>' +
+          '<td style="padding:9px 14px;text-align:right;font-weight:800;font-size:12px;color:#a78bfa;">' + (d.to_order||0).toLocaleString() + '</td>' +
+          '<td style="padding:9px 14px;text-align:center;"><span class="badge ' + hc + '"><span class="badge-dot"></span>' + (d.health==='atrisk'?'At Risk':d.health.charAt(0).toUpperCase()+d.health.slice(1)) + '</span></td>' +
+          '<td style="padding:9px 14px;text-align:center;font-size:11px;color:#6b7280;">' + (d.replenish_date||'—') + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function escHtml(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function showToast(msg, warn) {
+      var color  = warn ? '#f59e0b' : '#22c55e';
+      var border = warn ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)';
+      var t = document.createElement('div');
+      t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#13161e;border:1px solid '+border+';color:'+color+';font-size:13px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;align-items:center;gap:8px;';
+      t.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' + (warn ? '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' : '<polyline points="20 6 9 17 4 12"/>') + '</svg>' + msg;
+      document.body.appendChild(t);
+      setTimeout(function(){ t.style.transition='opacity 0.3s'; t.style.opacity='0'; setTimeout(function(){ t.remove(); },300); }, 3500);
+    }
+
+    var ALL_VIEWS = ['replenishment','upload','dashboard','products','suppliers','purchase-orders','shipping-orders','inbounds','outbounds','settings','integrations'];
+
+    const app = {
+      showView: function(view) {
+        // Track the currently active view for the settings panel
+        window._currentView = view;
+        // Hide all views
+        ALL_VIEWS.forEach(function(v) {
+          var el = document.getElementById('view-' + v);
+          if (el) el.style.display = 'none';
+        });
+        // Show selected
+        var target = document.getElementById('view-' + view);
+        if (target) target.style.display = 'flex';
+        // Update sidebar active state
+        document.querySelectorAll('.sidebar-item').forEach(function(el) {
+          el.classList.remove('active');
+        });
+        var navEl = document.getElementById('nav-' + view);
+        if (navEl) navEl.classList.add('active');
+        // Refresh dashboard KPIs when switching to it
+        if (view === 'dashboard') renderDashboard();
+      }
+    };
+
+    // Boot into replenishment
+    document.getElementById('view-upload').style.display = 'none';
+  </script>
+
+  <style>
+    .warehouse-select { position: relative; }
+
+    .warehouse-dropdown {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      min-width: 180px;
+      background: #1a1d27;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 5px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+    }
+    .warehouse-dropdown-item {
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 12px;
+      border-radius: 7px;
+      font-size: 12px; font-weight: 500;
+      color: #9ca3af;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .warehouse-dropdown-item:hover {
+      background: rgba(255,255,255,0.05);
+      color: #e8eaf0;
+    }
+    .warehouse-dropdown-item.selected {
+      background: rgba(124,58,237,0.14);
+      color: #a78bfa;
+    }
+    .warehouse-dropdown-item .wd-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor; flex-shrink: 0; opacity: 0.7;
+    }
+    .warehouse-select.open { border-color: rgba(124,58,237,0.45); }
+    .warehouse-select.open svg:last-child {
+      transform: rotate(180deg);
+      transition: transform 0.15s;
+    }
+  </style>
+
+  <script>
+    /* ── WAREHOUSE DROPDOWN ── */
+    (function() {
+      var OPTIONS = ['All Warehouses', 'Warehouse A', 'Warehouse B', 'Warehouse C'];
+      var selected = 'All Warehouses';
+      var activeSelect = null;
+
+      // Build dropdown element once
+      var dd = document.createElement('div');
+      dd.className = 'warehouse-dropdown';
+      dd.innerHTML = OPTIONS.map(function(opt) {
+        return '<div class="warehouse-dropdown-item' + (opt === selected ? ' selected' : '') + '" data-val="' + opt + '">' +
+               '<span class="wd-dot"></span>' + opt + '</div>';
+      }).join('');
+      document.body.appendChild(dd);
+
+      function openDropdown(selectEl) {
+        activeSelect = selectEl;
+        selectEl.classList.add('open');
+        var rect = selectEl.getBoundingClientRect();
+        dd.style.top  = (rect.bottom + 6) + 'px';
+        dd.style.left = rect.left + 'px';
+        dd.style.display = 'block';
+        // Sync selected state
+        dd.querySelectorAll('.warehouse-dropdown-item').forEach(function(item) {
+          item.classList.toggle('selected', item.dataset.val === selected);
+        });
+      }
+
+      function closeDropdown() {
+        if (activeSelect) activeSelect.classList.remove('open');
+        dd.style.display = 'none';
+        activeSelect = null;
+      }
+
+      function setWarehouse(val) {
+        selected = val;
+        document.querySelectorAll('.warehouse-name').forEach(function(el) {
+          el.textContent = val;
+        });
+      }
+
+      // Event delegation — works for all current and future views
+      document.addEventListener('click', function(e) {
+        var selectEl = e.target.closest('.warehouse-select');
+        var itemEl   = e.target.closest('.warehouse-dropdown-item');
+
+        if (selectEl) {
+          e.stopPropagation();
+          if (dd.style.display === 'block' && activeSelect === selectEl) {
+            closeDropdown();
+          } else {
+            closeDropdown();
+            openDropdown(selectEl);
+          }
+          return;
+        }
+
+        if (itemEl && dd.contains(itemEl)) {
+          setWarehouse(itemEl.dataset.val);
+          closeDropdown();
+          return;
+        }
+
+        closeDropdown();
+      });
+
+      // Close on scroll/resize
+      window.addEventListener('scroll', closeDropdown, true);
+      window.addEventListener('resize', closeDropdown);
+    })();
+  </script>
+
+
+  <!-- ── DATA ROUTER: parse full CSVs → route to correct page ── -->
+  <script>
+  (function () {
+
+    /* ── CSV line parser (handles quoted fields) ── */
+    function parseCSVLine(line, delim) {
+      var res = [], cur = '', inQ = false;
+      for (var i = 0; i < line.length; i++) {
+        var c = line[i];
+        if (c === '"') { inQ = !inQ; }
+        else if (c === delim && !inQ) { res.push(cur); cur = ''; }
+        else { cur += c; }
+      }
+      res.push(cur);
+      return res;
+    }
+
+    /* ── Parse full CSV text → array of row objects ── */
+    function parseCSVFull(text) {
+      var lines = text.split('\n');
+      var nonEmpty = [];
+      for (var i = 0; i < lines.length; i++) {
+        if (lines[i].trim()) nonEmpty.push(lines[i]);
+      }
+      if (nonEmpty.length < 2) return { headers: [], data: [] };
+      var delim = nonEmpty[0].indexOf('\t') !== -1 ? '\t' : ',';
+      var headers = parseCSVLine(nonEmpty[0], delim).map(function (h) {
+        return h.replace(/^"|"$/g, '').trim();
+      });
+      var data = [];
+      for (var j = 1; j < nonEmpty.length; j++) {
+        var vals = parseCSVLine(nonEmpty[j], delim);
+        var obj = {};
+        for (var k = 0; k < headers.length; k++) {
+          obj[headers[k]] = (vals[k] || '').replace(/^"|"$/g, '').trim();
+        }
+        data.push(obj);
+      }
+      return { headers: headers, data: data };
+    }
+
+    /* ── Get a field value by trying multiple possible key names ── */
+    function col(row, keys) {
+      for (var ki = 0; ki < keys.length; ki++) {
+        var want = keys[ki].toLowerCase().replace(/[^a-z0-9]/g, '');
+        var rowKeys = Object.keys(row);
+        for (var ri = 0; ri < rowKeys.length; ri++) {
+          if (rowKeys[ri].toLowerCase().replace(/[^a-z0-9]/g, '') === want) {
+            return row[rowKeys[ri]];
+          }
+        }
+      }
+      return '';
+    }
+
+    /* ── Detect which category a file belongs to ── */
+    function detectCategory(headers) {
+      if (typeof CATEGORIES === 'undefined') return null;
+      var norm = headers.map(function (h) {
+        return h.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+      });
+      var best = null, bestScore = 0;
+      CATEGORIES.forEach(function (cat) {
+        var hits = cat.keywords.filter(function (kw) {
+          return norm.some(function (h) {
+            return h.indexOf(kw) !== -1 || kw.indexOf(h) !== -1;
+          });
+        });
+        if (hits.length >= cat.matchThreshold && hits.length > bestScore) {
+          bestScore = hits.length;
+          best = cat;
+        }
+      });
+      return best;
+    }
+
+    /* ── Exposed: route ALL uploaded files into their views (called by loadDataToViews only) ── */
+    window.routeAllFiles = function () {
+      uploadedFiles.forEach(function(f) {
+        if (f.data && f.data.length) routeData(f.headers, f.data);
+      });
+    };
+
+    function routeData(headers, data) {
+      if (!data || !data.length) return;
+      var cat = detectCategory(headers);
+      if (!cat) return;
+      var asgn = window._viewAssignments || {};
+      /* helper: returns assigned column names for a view, or [] if none */
+      function assignedCols(viewId) {
+        return (asgn[viewId] || []).map(function(x){ return x.col; });
+      }
+      if (cat.id === 'po') {
+        renderPO(data);
+        var inbCols = assignedCols('inbounds');
+        if (inbCols.length) renderInbounds(data, inbCols);
+      } else if (cat.id === 'suppliers') {
+        renderSuppliers(data);
+      } else if (cat.id === 'stock') {
+        renderStock(data);
+        var prodCols = assignedCols('products');
+        if (prodCols.length) renderProducts(data, prodCols);
+      } else if (cat.id === 'sales') {
+        aggregateMonthlySales(data);   /* build window._monthlySalesBySKU for forecast models */
+        var outCols = assignedCols('outbounds');
+        if (outCols.length) renderOutbounds(data, outCols);
+      }
+    }
+
+    /* ── Generic table builder used by Products / Inbounds / Outbounds ── */
+    function renderGenericTable(viewId, tbodyId, searchPlaceholder, data, headers, footerText) {
+      /* Save state so settings panel can toggle/add columns */
+      window._dynViewColState[viewId] = window._dynViewColState[viewId] || {};
+      var state = window._dynViewColState[viewId];
+      state.allCols = headers.slice();
+      state.rows    = data;
+      state.visible = state.visible || {};
+      headers.forEach(function(h) { if (state.visible[h] == null) state.visible[h] = true; });
+
+      var visCols    = headers.filter(function(h) { return state.visible[h] !== false; });
+      var theadCells = visCols.map(function(h) { return '<th class="sortable">' + escHtml(h) + ' ↕</th>'; }).join('');
+      var tbodyRows  = data.map(function(row) {
+        return '<tr>' + visCols.map(function(h) {
+          return '<td class="tbl-cell">' + escHtml(row[h] != null ? String(row[h]) : '—') + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+
+      var dynTbodyId = 'dyn-tbody-' + viewId;
+      buildTableView('view-' + viewId,
+        '<div class="toolbar">' +
+          '<div class="search-wrap">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+            '<input class="search-input" type="text" placeholder="' + escHtml(searchPlaceholder) + '" oninput="filterTable(this,\'' + dynTbodyId + '\')">' +
+          '</div>' +
+          '<div class="toolbar-spacer"></div>' +
+          '<button class="toolbar-btn" onclick="openSettings()">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>' +
+            'Columns' +
+          '</button>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+        '</div>' +
+        '<div class="table-wrap">' +
+          '<table><thead><tr id="dyn-thead-' + viewId + '">' + theadCells + '</tr></thead>' +
+          '<tbody id="' + dynTbodyId + '">' + tbodyRows + '</tbody></table>' +
+        '</div>' +
+        '<div class="action-bar"><div class="action-spacer"></div>' +
+          '<span class="action-summary">' + footerText + ': <span>' + data.length + '</span> rows &nbsp;·&nbsp; <span>' + visCols.length + '</span> columns</span>' +
+        '</div>'
+      );
+      /* sidebar badge */
+      var nav = document.getElementById('nav-' + viewId);
+      if (nav) {
+        var b = nav.querySelector('.sidebar-badge');
+        if (!b) { b = document.createElement('span'); b.className = 'sidebar-badge'; nav.appendChild(b); }
+        b.textContent = data.length + ' rows';
+        b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);';
+      }
+    }
+
+    /* ── Resolve assigned col names → actual header names in data (case-insensitive) ── */
+    function resolveColsFromData(assignedCols, data) {
+      var allKeys = Object.keys(data[0] || {});
+      if (!assignedCols || !assignedCols.length) return allKeys;
+      /* match assigned names against real header names, case-insensitively */
+      var result = [];
+      assignedCols.forEach(function(want) {
+        var norm = want.toLowerCase().replace(/[^a-z0-9]/g, '');
+        var match = allKeys.find(function(k) {
+          return k.toLowerCase().replace(/[^a-z0-9]/g, '') === norm;
+        });
+        if (match && result.indexOf(match) === -1) result.push(match);
+      });
+      /* fall back to all keys if nothing matched */
+      return result.length ? result : allKeys;
+    }
+
+    /* ── Products ← stock file (full product catalog) ── */
+    function renderProducts(data, assignedCols) {
+      var cols = resolveColsFromData(assignedCols, data);
+      renderGenericTable('products', 'prod-tbody', 'Search products…', data, cols, 'Total');
+    }
+
+    /* ── Inbounds ← PO file (items in transit / pending delivery) ── */
+    function renderInbounds(data, assignedCols) {
+      var cols = resolveColsFromData(assignedCols, data);
+      renderGenericTable('inbounds', 'inb-tbody', 'Search inbound shipments…', data, cols, 'Inbound lines');
+    }
+
+    /* ── Outbounds ← sales file (fulfilled / shipped orders) ── */
+    function renderOutbounds(data, assignedCols) {
+      var cols = resolveColsFromData(assignedCols, data);
+      renderGenericTable('outbounds', 'out-tbody', 'Search outbound orders…', data, cols, 'Outbound lines');
+    }
+
+    /* ── Aggregate sales rows → monthly qty per SKU for forecast models ── */
+    function aggregateMonthlySales(data) {
+      var bySkuMonth = {};
+      data.forEach(function(row) {
+        var sku   = col(row, ['StockCode','SKU','ProductCode','ItemCode','Code']);
+        var date  = col(row, ['InvoiceDate','Date','OrderDate','SaleDate']);
+        var qty   = parseFloat(col(row, ['Quantity','Qty','Units','Sales','UnitsSold'])) || 0;
+        if (!sku || !date || qty <= 0) return;
+        /* Normalise date to YYYY-MM regardless of input format */
+        var month = (function(d) {
+          d = String(d).trim();
+          /* YYYY-MM-DD or YYYY-MM-DDThh:mm:ss */
+          if (/^\d{4}-\d{2}/.test(d)) return d.substring(0, 7);
+          /* DD/MM/YYYY or D/M/YYYY */
+          var dm = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (dm) return dm[3] + '-' + dm[2].padStart(2,'0');
+          /* MM/DD/YYYY — ambiguous, treat as DD/MM if day>12 is impossible */
+          var md = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (md) return md[3] + '-' + md[1].padStart(2,'0');
+          /* YYYY/MM/DD */
+          var ys = d.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
+          if (ys) return ys[1] + '-' + ys[2];
+          return d.substring(0, 7); /* best-effort fallback */
+        })(date);
+        if (!/^\d{4}-\d{2}$/.test(month)) return; /* skip unparseable dates */
+        if (!bySkuMonth[sku]) bySkuMonth[sku] = {};
+        bySkuMonth[sku][month] = (bySkuMonth[sku][month] || 0) + qty;
+      });
+      var result = {};
+      Object.keys(bySkuMonth).forEach(function(sku) {
+        var months = Object.keys(bySkuMonth[sku]).sort();
+        result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m]; }) };
+      });
+      window._monthlySalesBySKU = result;
+      /* notify forecast view if it's already open */
+      if (typeof ForecastDashboard !== 'undefined') ForecastDashboard.onDataReady();
+      renderDashboard();
+      /* update nav status indicator */
+      var lu = document.getElementById('last-updated');
+      if (lu) { var now = new Date(); lu.textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' — data loaded'; }
+      return result;
+    }
+
+    /* ── Replace "coming soon" placeholder with real table content ── */
+    function buildTableView(viewId, innerHtml) {
+      var view = document.getElementById(viewId);
+      if (!view) return;
+      /* keep banner [0] and warehouse-bar [1], remove everything else */
+      while (view.children.length > 2) view.removeChild(view.lastChild);
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'flex:1;display:flex;flex-direction:column;overflow:hidden;';
+      wrap.innerHTML = innerHtml;
+      view.appendChild(wrap);
+      /* attach column resizers to any table just inserted */
+      requestAnimationFrame(function() {
+        wrap.querySelectorAll('table').forEach(function(t) { ColResizer.attach(t); });
+      });
+    }
+
+    /* ── Status / In-Transit badge helpers ── */
+    function statusBadge(status) {
+      var s = (status || '').toLowerCase().trim();
+      var bg, clr;
+      if (s === 'confirmed' || s === 'shipped') {
+        bg = 'rgba(34,197,94,0.12)';  clr = '#22c55e';
+      } else if (s === 'in transit') {
+        bg = 'rgba(96,165,250,0.12)'; clr = '#60a5fa';
+      } else if (s === 'awaiting customs') {
+        bg = 'rgba(239,68,68,0.10)';  clr = '#ef4444';
+      } else {
+        bg = 'rgba(245,158,11,0.12)'; clr = '#f59e0b'; /* pending etc */
+      }
+      return '<span class="badge" style="background:' + bg + ';color:' + clr + ';">' +
+             '<span class="badge-dot"></span>' + (status || '—') + '</span>';
+    }
+
+    function transitBadge(val) {
+      var v = String(val || '').toLowerCase().trim();
+      if (v === 'true' || v === 'yes' || v === '1') {
+        return '<span class="badge" style="background:rgba(96,165,250,0.12);color:#60a5fa;"><span class="badge-dot"></span>Yes</span>';
+      }
+      return '<span style="color:#4b5563;font-size:12px;">No</span>';
+    }
+
+    /* ── Global table search ── */
+    window.filterTable = function (input, tbodyId) {
+      var q = input.value.toLowerCase();
+      var tbody = document.getElementById(tbodyId);
+      if (!tbody) return;
+      var trs = tbody.querySelectorAll('tr');
+      for (var i = 0; i < trs.length; i++) {
+        trs[i].style.display = trs[i].textContent.toLowerCase().indexOf(q) !== -1 ? '' : 'none';
+      }
+    };
+
+    /* ═══════════════════════════════════════════════
+       PURCHASE ORDERS  →  view-purchase-orders
+    ══════════════════════════════════════════════ */
+    function renderPO(data) {
+      var rows = data.map(function (r) {
+        var poNum    = col(r, ['PONumber','PurchaseOrder']);
+        var sku      = col(r, ['SKU','StockCode']);
+        var desc     = col(r, ['Description']);
+        var supplier = col(r, ['Supplier','Vendor']);
+        var qty      = col(r, ['OrderedQty','OrderedQuantity']);
+        var orderDt  = col(r, ['OrderDate']);
+        var delivDt  = col(r, ['ExpectedDelivery','DeliveryDate']);
+        var status   = col(r, ['Status']);
+        var transit  = col(r, ['InTransit','Inbound']);
+        var value    = col(r, ['TotalValue']);
+        var currency = col(r, ['Currency']) || 'GBP';
+        var valFmt   = value
+          ? currency + ' ' + parseFloat(value).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : '—';
+
+        return '<tr>' +
+          '<td><input type="checkbox" class="cb"></td>' +
+          '<td style="font-weight:700;color:#a78bfa;">' + (poNum || '—') + '</td>' +
+          '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (sku || '—') + '</td>' +
+          '<td>' + (desc || '—') + '</td>' +
+          '<td>' + (supplier || '—') + '</td>' +
+          '<td class="right">' + (qty ? parseInt(qty).toLocaleString() : '—') + '</td>' +
+          '<td>' + (orderDt || '—') + '</td>' +
+          '<td>' + (delivDt || '—') + '</td>' +
+          '<td class="center">' + statusBadge(status) + '</td>' +
+          '<td class="center">' + transitBadge(transit) + '</td>' +
+          '<td class="right" style="font-weight:600;">' + valFmt + '</td>' +
+          '</tr>';
+      }).join('');
+
+      buildTableView('view-purchase-orders',
+        '<div class="toolbar">' +
+          '<div class="search-wrap">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+            '<input class="search-input" type="text" placeholder="Search by PO number, SKU or supplier..." oninput="filterTable(this,\'po-tbody\')">' +
+          '</div>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter' +
+          '</button>' +
+          '<div class="toolbar-spacer"></div>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+        '</div>' +
+        '<div class="table-wrap">' +
+          '<table>' +
+            '<thead><tr>' +
+              '<th style="width:36px;"><input type="checkbox" class="cb"></th>' +
+              '<th class="sortable">PO Number</th>' +
+              '<th class="sortable">SKU</th>' +
+              '<th class="sortable">Description</th>' +
+              '<th class="sortable">Supplier</th>' +
+              '<th class="sortable right">Ordered Qty</th>' +
+              '<th class="sortable">Order Date</th>' +
+              '<th class="sortable">Expected Delivery</th>' +
+              '<th class="sortable center">Status</th>' +
+              '<th class="sortable center">In Transit</th>' +
+              '<th class="sortable right">Total Value</th>' +
+            '</tr></thead>' +
+            '<tbody id="po-tbody">' + rows + '</tbody>' +
+          '</table>' +
+        '</div>' +
+        '<div class="action-bar">' +
+          '<button class="action-btn action-btn-primary">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>New PO' +
+          '</button>' +
+          '<button class="action-btn action-btn-secondary">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+          '<div class="action-spacer"></div>' +
+          '<span class="action-summary">Total: <span>' + data.length + '</span> purchase orders</span>' +
+        '</div>'
+      );
+
+      /* badge on sidebar nav */
+      var nav = document.getElementById('nav-purchase-orders');
+      if (nav && !nav.querySelector('.sidebar-badge')) {
+        var b = document.createElement('span');
+        b.className = 'sidebar-badge';
+        b.textContent = data.length;
+        nav.appendChild(b);
+      } else if (nav && nav.querySelector('.sidebar-badge')) {
+        nav.querySelector('.sidebar-badge').textContent = data.length;
+      }
+    }
+
+
+    /* ═══════════════════════════════════════════════
+       STOCK LEVELS  →  view-replenishment (via renderReplenishmentTable)
+    ══════════════════════════════════════════════ */
+    function renderStock(data) {
+      var today = new Date();
+
+      var skuArray = data.map(function(r) {
+        var sku      = col(r, ['SKU','StockCode','ItemCode','ProductCode','Code','ProductId','Item']);
+        var name     = col(r, ['Description','ProductName','ItemName','Name','Title','Item','Product']);
+        var onhand   = parseFloat(col(r, ['OnHand','Stock','Inventory','Available','QtyOnHand','CurrentStock','Balance'])) || 0;
+        var safety   = parseFloat(col(r, ['SafetyStock','Safety','MinStock','SS','SafetyLevel'])) || 0;
+        var reorder  = parseFloat(col(r, ['ReorderPoint','ReorderQty','Reorder','ReorderLevel'])) || safety * 2;
+        var lead     = parseFloat(col(r, ['LeadTime','Lead','LeadDays','DeliveryDays','Days','LT'])) || 14;
+        var moq      = parseFloat(col(r, ['MOQ','MinimumOrder','MinOrder','MinQty','MinimumQty','OrderMultiple'])) || 1;
+        var price    = parseFloat(col(r, ['PurchasePrice','CostPrice','Price','UnitCost','UnitPrice','Cost'])) || 0;
+        var monthly  = parseFloat(col(r, ['MonthlySales','Monthly','AvgSales','AverageSales','AvgMonthly','SalesRate','Demand'])) || 0;
+
+        var coverDays    = (monthly > 0) ? Math.round(onhand / (monthly / 30)) : '—';
+        var raw          = Math.max(0, reorder - onhand);
+        var toOrder      = (moq > 1) ? Math.ceil(raw / moq) * moq : raw;
+        var health       = onhand <= 0 ? 'stockout'
+                         : (safety > 0 && onhand <= safety) ? 'atrisk'
+                         : 'healthy';
+        var repDate      = toOrder > 0
+          ? new Date(today.getTime() + lead * 86400000)
+              .toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+          : '—';
+
+        return {
+          sku:           sku   || '—',
+          name:          name  || '—',
+          stock:         Math.round(onhand),
+          cover_days:    coverDays,
+          monthly_sales: Math.round(monthly),
+          safety_stock:  Math.round(safety),
+          lead_time:     Math.round(lead),
+          moq:           Math.round(moq),
+          price:         price,
+          to_order:      Math.round(toOrder),
+          health:        health,
+          replenish_date: repDate
+        };
+      });
+
+      window._loadedSKUs    = skuArray;
+      window._rawDataBySKU  = {};
+      data.forEach(function(r) {
+        var sku = col(r, ['SKU','StockCode','ItemCode','ProductCode','Code','ProductId','Item']);
+        if (sku) window._rawDataBySKU[sku] = r;
+      });
+      window._allUploadedCols = Object.keys(data[0] || {}).map(function(h) {
+        return { col: h, file: 'stock_levels' };
+      });
+
+      renderReplenishmentTable(skuArray);
+      updateSidebarBadges(skuArray.length, 0, 0);
+
+      /* switch to replenishment view */
+      if (typeof app !== 'undefined' && app.showView) {
+        app.showView('replenishment');
+      }
+    }
+
+
+    /* ═══════════════════════════════════════════════
+       SUPPLIERS  →  view-suppliers
+    ══════════════════════════════════════════════ */
+    function renderSuppliers(data) {
+      var rows = data.map(function (r) {
+        var sku      = col(r, ['SKU','StockCode']);
+        var desc     = col(r, ['Description']);
+        var supplier = col(r, ['Supplier','Vendor']);
+        var lead     = col(r, ['LeadTime']);
+        var moq      = col(r, ['MOQ','MinimumOrder']);
+        var price    = col(r, ['PurchasePrice','CostPrice']);
+        var terms    = col(r, ['PaymentTerms']);
+        var origin   = col(r, ['CountryOfOrigin']);
+        var currency = col(r, ['Currency']) || 'GBP';
+        var active   = col(r, ['ActiveSupplier']);
+        var isActive = String(active).toLowerCase() === 'true';
+        var priceFmt = price
+          ? parseFloat(price).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+          : '—';
+
+        return '<tr>' +
+          '<td><input type="checkbox" class="cb"></td>' +
+          '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (sku || '—') + '</td>' +
+          '<td>' + (desc || '—') + '</td>' +
+          '<td style="font-weight:600;">' + (supplier || '—') + '</td>' +
+          '<td class="center">' + (lead ? lead + ' days' : '—') + '</td>' +
+          '<td class="right">' + (moq ? parseInt(moq).toLocaleString() : '—') + '</td>' +
+          '<td class="right">' + (price ? currency + ' ' + priceFmt : '—') + '</td>' +
+          '<td>' + (terms || '—') + '</td>' +
+          '<td>' + (origin || '—') + '</td>' +
+          '<td>' + (currency || '—') + '</td>' +
+          '<td class="center"><span class="badge ' + (isActive ? 'badge-healthy' : 'badge-risk') + '">' + (isActive ? 'Active' : 'Inactive') + '</span></td>' +
+        '</tr>';
+      });
+
+      var headerHtml =
+        '<table class="data-table">' +
+        '<thead><tr>' +
+        '<th style="width:32px"><input type="checkbox" id="sup-chk-all" onchange="document.querySelectorAll(\'#tbl-suppliers .cb\').forEach(c=>c.checked=this.checked)"></th>' +
+        '<th>SKU</th><th>Description</th><th>Supplier</th>' +
+        '<th class="center">Lead Time</th><th class="right">MOQ</th>' +
+        '<th class="right">Purchase Price</th><th>Payment Terms</th>' +
+        '<th>Country of Origin</th><th>Currency</th><th class="center">Status</th>' +
+        '</tr></thead>' +
+        '<tbody id="tbl-suppliers">' + rows.join('') + '</tbody>' +
+        '</table>';
+
+      buildTableView('view-suppliers', headerHtml);
+      updateSidebarBadges(0, data.length, 0);
+
+      if (typeof app !== 'undefined' && app.showView) {
+        app.showView('suppliers');
+      }
+    }
+
+
+
+  })(); // ← end of data-router IIFE
+
+  </script>
+
+  <!-- ─── Column Resizer ─────────────────────────────────────── -->
+  <script>
+  (function() {
+    /* widths[tableId][colIndex] = px */
+    var _widths = {};
+    var _uid    = 0;
+
+    function getTableId(table) {
+      if (!table.dataset.resizeId) table.dataset.resizeId = 'rt' + (++_uid);
+      return table.dataset.resizeId;
+    }
+
+    function applyStored(table) {
+      var tid  = getTableId(table);
+      var map  = _widths[tid];
+      if (!map) return;
+      var ths  = table.querySelectorAll('thead th');
+      ths.forEach(function(th, i) {
+        if (map[i] != null) th.style.width = th.style.minWidth = map[i] + 'px';
+      });
+    }
+
+    function attachToTh(th, tableId, colIdx) {
+      /* remove any stale handle */
+      var old = th.querySelector('.col-resizer');
+      if (old) old.remove();
+
+      var handle = document.createElement('span');
+      handle.className = 'col-resizer';
+      th.appendChild(handle);
+
+      handle.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        handle.classList.add('col-resizing');
+        var startX   = e.clientX;
+        var startW   = th.offsetWidth;
+
+        function onMove(ev) {
+          var newW = Math.max(48, startW + ev.clientX - startX);
+          th.style.width    = newW + 'px';
+          th.style.minWidth = newW + 'px';
+          /* keep stored */
+          _widths[tableId]         = _widths[tableId] || {};
+          _widths[tableId][colIdx] = newW;
+        }
+
+        function onUp() {
+          handle.classList.remove('col-resizing');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    }
+
+    window.ColResizer = {
+      /* Fresh attach — called when a brand-new table is inserted */
+      attach: function(table) {
+        if (!table) return;
+        var tid  = getTableId(table);
+        var ths  = table.querySelectorAll('thead th');
+        ths.forEach(function(th, i) {
+          attachToTh(th, tid, i);
+        });
+        applyStored(table);
+      },
+
+      /* Reattach — called after thead innerHTML is rebuilt in-place */
+      reattach: function(table) {
+        if (!table) return;
+        var tid  = getTableId(table);
+        var ths  = table.querySelectorAll('thead th');
+        ths.forEach(function(th, i) {
+          attachToTh(th, tid, i);
+        });
+        applyStored(table);   /* restore previously set widths */
+      }
+    };
+  })();
+  </script>
+
+  <!-- ─── Table Sorter ────────────────────────────────────────── -->
+  <script>
+  (function() {
+
+    /* ── Helpers ── */
+    function isNumeric(val) {
+      if (val == null || val === '' || val === '—') return false;
+      return !isNaN(parseFloat(String(val).replace(/[$,%]/g, '')));
+    }
+
+    function parseVal(val) {
+      if (val == null || val === '—') return null;
+      var n = parseFloat(String(val).replace(/[$,%]/g, ''));
+      return isNaN(n) ? String(val).toLowerCase() : n;
+    }
+
+    function detectType(rows, key) {
+      /* sample up to 20 rows */
+      var sample = rows.slice(0, 20).map(function(r) { return r[key]; });
+      var numCount = sample.filter(function(v) { return isNumeric(v); }).length;
+      return numCount >= sample.length * 0.6 ? 'num' : 'str';
+    }
+
+    /* ── Sort state: { key, dir } per table id ── */
+    var _state = {};
+
+    /* ── Core sort ── */
+    function sortRows(rows, key, dir, type) {
+      var sorted = rows.slice();
+      sorted.sort(function(a, b) {
+        var av = parseVal(a[key]);
+        var bv = parseVal(b[key]);
+        /* nulls always last */
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        var cmp = (typeof av === 'number' && typeof bv === 'number')
+          ? av - bv
+          : String(av).localeCompare(String(bv), undefined, { numeric: true, sensitivity: 'base' });
+        return dir === 'asc' ? cmp : -cmp;
+      });
+      return sorted;
+    }
+
+    /* ── Update header visual state ── */
+    function updateHeaderUI(thead, activeKey, dir) {
+      thead.querySelectorAll('th.sortable').forEach(function(th) {
+        var key = th.dataset.sortKey || th.dataset.sortCol || '';
+        th.classList.remove('sort-asc', 'sort-desc');
+        if (key === activeKey) th.classList.add(dir === 'asc' ? 'sort-asc' : 'sort-desc');
+      });
+    }
+
+    /* ─────────────────────────────────────────────
+       REPLENISHMENT TABLE sort handler
+    ───────────────────────────────────────────── */
+    function handleReplSort(th) {
+      var key = th.dataset.sortKey;
+      if (!key) return;
+
+      var skus = window._loadedSKUs;
+      if (!skus || !skus.length) return;
+
+      var prev = _state['repl'] || {};
+      var dir  = (prev.key === key && prev.dir === 'asc') ? 'desc' : 'asc';
+      _state['repl'] = { key: key, dir: dir };
+
+      /* Map DISPLAY_COL key → raw sku object field */
+      var fieldMap = {
+        sku: 'sku', name: 'name', stock: 'stock', cover: 'cover_days',
+        monthly: 'monthly_sales', safety: 'safety_stock', leadtime: 'lead_time',
+        moq: 'moq', price: 'price', toorder: 'to_order', repdate: 'replenish_date'
+      };
+      var field = fieldMap[key] || key;
+
+      /* Build proxy rows for sorting */
+      var proxy = skus.map(function(d) {
+        var obj = {}; obj[key] = d[field]; obj.__orig = d; return obj;
+      });
+      var type = detectType(proxy, key);
+      var sorted = sortRows(proxy, key, dir, type).map(function(p) { return p.__orig; });
+
+      window._loadedSKUs = sorted;
+      renderReplenishmentTable(sorted);
+
+      var thead = document.getElementById('table-head-row');
+      if (thead) updateHeaderUI(thead.parentNode || thead, key, dir);
+    }
+
+    /* ─────────────────────────────────────────────
+       DYNAMIC VIEW sort handler
+    ───────────────────────────────────────────── */
+    function handleDynSort(th) {
+      var col    = th.dataset.sortCol;
+      var viewId = th.dataset.viewId;
+      if (!col || !viewId) return;
+
+      var state = (window._dynViewColState || {})[viewId];
+      if (!state || !state.rows || !state.rows.length) return;
+
+      var stateKey = 'dyn_' + viewId;
+      var prev = _state[stateKey] || {};
+      var dir  = (prev.key === col && prev.dir === 'asc') ? 'desc' : 'asc';
+      _state[stateKey] = { key: col, dir: dir };
+
+      var type   = detectType(state.rows, col);
+      state.rows = sortRows(state.rows, col, dir, type);
+      rerenderDynamicView(viewId);
+
+      var thead = document.getElementById('dyn-thead-' + viewId);
+      if (thead) updateHeaderUI(thead, col, dir);
+    }
+
+    /* ── Single delegated click listener on the document ── */
+    document.addEventListener('click', function(e) {
+      var th = e.target.closest('th.sortable');
+      if (!th) return;
+      /* don't sort if user clicked the resize handle */
+      if (e.target.closest('.col-resizer')) return;
+
+      if (th.dataset.sortKey) {
+        handleReplSort(th);
+      } else if (th.dataset.sortCol) {
+        handleDynSort(th);
+      }
+    });
+
+  })();
+  </script>
+
+  <!-- Settings overlay + panel -->
+  <div id="settings-overlay" onclick="closeSettings()"></div>
+  <div id="settings-panel">
+    <div class="sp-header">
+      <span>Settings</span>
+      <button onclick="closeSettings()" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
+    </div>
+    <div id="settings-body" class="sp-body"></div>
+  </div>
+
+</body>
+</html>
