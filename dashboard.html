@@ -1032,7 +1032,7 @@
     <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
       <div class="fc-metric-card"><div class="fc-metric-label">MAE</div><div class="fc-metric-value" id="fc-v-mae">—</div><div class="fc-metric-sub">Mean Abs Error</div></div>
       <div class="fc-metric-card"><div class="fc-metric-label">RMSE</div><div class="fc-metric-value" id="fc-v-rmse">—</div><div class="fc-metric-sub">Root Mean Sq Error</div></div>
-      <div class="fc-metric-card"><div class="fc-metric-label">MAPE</div><div class="fc-metric-value" id="fc-v-mape">—</div><div class="fc-metric-sub">Mean Abs % Error</div></div>
+      <div class="fc-metric-card"><div class="fc-metric-label" id="fc-l-mape" style="cursor:default;">MAPE</div><div class="fc-metric-value" id="fc-v-mape">—</div><div class="fc-metric-sub">Mean Abs % Error</div></div>
       <div class="fc-metric-card" style="border-right:none;"><div class="fc-metric-label">Next Period</div><div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div><div class="fc-metric-sub" id="fc-v-next-label">units forecast</div></div>
     </div>
 
@@ -1142,11 +1142,12 @@
      FORECAST DASHBOARD CONTROLLER
   ══════════════════════════════════════════════════════════════ */
   const ForecastDashboard = (function() {
-    let _chart     = null;
-    let _model     = 'xgboost';
-    let _sku       = null;
-    let _params    = {};
+    let _chart       = null;
+    let _model       = 'xgboost';
+    let _sku         = null;
+    let _params      = {};
     let _initialized = false;
+    let _runTimer    = null;   // debounce handle — prevents stacking XGBoost grid searches
 
     /* ── Init (wires up static event listeners once) ── */
     function init() {
@@ -1165,6 +1166,11 @@
     function openDrawer(sku) {
       _sku = sku || (window._monthlySalesBySKU ? Object.keys(window._monthlySalesBySKU).sort()[0] : null);
       init();
+
+      // Destroy any existing chart NOW — before the rAF — so rapid consecutive
+      // openDrawer() calls can't race and create two Chart.js instances on the same canvas.
+      if (_chart) { _chart.destroy(); _chart = null; }
+
       /* Update SKU label in header */
       var label = document.getElementById('fc-drawer-sku');
       if (label) label.textContent = _sku || '—';
@@ -1353,7 +1359,14 @@
     }
 
     /* ── Run the selected model on the selected SKU ── */
+    // Debounced so rapid SKU clicks or param slider drags don't queue multiple
+    // synchronous XGBoost/Prophet grid searches back-to-back on the main thread.
     function run() {
+      if (_runTimer) { clearTimeout(_runTimer); _runTimer = null; }
+      _runTimer = setTimeout(_runNow, 80);
+    }
+    function _runNow() {
+      _runTimer = null;
       if (typeof Models === 'undefined') return;
       var skuData = window._monthlySalesBySKU && _sku
         ? window._monthlySalesBySKU[_sku]
@@ -1501,6 +1514,10 @@
       ];
 
       if (_chart) { _chart.destroy(); _chart = null; }
+      // Belt-and-suspenders: destroy any orphaned Chart.js instance still bound to this canvas
+      // (can happen if the GC hasn't collected a previous _chart reference yet)
+      var _orphan = typeof Chart !== 'undefined' && Chart.getChart && Chart.getChart(ctx);
+      if (_orphan) _orphan.destroy();
 
       _chart = new Chart(ctx, {
         type: 'line',
@@ -1564,7 +1581,21 @@
       }
       set('fc-v-mae',  metrics.mae  != null ? metrics.mae.toLocaleString()  : null);
       set('fc-v-rmse', metrics.rmse != null ? metrics.rmse.toLocaleString() : null);
-      set('fc-v-mape', metrics.mape != null ? metrics.mape + '%'            : null);
+      // MAPE excludes zero-actual months (division by zero). Append a marker when
+      // months were dropped so users know the figure covers non-zero demand only.
+      var mapeStr = null;
+      if (metrics.mape != null) {
+        mapeStr = metrics.mape + '%';
+        if (metrics.mapeExcludedZeros > 0) mapeStr += '*';
+      }
+      set('fc-v-mape', mapeStr);
+      // Update MAPE label to show disclaimer if zeros were excluded
+      var mapeLabel = document.getElementById('fc-l-mape');
+      if (mapeLabel) {
+        mapeLabel.title = metrics.mapeExcludedZeros > 0
+          ? '* ' + metrics.mapeExcludedZeros + ' zero-demand month(s) excluded from MAPE calculation'
+          : '';
+      }
       set('fc-v-next', nextVal != null ? Math.round(nextVal).toLocaleString() + ' units' : null);
     }
 
@@ -1782,8 +1813,10 @@
       }
     ];
 
-    var uploadedFiles = [];
-    var pendingCount  = 0;
+    // Use window-namespaced names to avoid collisions with any third-party
+    // scripts that might claim common names like "uploadedFiles".
+    window._uploadedFiles = window._uploadedFiles || [];
+    var uploadedFiles = window._uploadedFiles; // local alias for readability
 
     function normalise(str) {
       return str.toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
@@ -1799,7 +1832,7 @@
       });
     }
 
-    /* Parse one CSV/TSV line respecting quoted fields */
+    /* Parse one CSV/TSV line respecting quoted fields (handles "" escaped quotes) */
     function parseLine(line, delim) {
       var result = [], cur = '', inQ = false;
       for (var i = 0; i < line.length; i++) {
@@ -1813,9 +1846,17 @@
       result.push(cur.trim());
       return result;
     }
+    // Expose so the data-router IIFE (loaded later) can share the same implementation
+    window._parseLine = parseLine;
 
     /* Read FULL file — headers + all row data (array of plain objects) */
     function parseFile(file, callback) {
+      var MAX_FILE_MB = 50;
+      if (file.size > MAX_FILE_MB * 1024 * 1024) {
+        showToast('File "' + file.name + '" exceeds ' + MAX_FILE_MB + ' MB — skipped.', true);
+        callback([], 0, []);
+        return;
+      }
       var ext = file.name.split('.').pop().toLowerCase();
       if (ext === 'csv') {
         var reader = new FileReader();
@@ -1870,18 +1911,27 @@
     function processFileList(fileList, append) {
       if (!append) uploadedFiles = [];
       var files = Array.from(fileList);
-      pendingCount = files.length;
+      if (!files.length) return;
+
+      // Use a LOCAL closure counter — avoids the global-pendingCount race
+      // when the user drops a second batch before the first batch resolves.
+      var localPending = files.length;
+      function onOneDone() {
+        localPending--;
+        if (localPending === 0) { renderAnalysis(); renderFilesList(); }
+      }
+
       files.forEach(function(file) {
         /* Skip duplicates */
         if (uploadedFiles.some(function(u) { return u.file.name === file.name; })) {
-          pendingCount--;
-          if (pendingCount === 0) { renderAnalysis(); renderFilesList(); }
+          onOneDone();
           return;
         }
         parseFile(file, function(headers, rowCount, data) {
-          uploadedFiles.push({ file: file, headers: headers, rows: rowCount, data: data });
-          pendingCount--;
-          if (pendingCount === 0) { renderAnalysis(); renderFilesList(); }
+          if (headers.length) {  // guard against failed/empty parses
+            uploadedFiles.push({ file: file, headers: headers, rows: rowCount, data: data });
+          }
+          onOneDone();
         });
       });
     }
@@ -1904,9 +1954,25 @@
 
     function removeFile(idx) {
       uploadedFiles.splice(idx, 1);
+
+      /* Wipe view state so stale data doesn't linger in view panels */
+      window._dynViewColState = {};
+      window._viewAssignments = {};
+      window._loadedSKUs      = null;
+
+      /* Clear ALL sidebar badges first — routeAllFiles will re-set only the
+         views that actually receive data, leaving orphaned badges blank. */
+      document.querySelectorAll('.sidebar-badge').forEach(function(b) {
+        b.textContent = '';
+        b.style.display = 'none';
+      });
+
       if (uploadedFiles.length === 0) {
         document.getElementById('analysis-results').style.display = 'none';
+        renderReplenishmentTable([]); /* reset replenishment to empty state */
       } else {
+        /* Re-route remaining files so views reflect current data */
+        if (typeof window.routeAllFiles === 'function') window.routeAllFiles();
         renderAnalysis();
         renderFilesList();
       }
@@ -2302,9 +2368,10 @@
     }
 
     /* ── Drag/drop handlers ── */
-    var _dragging = null;
+    // Namespaced on window so no bare global conflicts
+    window._dragging = null;
     function dragChip(e) {
-      _dragging = {
+      window._dragging = {
         col:      e.currentTarget.dataset.col,
         file:     e.currentTarget.dataset.file,
         fileIdx:  parseInt(e.currentTarget.dataset.fidx),
@@ -2318,9 +2385,9 @@
     function dropOnView(e, viewId) {
       e.preventDefault();
       document.getElementById('vzone-' + viewId).classList.remove('vzone-over');
-      if (!_dragging) return;
+      if (!window._dragging) return;
 
-      var d = _dragging; _dragging = null;
+      var d = window._dragging; window._dragging = null;
 
       /* ── Determine copy vs move ──
          view → view  = COPY  (stays in source, added to destination)
@@ -2671,17 +2738,7 @@
           val.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) + '</span>';
       }
 
-      /* Wire search (once) */
-      var searchEl = document.getElementById('replenishment-search');
-      if (searchEl && !searchEl._wired) {
-        searchEl._wired = true;
-        searchEl.addEventListener('input', function() {
-          var q = this.value.toLowerCase();
-          if (!window._loadedSKUs) return;
-          var filtered = q ? window._loadedSKUs.filter(function(d){ return d.sku.toLowerCase().includes(q)||d.name.toLowerCase().includes(q); }) : window._loadedSKUs;
-          renderReplenishmentTable(filtered);
-        });
-      }
+      // Search is wired once via event delegation — see bottom of this script block.
     }
 
 
@@ -3041,10 +3098,36 @@
       var border = warn ? 'rgba(245,158,11,0.3)' : 'rgba(34,197,94,0.3)';
       var t = document.createElement('div');
       t.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#13161e;border:1px solid '+border+';color:'+color+';font-size:13px;font-weight:600;padding:12px 20px;border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;align-items:center;gap:8px;';
-      t.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' + (warn ? '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' : '<polyline points="20 6 9 17 4 12"/>') + '</svg>' + msg;
+      // Build icon via innerHTML on an isolated element (SVG only — no user data)
+      var iconWrap = document.createElement('span');
+      iconWrap.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+        (warn ? '<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+               : '<polyline points="20 6 9 17 4 12"/>') + '</svg>';
+      // Message via textContent — never parsed as HTML, so no XSS
+      var msgNode = document.createTextNode(msg);
+      t.appendChild(iconWrap);
+      t.appendChild(msgNode);
       document.body.appendChild(t);
       setTimeout(function(){ t.style.transition='opacity 0.3s'; t.style.opacity='0'; setTimeout(function(){ t.remove(); },300); }, 3500);
     }
+
+    /* ── Delegated search listener for the Replenishment table ──────────────────
+       Using event delegation on document instead of attaching directly to the input
+       means the listener survives DOM replacements of the search element (e.g. when
+       renderReplenishmentTable rebuilds the view). The old _wired flag approach
+       would silently stop working if the input node was replaced. */
+    document.addEventListener('input', function(e) {
+      if (!e.target || e.target.id !== 'replenishment-search') return;
+      var q = e.target.value.toLowerCase();
+      if (!window._loadedSKUs) return;
+      var filtered = q
+        ? window._loadedSKUs.filter(function(d) {
+            return d.sku.toLowerCase().indexOf(q) !== -1 ||
+                   d.name.toLowerCase().indexOf(q) !== -1;
+          })
+        : window._loadedSKUs;
+      renderReplenishmentTable(filtered);
+    });
 
     var ALL_VIEWS = ['replenishment','upload','dashboard','products','suppliers','purchase-orders','shipping-orders','inbounds','outbounds','settings','integrations'];
 
@@ -3195,18 +3278,23 @@
   <script>
   (function () {
 
-    /* ── CSV line parser (handles quoted fields) ── */
-    function parseCSVLine(line, delim) {
+    /* ── Reuse the canonical parseLine() exposed by the upload script.
+         It correctly handles "" escaped quotes and trims values, so we no
+         longer need the duplicate local parseCSVLine() + quote-strip pass. ── */
+    var parseCSVLine = window._parseLine || function(line, delim) {
+      // Inline fallback in case the upload script hasn't run yet (shouldn't happen).
       var res = [], cur = '', inQ = false;
       for (var i = 0; i < line.length; i++) {
         var c = line[i];
-        if (c === '"') { inQ = !inQ; }
-        else if (c === delim && !inQ) { res.push(cur); cur = ''; }
+        if (c === '"') {
+          if (inQ && line[i + 1] === '"') { cur += '"'; i++; }
+          else inQ = !inQ;
+        } else if (c === delim && !inQ) { res.push(cur.trim()); cur = ''; }
         else { cur += c; }
       }
-      res.push(cur);
+      res.push(cur.trim());
       return res;
-    }
+    };
 
     /* ── Parse full CSV text → array of row objects ── */
     function parseCSVFull(text) {
@@ -3217,15 +3305,14 @@
       }
       if (nonEmpty.length < 2) return { headers: [], data: [] };
       var delim = nonEmpty[0].indexOf('\t') !== -1 ? '\t' : ',';
-      var headers = parseCSVLine(nonEmpty[0], delim).map(function (h) {
-        return h.replace(/^"|"$/g, '').trim();
-      });
+      // parseLine already handles quote removal and trimming — no extra .replace() needed
+      var headers = parseCSVLine(nonEmpty[0], delim);
       var data = [];
       for (var j = 1; j < nonEmpty.length; j++) {
         var vals = parseCSVLine(nonEmpty[j], delim);
         var obj = {};
         for (var k = 0; k < headers.length; k++) {
-          obj[headers[k]] = (vals[k] || '').replace(/^"|"$/g, '').trim();
+          obj[headers[k]] = vals[k] != null ? vals[k] : '';
         }
         data.push(obj);
       }
@@ -3267,11 +3354,102 @@
       return best;
     }
 
+    /* ── Build a merged row array from the chips assigned to a view.
+         Each chip carries { col, fileIdx }. Columns from multiple files are
+         joined on the first SKU-like key found in the base file.
+         Returns [] if no valid files/data are found.                          ── */
+    function buildRowsFromAssignments(assignedChips) {
+      if (!assignedChips || !assignedChips.length) return [];
+
+      /* Group columns by source file */
+      var byFile = {};
+      assignedChips.forEach(function(c) {
+        if (!byFile[c.fileIdx]) byFile[c.fileIdx] = [];
+        if (byFile[c.fileIdx].indexOf(c.col) === -1) byFile[c.fileIdx].push(c.col);
+      });
+
+      var skuKeywords = ['sku','productcode','itemcode','stockcode','code','id'];
+      var fileIdxs    = Object.keys(byFile).map(Number);
+      var baseIdx     = fileIdxs[0];
+      var baseFile    = uploadedFiles[baseIdx];
+      if (!baseFile || !baseFile.data || !baseFile.data.length) return [];
+
+      /* Find SKU-like join key in base file's assigned columns */
+      var baseSkuCol = null;
+      byFile[baseIdx].forEach(function(h) {
+        if (!baseSkuCol) {
+          var n = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+          if (skuKeywords.some(function(k){ return n.indexOf(k) !== -1 || k.indexOf(n) !== -1; }))
+            baseSkuCol = h;
+        }
+      });
+
+      return baseFile.data.map(function(row) {
+        var merged = {};
+        byFile[baseIdx].forEach(function(h) { merged[h] = row[h] != null ? row[h] : ''; });
+
+        fileIdxs.slice(1).forEach(function(fi) {
+          var otherFile = uploadedFiles[fi];
+          if (!otherFile || !otherFile.data) return;
+          var otherSkuCol = null;
+          byFile[fi].forEach(function(h) {
+            if (!otherSkuCol) {
+              var n = h.toLowerCase().replace(/[^a-z0-9]/g, '');
+              if (skuKeywords.some(function(k){ return n.indexOf(k) !== -1; })) otherSkuCol = h;
+            }
+          });
+          var myKey  = baseSkuCol ? (row[baseSkuCol] || '').trim().toUpperCase() : null;
+          var match  = (myKey && otherSkuCol)
+            ? otherFile.data.find(function(or){ return (or[otherSkuCol]||'').trim().toUpperCase() === myKey; })
+            : null;
+          byFile[fi].forEach(function(h) {
+            merged[h] = match ? (match[h] != null ? match[h] : '') : '';
+          });
+        });
+        return merged;
+      });
+    }
+
     /* ── Exposed: route ALL uploaded files into their views (called by loadDataToViews only) ── */
     window.routeAllFiles = function () {
+      var asgn             = window._viewAssignments || {};
+      var mapperInitialised = Object.keys(asgn).length > 0;
+
+      /* Always auto-route files into the rich dedicated views
+         (replenishment, purchase-orders, suppliers). These have fixed renderers
+         that do their own data processing and are not driven by chips. */
       uploadedFiles.forEach(function(f) {
         if (f.data && f.data.length) routeData(f.headers, f.data);
       });
+
+      /* For the three generic dynamic views (products, inbounds, outbounds):
+         when the mapper has been initialised, ignore the auto-routed data and
+         rebuild each view EXCLUSIVELY from its chip assignments.
+         This means the view contains exactly — and only — the files and columns
+         the user placed in that window.                                         */
+      var DYNAMIC_VIEWS = ['products', 'inbounds', 'outbounds'];
+      if (mapperInitialised) {
+        DYNAMIC_VIEWS.forEach(function(viewId) {
+          var chips = asgn[viewId] || [];
+
+          if (!chips.length) {
+            /* User explicitly cleared this window — show empty state */
+            clearDynamicView(viewId);
+            return;
+          }
+
+          var rows     = buildRowsFromAssignments(chips);
+          var colNames = [];
+          chips.forEach(function(c) { if (colNames.indexOf(c.col) === -1) colNames.push(c.col); });
+
+          if (!rows.length) { clearDynamicView(viewId); return; }
+
+          /* Use the existing generic table renderer — it handles badge, state, etc. */
+          var labelMap = { products: 'Search products…', inbounds: 'Search inbound shipments…', outbounds: 'Search outbound orders…' };
+          var footerMap = { products: 'Total', inbounds: 'Inbound lines', outbounds: 'Outbound lines' };
+          renderGenericTable(viewId, viewId + '-tbody', labelMap[viewId] || 'Search…', rows, colNames, footerMap[viewId] || 'Rows');
+        });
+      }
     };
 
     function routeData(headers, data) {
@@ -3279,24 +3457,38 @@
       var cat = detectCategory(headers);
       if (!cat) return;
       var asgn = window._viewAssignments || {};
-      /* helper: returns assigned column names for a view, or [] if none */
+
+      /* Has the user interacted with the column mapper at all?
+         If _viewAssignments has any keys, the mapper has been initialised and
+         every entry reflects the user's explicit intent (even empty arrays). */
+      var mapperInitialised = Object.keys(asgn).length > 0;
+
+      /* Returns the list of column names assigned to a view by the user. */
       function assignedCols(viewId) {
         return (asgn[viewId] || []).map(function(x){ return x.col; });
       }
+
+      /* Should a dynamic view be rendered?
+         - Mapper never initialised → yes (first load, no user intent recorded).
+         - Mapper initialised + view has ≥1 column chip → yes.
+         - Mapper initialised + view was explicitly cleared ([] entry) → NO.
+         This is the gate that prevents loading data into a view the user emptied. */
+      function shouldRender(viewId) {
+        if (!mapperInitialised) return true;
+        return Array.isArray(asgn[viewId]) && asgn[viewId].length > 0;
+      }
+
       if (cat.id === 'po') {
         renderPO(data);
-        var inbCols = assignedCols('inbounds');
-        if (inbCols.length) renderInbounds(data, inbCols);
+        if (shouldRender('inbounds')) renderInbounds(data, assignedCols('inbounds'));
       } else if (cat.id === 'suppliers') {
         renderSuppliers(data);
       } else if (cat.id === 'stock') {
         renderStock(data);
-        var prodCols = assignedCols('products');
-        if (prodCols.length) renderProducts(data, prodCols);
+        if (shouldRender('products')) renderProducts(data, assignedCols('products'));
       } else if (cat.id === 'sales') {
-        aggregateMonthlySales(data);   /* build window._monthlySalesBySKU for forecast models */
-        var outCols = assignedCols('outbounds');
-        if (outCols.length) renderOutbounds(data, outCols);
+        aggregateMonthlySales(data);
+        if (shouldRender('outbounds')) renderOutbounds(data, assignedCols('outbounds'));
       }
     }
 
@@ -3446,6 +3638,31 @@
       });
     }
 
+    /* ── Show "no columns assigned" empty state for a view the user explicitly cleared ── */
+    function clearDynamicView(viewId) {
+      /* Wipe any cached state for this view */
+      if (window._dynViewColState) delete window._dynViewColState[viewId];
+
+      /* Hide sidebar badge */
+      var nav = document.getElementById('nav-' + viewId);
+      if (nav) {
+        var b = nav.querySelector('.sidebar-badge');
+        if (b) { b.textContent = ''; b.style.display = 'none'; }
+      }
+
+      /* Render an informative empty state into the view panel */
+      var viewLabel = viewId.charAt(0).toUpperCase() + viewId.slice(1);
+      buildTableView('view-' + viewId,
+        '<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:40px;">' +
+          '<div style="width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;">' +
+            '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="1.5"><path d="M9 17H7A5 5 0 017 7h10a5 5 0 110 10h-2"/><path d="M12 12v6"/><polyline points="9 15 12 18 15 15"/></svg>' +
+          '</div>' +
+          '<div style="font-size:13px;font-weight:600;color:#6b7280;">' + escHtml(viewLabel) + ' — no columns assigned</div>' +
+          '<div style="font-size:12px;color:#374151;text-align:center;max-width:320px;">Go to the Upload view, assign at least one column to this window in the column mapper, then press <strong style="color:#9ca3af;">Load to Views</strong>.</div>' +
+        '</div>'
+      );
+    }
+
     /* ── Status / In-Transit badge helpers ── */
     function statusBadge(status) {
       var s = (status || '').toLowerCase().trim();
@@ -3591,7 +3808,9 @@
         var price    = parseFloat(col(r, ['PurchasePrice','CostPrice','Price','UnitCost','UnitPrice','Cost'])) || 0;
         var monthly  = parseFloat(col(r, ['MonthlySales','Monthly','AvgSales','AverageSales','AvgMonthly','SalesRate','Demand'])) || 0;
 
-        var coverDays    = (monthly > 0) ? Math.round(onhand / (monthly / 30)) : '—';
+        // Math.floor so 13.6 days shows as 13d (amber) rather than rounding up to 14d (green).
+        // A stock that runs out in 13.6 days should trigger an amber warning, not a false green.
+        var coverDays    = (monthly > 0) ? Math.floor(onhand / (monthly / 30)) : '—';
         var raw          = Math.max(0, reorder - onhand);
         var toOrder      = (moq > 1) ? Math.ceil(raw / moq) * moq : raw;
         var health       = onhand <= 0 ? 'stockout'

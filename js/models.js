@@ -27,20 +27,23 @@ const Models = (() => {
   function _mean(arr) { return arr.reduce((s, v) => s + v, 0) / arr.length; }
 
   function computeMetrics(actual, fitted) {
-    let sumAbs = 0, sumSq = 0, sumPct = 0, n = 0;
+    let sumAbs = 0, sumSq = 0, sumPct = 0, n = 0, nZero = 0;
     for (let i = 0; i < actual.length; i++) {
-      if (fitted[i] == null || actual[i] == null || actual[i] === 0) continue;
+      if (fitted[i] == null || actual[i] == null) continue;
+      if (actual[i] === 0) { nZero++; continue; } // skip zeros for MAPE (div-by-zero)
       const err = actual[i] - fitted[i];
       sumAbs += Math.abs(err);
       sumSq  += err * err;
       sumPct += Math.abs(err / actual[i]);
       n++;
     }
-    if (n === 0) return { mae: null, rmse: null, mape: null };
+    if (n === 0) return { mae: null, rmse: null, mape: null, mapeExcludedZeros: 0 };
     return {
       mae  : round2(sumAbs / n),
       rmse : round2(Math.sqrt(sumSq / n)),
-      mape : round2((sumPct / n) * 100)
+      mape : round2((sumPct / n) * 100),
+      // Callers can show a disclaimer when zero-demand months were excluded from MAPE
+      mapeExcludedZeros: nZero
     };
   }
 
@@ -61,7 +64,9 @@ const Models = (() => {
     const spikes  = [];
     const cleaned = data.map((v, i) => {
       if (iqr > 0 && v > upper) { spikes.push({ idx: i, original: v, capped: round2(upper) }); return upper; }
-      if (iqr > 0 && v < lower && v >= 0) { return lower > 0 ? lower : 0; }
+      // Only clamp the lower fence when it is meaningfully above zero —
+      // otherwise a valid zero-demand month gets floored to a spurious positive.
+      if (iqr > 0 && lower > 0 && v < lower) { return lower; }
       return v;
     });
     return { cleaned, spikes, upper: round2(upper), lower: round2(lower), q1: round2(q1), q3: round2(q3), iqr: round2(iqr) };
@@ -181,6 +186,14 @@ const Models = (() => {
     const p = Math.max(1, Math.min(params.ar_order    || 2,  4));
     const s = Math.max(2, Math.min(params.seasonality || 12, 24));
     const n = data.length;
+
+    // Need at least s+2 points so buf[t-s-1] is always a valid index
+    if (n < s + 2) {
+      console.warn('[SARIMAX] Insufficient data (' + n + ' pts) for seasonality ' + s +
+                   '. Need ≥' + (s + 2) + '. Falling back to EMA.');
+      return ema(data, {}, horizon);
+    }
+
     const start = s + 1;
 
     const w = [];
@@ -244,6 +257,14 @@ const Models = (() => {
     const N   = Math.max(1, Math.min(params.fourier_order      || 5,  10));
     const nCp = Math.max(0, Math.min(params.changepoints       || 3,   8));
     const T   = data.length;
+
+    // Feature matrix has 2 + nCp + 2*N columns; need T > that for OLS to be determined
+    const minRequired = 2 + nCp + 2 * N + 2;
+    if (T < minRequired) {
+      console.warn('[Prophet] Insufficient data (' + T + ' pts, need ≥' + minRequired +
+                   '). Falling back to EMA.');
+      return ema(data, {}, horizon);
+    }
 
     const changepoints = Array.from({ length: nCp }, (_, i) =>
       Math.floor((i + 1) * T * 0.8 / (nCp + 1)));
