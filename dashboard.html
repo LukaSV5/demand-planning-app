@@ -862,6 +862,22 @@
       </div>
     </div>
 
+    <!-- Charts row -->
+    <div style="display:flex;gap:1px;flex-shrink:0;height:220px;border-bottom:1px solid var(--border);background:var(--border);">
+      <div style="width:220px;flex-shrink:0;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Health Distribution</div>
+        <div style="flex:1;position:relative;min-height:0;"><canvas id="db-health-chart"></canvas></div>
+      </div>
+      <div style="flex:1;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;min-width:0;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Top 10 — Reorder Qty</div>
+        <div style="flex:1;position:relative;min-height:0;"><canvas id="db-reorder-chart"></canvas></div>
+      </div>
+      <div style="width:260px;flex-shrink:0;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Stock Cover Buckets</div>
+        <div style="flex:1;position:relative;min-height:0;"><canvas id="db-cover-chart"></canvas></div>
+      </div>
+    </div>
+
     <!-- Health summary + top reorder table -->
     <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
 
@@ -996,12 +1012,16 @@
       </div>
       <!-- Model pills -->
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;">
-        <button class="fc-mpill" data-model="sma"     onclick="ForecastDashboard.selectModel('sma')">SMA</button>
-        <button class="fc-mpill" data-model="wma"     onclick="ForecastDashboard.selectModel('wma')">WMA</button>
-        <button class="fc-mpill" data-model="ema"     onclick="ForecastDashboard.selectModel('ema')">EMA</button>
-        <button class="fc-mpill" data-model="sarimax" onclick="ForecastDashboard.selectModel('sarimax')">SARIMAX</button>
-        <button class="fc-mpill" data-model="prophet" onclick="ForecastDashboard.selectModel('prophet')">Prophet</button>
+        <button class="fc-mpill" data-model="sma"         onclick="ForecastDashboard.selectModel('sma')">SMA</button>
+        <button class="fc-mpill" data-model="wma"         onclick="ForecastDashboard.selectModel('wma')">WMA</button>
+        <button class="fc-mpill" data-model="ema"         onclick="ForecastDashboard.selectModel('ema')">EMA</button>
+        <button class="fc-mpill" data-model="holtwinters" onclick="ForecastDashboard.selectModel('holtwinters')">Holt-Winters</button>
+        <button class="fc-mpill" data-model="sarimax"     onclick="ForecastDashboard.selectModel('sarimax')">SARIMAX</button>
+        <button class="fc-mpill" data-model="prophet"     onclick="ForecastDashboard.selectModel('prophet')">Prophet</button>
         <button class="fc-mpill active" data-model="xgboost" onclick="ForecastDashboard.selectModel('xgboost')">XGBoost</button>
+        <button class="fc-mpill" id="fc-best-btn" onclick="ForecastDashboard.autoSelectBest()"
+                title="Backtest every model on held-out months and switch to the most accurate"
+                style="border-color:rgba(34,197,94,0.45);color:#22c55e;">★ Best Fit</button>
       </div>
       <!-- Export -->
       <div class="toolbar-btn" id="fc-export-btn" style="font-size:11px;cursor:pointer;white-space:nowrap;">
@@ -1033,6 +1053,7 @@
       <div class="fc-metric-card"><div class="fc-metric-label">MAE</div><div class="fc-metric-value" id="fc-v-mae">—</div><div class="fc-metric-sub">Mean Abs Error</div></div>
       <div class="fc-metric-card"><div class="fc-metric-label">RMSE</div><div class="fc-metric-value" id="fc-v-rmse">—</div><div class="fc-metric-sub">Root Mean Sq Error</div></div>
       <div class="fc-metric-card"><div class="fc-metric-label" id="fc-l-mape" style="cursor:default;">MAPE</div><div class="fc-metric-value" id="fc-v-mape">—</div><div class="fc-metric-sub">Mean Abs % Error</div></div>
+      <div class="fc-metric-card" title="Trained without the most recent months, then scored on forecasting them blind — honest out-of-sample accuracy, unlike the in-sample fit metrics to the left."><div class="fc-metric-label" style="color:#22c55e;">Holdout MAE</div><div class="fc-metric-value" id="fc-v-holdout" style="color:#22c55e;">—</div><div class="fc-metric-sub" id="fc-v-holdout-sub">out-of-sample</div></div>
       <div class="fc-metric-card" style="border-right:none;"><div class="fc-metric-label">Next Period</div><div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div><div class="fc-metric-sub" id="fc-v-next-label">units forecast</div></div>
     </div>
 
@@ -1041,6 +1062,9 @@
 
       <!-- Parameters panel -->
       <div id="fc-params-panel" style="width:216px;min-width:216px;background:#0b0d11;border-right:1px solid rgba(255,255,255,0.06);overflow-y:auto;padding:14px 13px;display:flex;flex-direction:column;gap:11px;">
+
+        <!-- ── Best Fit ranking (filled by autoSelectBest) ── -->
+        <div id="fc-bestfit-result" style="display:none;padding:10px 11px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.25);border-radius:9px;font-size:10.5px;color:#6b7280;line-height:1.7;"></div>
 
         <!-- ── Global Configuration ── -->
         <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Global Configuration</div>
@@ -1174,6 +1198,9 @@
       /* Update SKU label in header */
       var label = document.getElementById('fc-drawer-sku');
       if (label) label.textContent = _sku || '—';
+      /* Stale ranking belongs to the previous SKU — hide it */
+      var bfPanel = document.getElementById('fc-bestfit-result');
+      if (bfPanel) { bfPanel.style.display = 'none'; bfPanel.innerHTML = ''; }
       /* Show backdrop */
       var backdrop = document.getElementById('fc-backdrop');
       var drawer   = document.getElementById('fc-drawer');
@@ -1423,9 +1450,59 @@
       /* Show autopilot result card if applicable */
       if (meta && meta.autopilot) _showAutopilotResult(result);
 
+      /* Out-of-sample backtest: retrain without the last months, score blind */
+      var bt = (Models.backtest) ? Models.backtest(_model, values) : null;
+
       _renderChart(months, values, result, horizon);
-      _renderMetrics(result.metrics, result.forecast[0]);
+      _renderMetrics(result.metrics, result.forecast[0], bt);
       _renderTable(months, values, result, horizon);
+    }
+
+    /* ── Best Fit: backtest every model, switch to the winner ── */
+    function autoSelectBest() {
+      var skuData = window._monthlySalesBySKU && _sku
+        ? window._monthlySalesBySKU[_sku]
+        : null;
+      if (!skuData || !skuData.values.length || !Models.autoSelect) return;
+
+      /* Same history-horizon slice as run() */
+      var histHorizon = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
+      var values = (histHorizon > 0 && skuData.values.length > histHorizon)
+        ? skuData.values.slice(-histHorizon)
+        : skuData.values;
+
+      var btn = document.getElementById('fc-best-btn');
+      if (btn) { btn.textContent = 'Testing…'; btn.disabled = true; }
+
+      /* Defer so the button label paints before the grid searches block the thread */
+      setTimeout(function() {
+        var sel;
+        try { sel = Models.autoSelect(values); }
+        finally {
+          if (btn) { btn.textContent = '★ Best Fit'; btn.disabled = false; }
+        }
+        var panel = document.getElementById('fc-bestfit-result');
+        if (!sel || !sel.best) {
+          if (panel) {
+            panel.style.display = 'block';
+            panel.innerHTML = '<strong style="color:#f59e0b;">Not enough history</strong><br>Backtesting needs ≥12 months of sales for this SKU.';
+          }
+          return;
+        }
+        if (panel) {
+          panel.style.display = 'block';
+          panel.innerHTML =
+            '<strong style="color:#22c55e;">★ Best fit: ' + sel.results[0].name + '</strong>' +
+            '<span style="color:#4b5563;"> · ' + sel.holdout + '-month holdout</span><br>' +
+            sel.results.map(function(r, i) {
+              var col = i === 0 ? '#22c55e' : '#6b7280';
+              return '<span style="color:' + col + ';">' + (i + 1) + '. ' + r.name +
+                     ' — MAE ' + r.mae.toLocaleString() +
+                     (r.mape != null ? ' (' + r.mape + '%)' : '') + '</span>';
+            }).join('<br>');
+        }
+        selectModel(sel.best);
+      }, 30);
     }
 
     /* ── Chart ── */
@@ -1447,10 +1524,11 @@
         : 0;
 
       var forecastWithNulls = new Array(values.length).fill(null).concat(result.forecast);
+      /* Bands widen with √h — uncertainty compounds the further out you forecast */
       var upperBand = new Array(values.length).fill(null)
-        .concat(result.forecast.map(function(v){ return Math.round(v + sigma); }));
+        .concat(result.forecast.map(function(v, i){ return Math.round(v + sigma * Math.sqrt(i + 1)); }));
       var lowerBand = new Array(values.length).fill(null)
-        .concat(result.forecast.map(function(v){ return Math.max(0, Math.round(v - sigma)); }));
+        .concat(result.forecast.map(function(v, i){ return Math.max(0, Math.round(v - sigma * Math.sqrt(i + 1))); }));
 
       var datasets = [
         {
@@ -1574,7 +1652,7 @@
     }
 
     /* ── Metrics ── */
-    function _renderMetrics(metrics, nextVal) {
+    function _renderMetrics(metrics, nextVal, bt) {
       function set(id, val) {
         var el = document.getElementById(id);
         if (el) el.textContent = val != null ? val : '—';
@@ -1597,10 +1675,21 @@
           : '';
       }
       set('fc-v-next', nextVal != null ? Math.round(nextVal).toLocaleString() + ' units' : null);
+
+      /* Out-of-sample holdout metrics */
+      var hSub = document.getElementById('fc-v-holdout-sub');
+      if (bt && bt.metrics && bt.metrics.mae != null) {
+        set('fc-v-holdout', bt.metrics.mae.toLocaleString());
+        if (hSub) hSub.textContent = 'last ' + bt.holdout + ' months blind' +
+          (bt.metrics.mape != null ? ' · ' + bt.metrics.mape + '%' : '');
+      } else {
+        set('fc-v-holdout', '—');
+        if (hSub) hSub.textContent = 'needs ≥12 months history';
+      }
     }
 
     function _clearMetrics() {
-      ['fc-v-mae','fc-v-rmse','fc-v-mape','fc-v-next'].forEach(function(id){
+      ['fc-v-mae','fc-v-rmse','fc-v-mape','fc-v-next','fc-v-holdout'].forEach(function(id){
         var el = document.getElementById(id); if (el) el.textContent = '—';
       });
     }
@@ -1639,7 +1728,8 @@
           ? (diff >= 0 ? '+' : '') + diff.toLocaleString() + ' (' + (ly > 0 ? ((diff/ly*100).toFixed(1)+'%') : 'N/A') + ')'
           : '—';
         var diffColor = diff == null ? '#4b5563' : diff > 0 ? '#22c55e' : diff < 0 ? '#ef4444' : '#4b5563';
-        var upper = Math.round(fc + sigma), lower = Math.max(0, Math.round(fc - sigma));
+        var band  = sigma * Math.sqrt(i + 1);
+        var upper = Math.round(fc + band), lower = Math.max(0, Math.round(fc - band));
         return '<tr>' +
           '<td class="tbl-cell" style="font-family:monospace;font-size:11px;color:#9ca3af;">' + m + '</td>' +
           '<td class="tbl-cell right" style="font-weight:700;color:#a78bfa;">' + Math.round(fc).toLocaleString() + '</td>' +
@@ -1690,7 +1780,7 @@
       if (e.key === 'Escape') closeDrawer();
     });
 
-    return { init, onDataReady, openDrawer, closeDrawer, toggleFullscreen, selectModel, onParamChange, run };
+    return { init, onDataReady, openDrawer, closeDrawer, toggleFullscreen, selectModel, onParamChange, run, autoSelectBest };
   })();
   </script>
 
@@ -2224,17 +2314,35 @@
         });
       });
 
-      /* Auto-assign if assignments are empty */
+      /* Auto-assign if assignments are empty.
+         Category-aware: ALL columns of a recognised file go to the window(s)
+         of the view(s) that render that file — so the default mapping mirrors
+         the router exactly, and the user subtracts/moves from there.
+         Unrecognised files fall back to per-column keyword matching. */
       if (!Object.keys(window._viewAssignments).length) {
         window._viewAssignments = {};
         SIDEBAR_VIEWS.forEach(function(v) { window._viewAssignments[v.id] = []; });
-        allCols.forEach(function(item) {
-          var vid = autoAssignCol(item.col);
-          if (vid) {
-            /* avoid duplicates */
-            var already = window._viewAssignments[vid].some(function(x){ return x.col===item.col && x.fileIdx===item.fileIdx; });
-            if (!already) window._viewAssignments[vid].push(item);
-          }
+
+        var CAT_TO_VIEWS = {
+          stock:     ['replenishment', 'products'],
+          suppliers: ['suppliers'],
+          po:        ['purchase-orders', 'inbounds'],
+          sales:     ['outbounds']
+        };
+
+        uploadedFiles.forEach(function(f, fi) {
+          var catId   = getBestCategory(f);
+          var catViews = catId ? CAT_TO_VIEWS[catId] : null;
+          (f.headers || []).forEach(function(h) {
+            var item = { col: h, file: f.file.name, fileIdx: fi };
+            var targets = catViews || (autoAssignCol(h) ? [autoAssignCol(h)] : []);
+            targets.forEach(function(vid) {
+              var arr = window._viewAssignments[vid];
+              if (!arr) return;
+              var already = arr.some(function(x){ return x.col === item.col && x.fileIdx === item.fileIdx; });
+              if (!already) arr.push(item);
+            });
+          });
         });
       }
 
@@ -2255,10 +2363,14 @@
           '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>' +
           '<span style="font-size:12px;font-weight:700;color:#e8eaf0;">Assign Columns to Views</span>' +
         '</div>' +
-        '<p style="font-size:12px;color:#6b7280;margin-bottom:18px;padding-left:24px;">We\'ve auto-assigned columns based on their names. Drag any chip to re-assign, or drop unassigned columns into the right view.</p>';
+        '<p style="font-size:12px;color:#6b7280;margin-bottom:18px;padding-left:24px;">We\'ve auto-assigned columns based on their names. Drag chips between views to move them, drag back to the pool (or click ✕) to remove, and use ⊕ to duplicate into another view. Each view shows exactly the columns in its window.</p>';
 
       /* Unassigned pool */
-      html += '<div id="unassigned-pool" style="margin-bottom:20px;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;">' +
+      html += '<div id="unassigned-pool" ' +
+        'ondragover="event.preventDefault();this.classList.add(\'vzone-over\')" ' +
+        'ondragleave="this.classList.remove(\'vzone-over\')" ' +
+        'ondrop="dropOnPool(event)" ' +
+        'style="margin-bottom:20px;padding:12px 14px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;transition:border-color 0.15s,background 0.15s;">' +
         '<div style="font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#4b5563;margin-bottom:10px;">Unassigned Columns</div>' +
         '<div id="unassigned-chips" style="display:flex;flex-wrap:wrap;gap:6px;min-height:28px;">';
 
@@ -2382,6 +2494,23 @@
     }
     function dragChipEnd(e) { e.currentTarget.style.opacity = ''; }
 
+    /* Remove a chip from a view's state + DOM, restoring the placeholder */
+    function detachChipFromView(col, fileIdx, viewId) {
+      window._viewAssignments[viewId] = (window._viewAssignments[viewId] || []).filter(function(x) {
+        return !(x.col === col && x.fileIdx === fileIdx);
+      });
+      var zone = document.getElementById('vzone-chips-' + viewId);
+      if (!zone) return;
+      var chips = zone.querySelectorAll('[data-col]');
+      for (var i = 0; i < chips.length; i++) {
+        if (chips[i].dataset.col === col && parseInt(chips[i].dataset.fidx) === fileIdx) {
+          chips[i].remove(); break;
+        }
+      }
+      if (!zone.querySelector('[data-col]'))
+        zone.innerHTML = '<span class="vzone-empty" style="font-size:10px;color:#374151;font-style:italic;padding:2px 0;">Drop columns here</span>';
+    }
+
     function dropOnView(e, viewId) {
       e.preventDefault();
       document.getElementById('vzone-' + viewId).classList.remove('vzone-over');
@@ -2389,14 +2518,17 @@
 
       var d = window._dragging; window._dragging = null;
 
-      /* ── Determine copy vs move ──
-         view → view  = COPY  (stays in source, added to destination)
-         pool → view  = MOVE  (removed from pool, added to destination)
-      ── */
-      var isCopy = !!d.fromView;   /* dragging from a view zone = copy */
+      /* Dropped back on its own view — nothing to do */
+      if (d.fromView === viewId) return;
 
-      if (!isCopy) {
-        /* MOVE: remove from unassigned pool */
+      /* ── MOVE semantics everywhere ──
+         view → view  = MOVE  (removed from source, added to destination)
+         pool → view  = MOVE  (removed from pool, added to destination)
+         Use the ⊕ button on a chip to duplicate it instead.            ── */
+      if (d.fromView) {
+        detachChipFromView(d.col, d.fileIdx, d.fromView);
+      } else {
+        /* remove from unassigned pool */
         var pool = document.getElementById('unassigned-chips');
         if (pool) {
           var chips = pool.querySelectorAll('[data-col]');
@@ -2409,7 +2541,6 @@
             pool.innerHTML = '<span style="font-size:11px;color:#374151;font-style:italic;">All columns assigned</span>';
         }
       }
-      /* COPY: source view chip stays — nothing to remove */
 
       /* Add to destination view if not already there */
       if (!window._viewAssignments[viewId]) window._viewAssignments[viewId] = [];
@@ -2426,6 +2557,31 @@
           chipsEl.appendChild(newChip.firstChild);
         }
       }
+    }
+
+    /* Drop a chip onto the unassigned pool = remove it from its view */
+    function dropOnPool(e) {
+      e.preventDefault();
+      var poolWrap = document.getElementById('unassigned-pool');
+      if (poolWrap) poolWrap.classList.remove('vzone-over');
+      if (!window._dragging) return;
+      var d = window._dragging; window._dragging = null;
+      if (!d.fromView) return; /* already in the pool */
+
+      detachChipFromView(d.col, d.fileIdx, d.fromView);
+
+      /* add to pool (skip if an identical chip is already there) */
+      var pool = document.getElementById('unassigned-chips');
+      if (!pool) return;
+      var placeholder = pool.querySelector('span[style*="italic"]');
+      if (placeholder) placeholder.remove();
+      var existing = pool.querySelectorAll('[data-col]');
+      for (var i = 0; i < existing.length; i++) {
+        if (existing[i].dataset.col === d.col && parseInt(existing[i].dataset.fidx) === d.fileIdx) return;
+      }
+      var newChip = document.createElement('span');
+      newChip.innerHTML = chipHtml(d.col, d.file, d.fileIdx, null);
+      pool.appendChild(newChip.firstChild);
     }
 
     function removeFromView(col, fileIdx, viewId, btn) {
@@ -2566,7 +2722,10 @@
             '</div>' +
             '<button onclick="app.showView(\'replenishment\')" style="flex-shrink:0;background:#7c3aed;color:#fff;font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;">View Tables &#8594;</button>' +
           '</div>' +
-          '<button onclick="resetAndReload()" style="margin-top:10px;display:inline-flex;align-items:center;gap:6px;background:transparent;color:#6b7280;font-size:11px;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#e8eaf0\'" onmouseout="this.style.color=\'#6b7280\'">&#x21BA; Reassign &amp; reload</button>';
+          '<div style="margin-top:10px;display:flex;gap:18px;">' +
+            '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#a78bfa;font-size:11px;font-weight:600;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#c4b5fd\'" onmouseout="this.style.color=\'#a78bfa\'">&#x21BA; Apply mapping changes</button>' +
+            '<button onclick="resetAndReload()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#6b7280;font-size:11px;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#e8eaf0\'" onmouseout="this.style.color=\'#6b7280\'">Reset auto-assignment</button>' +
+          '</div>';
       }
     }
 
@@ -2608,11 +2767,17 @@
 
       var visCols   = colNames.filter(function(c) { return state.visible[c] !== false; });
       var theadCells = visCols.map(function(c) { return '<th class="sortable">' + escHtml(c) + ' ↕</th>'; }).join('');
-      var tbodyRows  = rows.map(function(row) {
+      var MAX_RENDER_ROWS = 1000;
+      var renderRows = rows.length > MAX_RENDER_ROWS ? rows.slice(0, MAX_RENDER_ROWS) : rows;
+      var tbodyRows  = renderRows.map(function(row) {
         return '<tr>' + visCols.map(function(c) {
           return '<td class="tbl-cell">' + escHtml(row[c] != null ? String(row[c]) : '—') + '</td>';
         }).join('') + '</tr>';
       }).join('');
+      if (rows.length > MAX_RENDER_ROWS) {
+        tbodyRows += '<tr><td colspan="' + visCols.length + '" style="text-align:center;padding:14px;color:#6b7280;font-size:11px;background:rgba(245,158,11,0.04);">' +
+          'Showing first ' + MAX_RENDER_ROWS.toLocaleString() + ' of ' + rows.length.toLocaleString() + ' rows</td></tr>';
+      }
 
       buildTableView('view-' + viewId,
         '<div class="toolbar">' +
@@ -2926,11 +3091,16 @@
           '<span class="col-resizer"></span></th>';
       }).join('');
 
-      tbody.innerHTML = rows.map(function(row) {
+      var MAX_RENDER_ROWS = 1000;
+      var renderRows = rows.length > MAX_RENDER_ROWS ? rows.slice(0, MAX_RENDER_ROWS) : rows;
+      tbody.innerHTML = renderRows.map(function(row) {
         return '<tr>' + visCols.map(function(c) {
           return '<td class="tbl-cell">' + escHtml(row[c] != null ? String(row[c]) : '—') + '</td>';
         }).join('') + '</tr>';
-      }).join('');
+      }).join('') + (rows.length > MAX_RENDER_ROWS
+        ? '<tr><td colspan="' + visCols.length + '" style="text-align:center;padding:14px;color:#6b7280;font-size:11px;background:rgba(245,158,11,0.04);">' +
+          'Showing first ' + MAX_RENDER_ROWS.toLocaleString() + ' of ' + rows.length.toLocaleString() + ' rows</td></tr>'
+        : '');
 
       /* Update action bar column count */
       var bar = document.querySelector('#view-' + viewId + ' .action-summary');
@@ -3039,6 +3209,117 @@
     }
 
     /* ── Dashboard KPI renderer ── */
+    /* Chart.js instances — destroyed & rebuilt on every dashboard render */
+    window._dbCharts = window._dbCharts || {};
+
+    function _dbChart(canvasId, config) {
+      var ctx = document.getElementById(canvasId);
+      if (!ctx || typeof Chart === 'undefined') return;
+      if (window._dbCharts[canvasId]) { window._dbCharts[canvasId].destroy(); }
+      var orphan = Chart.getChart && Chart.getChart(ctx);
+      if (orphan) orphan.destroy();
+      window._dbCharts[canvasId] = new Chart(ctx, config);
+    }
+
+    function renderDashboardCharts(skus) {
+      var TOOLTIP = {
+        backgroundColor: '#13161e', borderColor: 'rgba(255,255,255,0.1)', borderWidth: 1,
+        titleColor: '#e8eaf0', bodyColor: '#9ca3af'
+      };
+
+      /* 1 ── Health doughnut */
+      var healthy  = skus.filter(function(d){ return d.health === 'healthy'; }).length;
+      var atrisk   = skus.filter(function(d){ return d.health === 'atrisk'; }).length;
+      var stockout = skus.filter(function(d){ return d.health === 'stockout'; }).length;
+      _dbChart('db-health-chart', {
+        type: 'doughnut',
+        data: {
+          labels: ['Healthy', 'At Risk', 'Stockout'],
+          datasets: [{
+            data: [healthy, atrisk, stockout],
+            backgroundColor: ['rgba(34,197,94,0.75)', 'rgba(245,158,11,0.75)', 'rgba(239,68,68,0.75)'],
+            borderColor: '#13161e', borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false, cutout: '62%',
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#6b7280', font: { size: 10 }, boxWidth: 8, padding: 8 } },
+            tooltip: TOOLTIP
+          }
+        }
+      });
+
+      /* 2 ── Top 10 reorder bar */
+      var top = skus.filter(function(d){ return (d.to_order||0) > 0; })
+        .sort(function(a,b){ return (b.to_order||0)-(a.to_order||0); })
+        .slice(0, 10);
+      _dbChart('db-reorder-chart', {
+        type: 'bar',
+        data: {
+          labels: top.map(function(d){ return d.sku; }),
+          datasets: [{
+            data: top.map(function(d){ return d.to_order; }),
+            backgroundColor: 'rgba(124,58,237,0.55)',
+            hoverBackgroundColor: 'rgba(124,58,237,0.85)',
+            borderColor: 'rgba(167,139,250,0.8)', borderWidth: 1, borderRadius: 4
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: Object.assign({}, TOOLTIP, {
+              callbacks: {
+                title: function(items){ var d = top[items[0].dataIndex]; return d.sku + ' — ' + d.name; },
+                label:  function(c){ return 'To order: ' + c.parsed.y.toLocaleString() + ' units'; }
+              }
+            })
+          },
+          scales: {
+            x: { ticks: { color: '#4b5563', font: { size: 9, family: 'monospace' } }, grid: { display: false } },
+            y: { ticks: { color: '#4b5563', font: { size: 9 }, callback: function(v){ return v.toLocaleString(); } },
+                 grid: { color: 'rgba(255,255,255,0.04)' } }
+          }
+        }
+      });
+
+      /* 3 ── Stock cover buckets */
+      var buckets = { '<14d': 0, '14–30d': 0, '30–60d': 0, '60d+': 0, 'No sales': 0 };
+      skus.forEach(function(d) {
+        if (d.cover_days === '—') buckets['No sales']++;
+        else if (d.cover_days < 14) buckets['<14d']++;
+        else if (d.cover_days < 30) buckets['14–30d']++;
+        else if (d.cover_days < 60) buckets['30–60d']++;
+        else buckets['60d+']++;
+      });
+      _dbChart('db-cover-chart', {
+        type: 'bar',
+        data: {
+          labels: Object.keys(buckets),
+          datasets: [{
+            data: Object.keys(buckets).map(function(k){ return buckets[k]; }),
+            backgroundColor: ['rgba(239,68,68,0.6)','rgba(245,158,11,0.6)','rgba(34,197,94,0.6)','rgba(96,165,250,0.6)','rgba(107,114,128,0.4)'],
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: Object.assign({}, TOOLTIP, {
+              callbacks: { label: function(c){ return c.parsed.x.toLocaleString() + ' SKUs'; } }
+            })
+          },
+          scales: {
+            x: { ticks: { color: '#4b5563', font: { size: 9 }, precision: 0 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: { ticks: { color: '#6b7280', font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+    }
+
     function renderDashboard() {
       var skus = window._loadedSKUs || [];
       var salesSkus = window._monthlySalesBySKU ? Object.keys(window._monthlySalesBySKU).length : 0;
@@ -3067,6 +3348,8 @@
       set('db-h-healthy',  healthy.toLocaleString());
       set('db-h-atrisk',   atrisk.toLocaleString());
       set('db-h-stockout', stockout.toLocaleString());
+
+      renderDashboardCharts(skus);
 
       var HCFG = { healthy:'badge-healthy', atrisk:'badge-atrisk', stockout:'badge-stockout' };
       var tbody = document.getElementById('db-reorder-body');
@@ -3410,6 +3693,61 @@
       });
     }
 
+    /* ── CROSS-FILE ENRICHMENT ──────────────────────────────────────────
+       stock_levels.csv alone has no price, lead time, MOQ or sales rate.
+       After all files are routed, join supplier terms (price/lead/MOQ) and
+       sales velocity (avg of last 3 months) onto each SKU, then recompute
+       cover days, reorder point and order quantity.                       */
+    function enrichLoadedSKUs() {
+      var skus      = window._loadedSKUs;
+      if (!skus || !skus.length) return;
+      var suppliers = window._suppliersBySKU   || {};
+      var sales     = window._monthlySalesBySKU || {};
+      var today     = new Date();
+
+      skus.forEach(function(d) {
+        var key = (d.sku || '').toUpperCase();
+
+        /* Supplier terms — authoritative source for lead / MOQ / price */
+        var sup = suppliers[key];
+        if (sup) {
+          if (sup.lead  > 0) d.lead_time = sup.lead;
+          if (sup.moq   > 0) d.moq       = sup.moq;
+          if (sup.price > 0) d.price     = sup.price;
+        }
+
+        /* Sales velocity — average of the last 3 months of history */
+        var hist = sales[d.sku] || sales[key];
+        if (hist && hist.values.length) {
+          var tail = hist.values.slice(-3);
+          d.monthly_sales = Math.round(tail.reduce(function(a,b){ return a+b; }, 0) / tail.length);
+        }
+
+        /* Recompute derived fields */
+        var monthly = d.monthly_sales || 0;
+        d.cover_days = monthly > 0 ? Math.floor(d.stock / (monthly / 30)) : '—';
+
+        /* Reorder point = safety stock + demand during lead time */
+        var leadDemand   = monthly * ((d.lead_time || 14) / 30);
+        var reorderPoint = (d.safety_stock || 0) + leadDemand;
+        var raw          = Math.max(0, Math.ceil(reorderPoint - d.stock));
+        d.to_order       = (raw > 0 && d.moq > 1) ? Math.ceil(raw / d.moq) * d.moq : raw;
+
+        d.health = d.stock <= 0 ? 'stockout'
+                 : (d.safety_stock > 0 && d.stock <= d.safety_stock) ? 'atrisk'
+                 : 'healthy';
+        d.replenish_date = d.to_order > 0
+          ? new Date(today.getTime() + (d.lead_time || 14) * 86400000)
+              .toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
+          : '—';
+      });
+
+      /* Push the enriched data back into the UI */
+      renderReplenishmentTable(skus);
+      updateSidebarBadges(skus.length, 0, 0);
+      renderDashboard();
+    }
+
     /* ── Exposed: route ALL uploaded files into their views (called by loadDataToViews only) ── */
     window.routeAllFiles = function () {
       var asgn             = window._viewAssignments || {};
@@ -3421,6 +3759,9 @@
       uploadedFiles.forEach(function(f) {
         if (f.data && f.data.length) routeData(f.headers, f.data);
       });
+
+      /* Join supplier terms + sales velocity onto the SKU table */
+      enrichLoadedSKUs();
 
       /* For the three generic dynamic views (products, inbounds, outbounds):
          when the mapper has been initialised, ignore the auto-routed data and
@@ -3479,17 +3820,77 @@
       }
 
       if (cat.id === 'po') {
-        renderPO(data);
+        if (shouldRender('purchase-orders')) renderPO(data, assignedCols('purchase-orders'));
+        else clearDynamicView('purchase-orders');
         if (shouldRender('inbounds')) renderInbounds(data, assignedCols('inbounds'));
       } else if (cat.id === 'suppliers') {
-        renderSuppliers(data);
+        /* Lookup is always built — it powers replenishment enrichment even
+           when the Suppliers view window itself has been cleared. */
+        buildSupplierLookup(data);
+        if (shouldRender('suppliers')) renderSuppliers(data, assignedCols('suppliers'));
+        else clearDynamicView('suppliers');
       } else if (cat.id === 'stock') {
-        renderStock(data);
+        if (shouldRender('replenishment')) renderStock(data, assignedCols('replenishment'));
+        else clearReplenishment();
         if (shouldRender('products')) renderProducts(data, assignedCols('products'));
       } else if (cat.id === 'sales') {
+        /* Aggregation always runs — it feeds the forecast engine & enrichment */
         aggregateMonthlySales(data);
         if (shouldRender('outbounds')) renderOutbounds(data, assignedCols('outbounds'));
       }
+    }
+
+    /* ── Column-mapper helpers for the dedicated (rich) views ────────────── */
+
+    /* True once the mapper has been initialised (auto-assign or user edits) */
+    function mapperOn() {
+      return Object.keys(window._viewAssignments || {}).length > 0;
+    }
+
+    /* Filter a column-definition list down to the defs whose hints match the
+       chips assigned to that view's window. Falls back to ALL defs when the
+       mapper is untouched, or when nothing matches (so the view stays usable). */
+    function visibleDefs(defs, assignedCols) {
+      if (!mapperOn() || !assignedCols || !assignedCols.length) return defs;
+      var normed = assignedCols.map(function(c) {
+        return c.toLowerCase().replace(/[^a-z0-9]/g, '');
+      });
+      var out = defs.filter(function(def) {
+        return normed.some(function(n) {
+          return def.hints.some(function(h) {
+            /* one-directional: the chip name must contain the hint — the
+               reverse ("safetystock" contains "stock") causes cross-matches */
+            return n === h || n.indexOf(h) !== -1;
+          });
+        });
+      });
+      return out.length ? out : defs;
+    }
+
+    /* Supplier terms lookup keyed by SKU — used by enrichLoadedSKUs() */
+    function buildSupplierLookup(data) {
+      window._suppliersBySKU = {};
+      data.forEach(function(r) {
+        var sku = (col(r, ['SKU','StockCode']) || '').toUpperCase();
+        if (!sku) return;
+        window._suppliersBySKU[sku] = {
+          supplier: col(r, ['Supplier','Vendor']),
+          lead:     parseFloat(col(r, ['LeadTime']))            || 0,
+          moq:      parseFloat(col(r, ['MOQ','MinimumOrder']))  || 0,
+          price:    parseFloat(col(r, ['PurchasePrice','CostPrice'])) || 0
+        };
+      });
+    }
+
+    /* Reset the replenishment view to its empty state (window cleared by user) */
+    function clearReplenishment() {
+      window._loadedSKUs = [];
+      renderReplenishmentTable([]);
+      var nav = document.getElementById('nav-replenishment');
+      var b = nav && nav.querySelector('.sidebar-badge');
+      if (b) { b.textContent = ''; b.style.display = 'none'; }
+      var sumEl = document.querySelector('#view-replenishment .action-summary');
+      if (sumEl) sumEl.innerHTML = 'Total: <span>0</span> products &nbsp;·&nbsp; Selected: <span>0</span> &nbsp;·&nbsp; Value: <span>$0.00</span>';
     }
 
     /* ── Generic table builder used by Products / Inbounds / Outbounds ── */
@@ -3504,11 +3905,20 @@
 
       var visCols    = headers.filter(function(h) { return state.visible[h] !== false; });
       var theadCells = visCols.map(function(h) { return '<th class="sortable">' + escHtml(h) + ' ↕</th>'; }).join('');
-      var tbodyRows  = data.map(function(row) {
+
+      /* Cap DOM rows — rendering 100k+ <tr> elements freezes the page.
+         The full dataset stays in state.rows for sorting/exports. */
+      var MAX_RENDER_ROWS = 1000;
+      var renderData = data.length > MAX_RENDER_ROWS ? data.slice(0, MAX_RENDER_ROWS) : data;
+      var tbodyRows  = renderData.map(function(row) {
         return '<tr>' + visCols.map(function(h) {
           return '<td class="tbl-cell">' + escHtml(row[h] != null ? String(row[h]) : '—') + '</td>';
         }).join('') + '</tr>';
       }).join('');
+      if (data.length > MAX_RENDER_ROWS) {
+        tbodyRows += '<tr><td colspan="' + visCols.length + '" style="text-align:center;padding:14px;color:#6b7280;font-size:11px;background:rgba(245,158,11,0.04);">' +
+          'Showing first ' + MAX_RENDER_ROWS.toLocaleString() + ' of ' + data.length.toLocaleString() + ' rows</td></tr>';
+      }
 
       var dynTbodyId = 'dyn-tbody-' + viewId;
       buildTableView('view-' + viewId,
@@ -3702,35 +4112,42 @@
     /* ═══════════════════════════════════════════════
        PURCHASE ORDERS  →  view-purchase-orders
     ══════════════════════════════════════════════ */
-    function renderPO(data) {
-      var rows = data.map(function (r) {
-        var poNum    = col(r, ['PONumber','PurchaseOrder']);
-        var sku      = col(r, ['SKU','StockCode']);
-        var desc     = col(r, ['Description']);
-        var supplier = col(r, ['Supplier','Vendor']);
-        var qty      = col(r, ['OrderedQty','OrderedQuantity']);
-        var orderDt  = col(r, ['OrderDate']);
-        var delivDt  = col(r, ['ExpectedDelivery','DeliveryDate']);
-        var status   = col(r, ['Status']);
-        var transit  = col(r, ['InTransit','Inbound']);
-        var value    = col(r, ['TotalValue']);
-        var currency = col(r, ['Currency']) || 'GBP';
-        var valFmt   = value
-          ? currency + ' ' + parseFloat(value).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          : '—';
+    function renderPO(data, assignedCols) {
+      /* Column definitions — each maps to source-file headers via hints so the
+         visible set is driven by the chips in the Purchase Orders window. */
+      var PO_COLS = [
+        { label:'PO Number', cls:'', hints:['ponumber','purchaseorder','po'],
+          cell:function(r){ return '<td style="font-weight:700;color:#a78bfa;">' + (col(r,['PONumber','PurchaseOrder']) || '—') + '</td>'; } },
+        { label:'SKU', cls:'', hints:['sku','stockcode'],
+          cell:function(r){ return '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (col(r,['SKU','StockCode']) || '—') + '</td>'; } },
+        { label:'Description', cls:'', hints:['description'],
+          cell:function(r){ return '<td>' + (col(r,['Description']) || '—') + '</td>'; } },
+        { label:'Supplier', cls:'', hints:['supplier','vendor'],
+          cell:function(r){ return '<td>' + (col(r,['Supplier','Vendor']) || '—') + '</td>'; } },
+        { label:'Ordered Qty', cls:' right', hints:['orderedqty','orderedquantity','qty','quantity'],
+          cell:function(r){ var v = col(r,['OrderedQty','OrderedQuantity']); return '<td class="right">' + (v ? parseInt(v).toLocaleString() : '—') + '</td>'; } },
+        { label:'Order Date', cls:'', hints:['orderdate'],
+          cell:function(r){ return '<td>' + (col(r,['OrderDate']) || '—') + '</td>'; } },
+        { label:'Expected Delivery', cls:'', hints:['expecteddelivery','deliverydate','delivery'],
+          cell:function(r){ return '<td>' + (col(r,['ExpectedDelivery','DeliveryDate']) || '—') + '</td>'; } },
+        { label:'Status', cls:' center', hints:['status'],
+          cell:function(r){ return '<td class="center">' + statusBadge(col(r,['Status'])) + '</td>'; } },
+        { label:'In Transit', cls:' center', hints:['intransit','inbound'],
+          cell:function(r){ return '<td class="center">' + transitBadge(col(r,['InTransit','Inbound'])) + '</td>'; } },
+        { label:'Total Value', cls:' right', hints:['totalvalue','value','currency'],
+          cell:function(r){
+            var value = col(r,['TotalValue']);
+            var currency = col(r,['Currency']) || 'GBP';
+            var valFmt = value
+              ? currency + ' ' + parseFloat(value).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              : '—';
+            return '<td class="right" style="font-weight:600;">' + valFmt + '</td>'; } }
+      ];
 
-        return '<tr>' +
-          '<td><input type="checkbox" class="cb"></td>' +
-          '<td style="font-weight:700;color:#a78bfa;">' + (poNum || '—') + '</td>' +
-          '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (sku || '—') + '</td>' +
-          '<td>' + (desc || '—') + '</td>' +
-          '<td>' + (supplier || '—') + '</td>' +
-          '<td class="right">' + (qty ? parseInt(qty).toLocaleString() : '—') + '</td>' +
-          '<td>' + (orderDt || '—') + '</td>' +
-          '<td>' + (delivDt || '—') + '</td>' +
-          '<td class="center">' + statusBadge(status) + '</td>' +
-          '<td class="center">' + transitBadge(transit) + '</td>' +
-          '<td class="right" style="font-weight:600;">' + valFmt + '</td>' +
+      var defs = visibleDefs(PO_COLS, assignedCols);
+      var rows = data.map(function (r) {
+        return '<tr><td><input type="checkbox" class="cb"></td>' +
+          defs.map(function(d){ return d.cell(r); }).join('') +
           '</tr>';
       }).join('');
 
@@ -3752,16 +4169,7 @@
           '<table>' +
             '<thead><tr>' +
               '<th style="width:36px;"><input type="checkbox" class="cb"></th>' +
-              '<th class="sortable">PO Number</th>' +
-              '<th class="sortable">SKU</th>' +
-              '<th class="sortable">Description</th>' +
-              '<th class="sortable">Supplier</th>' +
-              '<th class="sortable right">Ordered Qty</th>' +
-              '<th class="sortable">Order Date</th>' +
-              '<th class="sortable">Expected Delivery</th>' +
-              '<th class="sortable center">Status</th>' +
-              '<th class="sortable center">In Transit</th>' +
-              '<th class="sortable right">Total Value</th>' +
+              defs.map(function(d){ return '<th class="sortable' + d.cls + '">' + d.label + '</th>'; }).join('') +
             '</tr></thead>' +
             '<tbody id="po-tbody">' + rows + '</tbody>' +
           '</table>' +
@@ -3794,7 +4202,7 @@
     /* ═══════════════════════════════════════════════
        STOCK LEVELS  →  view-replenishment (via renderReplenishmentTable)
     ══════════════════════════════════════════════ */
-    function renderStock(data) {
+    function renderStock(data, assignedCols) {
       var today = new Date();
 
       var skuArray = data.map(function(r) {
@@ -3847,6 +4255,32 @@
         return { col: h, file: 'stock_levels' };
       });
 
+      /* ── Column visibility driven by the chips in the Replenishment window ──
+         Each raw assigned column maps to one display column; derived columns
+         (cover, to-order, health, replenish date) always stay — they ARE the view. */
+      /* Exact alias lists — substring matching is too loose here ("Stock"
+         would keep Safety Stock visible because "safetystock" contains it). */
+      var REPL_HINTS = {
+        sku:    ['sku','stockcode','itemcode','productcode','code','productid'],
+        name:   ['description','productname','itemname','name','product','item','title'],
+        stock:  ['stock','onhand','inventory','available','qtyonhand','currentstock','stockonhand','unitsonhand','quantityonhand','balance'],
+        safety: ['safetystock','safety','minstock','ss','safetylevel']
+      };
+      if (mapperOn() && assignedCols && assignedCols.length) {
+        var normed = assignedCols.map(function(c){ return c.toLowerCase().replace(/[^a-z0-9]/g,''); });
+        window._colState = window._colState || {};
+        Object.keys(REPL_HINTS).forEach(function(key) {
+          window._colState[key] = normed.some(function(n) {
+            return REPL_HINTS[key].indexOf(n) !== -1;
+          });
+        });
+        /* Derived & enriched columns always stay — cover/health/to-order are
+           computed, and lead/MOQ/price/monthly come from the supplier & sales
+           files via enrichment, not from the stock file's own columns. */
+        ['img','cover','monthly','leadtime','moq','price','toorder','health','repdate']
+          .forEach(function(k){ window._colState[k] = true; });
+      }
+
       renderReplenishmentTable(skuArray);
       updateSidebarBadges(skuArray.length, 0, 0);
 
@@ -3860,51 +4294,86 @@
     /* ═══════════════════════════════════════════════
        SUPPLIERS  →  view-suppliers
     ══════════════════════════════════════════════ */
-    function renderSuppliers(data) {
-      var rows = data.map(function (r) {
-        var sku      = col(r, ['SKU','StockCode']);
-        var desc     = col(r, ['Description']);
-        var supplier = col(r, ['Supplier','Vendor']);
-        var lead     = col(r, ['LeadTime']);
-        var moq      = col(r, ['MOQ','MinimumOrder']);
-        var price    = col(r, ['PurchasePrice','CostPrice']);
-        var terms    = col(r, ['PaymentTerms']);
-        var origin   = col(r, ['CountryOfOrigin']);
-        var currency = col(r, ['Currency']) || 'GBP';
-        var active   = col(r, ['ActiveSupplier']);
-        var isActive = String(active).toLowerCase() === 'true';
-        var priceFmt = price
-          ? parseFloat(price).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          : '—';
+    function renderSuppliers(data, assignedCols) {
+      /* Column definitions — visible set driven by chips in the Suppliers window */
+      var SUP_COLS = [
+        { label:'SKU', cls:'', hints:['sku','stockcode'],
+          cell:function(r){ return '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (col(r,['SKU','StockCode']) || '—') + '</td>'; } },
+        { label:'Description', cls:'', hints:['description'],
+          cell:function(r){ return '<td>' + (col(r,['Description']) || '—') + '</td>'; } },
+        { label:'Supplier', cls:'', hints:['supplier','vendor'],
+          cell:function(r){ return '<td style="font-weight:600;">' + (col(r,['Supplier','Vendor']) || '—') + '</td>'; } },
+        { label:'Lead Time', cls:' center', hints:['leadtime','lead'],
+          cell:function(r){ var v = col(r,['LeadTime']); return '<td class="center">' + (v ? v + ' days' : '—') + '</td>'; } },
+        { label:'MOQ', cls:' right', hints:['moq','minimumorder'],
+          cell:function(r){ var v = col(r,['MOQ','MinimumOrder']); return '<td class="right">' + (v ? parseInt(v).toLocaleString() : '—') + '</td>'; } },
+        { label:'Purchase Price', cls:' right', hints:['purchaseprice','costprice','cost'],
+          cell:function(r){
+            var price = col(r,['PurchasePrice','CostPrice']);
+            var currency = col(r,['Currency']) || 'GBP';
+            var priceFmt = price
+              ? parseFloat(price).toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              : '—';
+            return '<td class="right">' + (price ? currency + ' ' + priceFmt : '—') + '</td>'; } },
+        { label:'Payment Terms', cls:'', hints:['paymentterms','terms'],
+          cell:function(r){ return '<td>' + (col(r,['PaymentTerms']) || '—') + '</td>'; } },
+        { label:'Country of Origin', cls:'', hints:['countryoforigin','origin','country'],
+          cell:function(r){ return '<td>' + (col(r,['CountryOfOrigin']) || '—') + '</td>'; } },
+        { label:'Currency', cls:'', hints:['currency'],
+          cell:function(r){ return '<td>' + (col(r,['Currency']) || '—') + '</td>'; } },
+        { label:'Status', cls:' center', hints:['activesupplier','active','status'],
+          cell:function(r){
+            var isActive = String(col(r,['ActiveSupplier'])).toLowerCase() === 'true';
+            return '<td class="center"><span class="badge ' + (isActive ? 'badge-healthy' : 'badge-risk') + '">' + (isActive ? 'Active' : 'Inactive') + '</span></td>'; } }
+      ];
 
-        return '<tr>' +
-          '<td><input type="checkbox" class="cb"></td>' +
-          '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (sku || '—') + '</td>' +
-          '<td>' + (desc || '—') + '</td>' +
-          '<td style="font-weight:600;">' + (supplier || '—') + '</td>' +
-          '<td class="center">' + (lead ? lead + ' days' : '—') + '</td>' +
-          '<td class="right">' + (moq ? parseInt(moq).toLocaleString() : '—') + '</td>' +
-          '<td class="right">' + (price ? currency + ' ' + priceFmt : '—') + '</td>' +
-          '<td>' + (terms || '—') + '</td>' +
-          '<td>' + (origin || '—') + '</td>' +
-          '<td>' + (currency || '—') + '</td>' +
-          '<td class="center"><span class="badge ' + (isActive ? 'badge-healthy' : 'badge-risk') + '">' + (isActive ? 'Active' : 'Inactive') + '</span></td>' +
-        '</tr>';
+      var defs = visibleDefs(SUP_COLS, assignedCols);
+      var rows = data.map(function (r) {
+        return '<tr><td><input type="checkbox" class="cb"></td>' +
+          defs.map(function(d){ return d.cell(r); }).join('') +
+          '</tr>';
       });
 
-      var headerHtml =
-        '<table class="data-table">' +
-        '<thead><tr>' +
-        '<th style="width:32px"><input type="checkbox" id="sup-chk-all" onchange="document.querySelectorAll(\'#tbl-suppliers .cb\').forEach(c=>c.checked=this.checked)"></th>' +
-        '<th>SKU</th><th>Description</th><th>Supplier</th>' +
-        '<th class="center">Lead Time</th><th class="right">MOQ</th>' +
-        '<th class="right">Purchase Price</th><th>Payment Terms</th>' +
-        '<th>Country of Origin</th><th>Currency</th><th class="center">Status</th>' +
-        '</tr></thead>' +
-        '<tbody id="tbl-suppliers">' + rows.join('') + '</tbody>' +
-        '</table>';
+      /* Distinct suppliers + active count for the action-bar summary */
+      var supplierSet = {};
+      var activeCount = 0;
+      data.forEach(function(r) {
+        var s = col(r, ['Supplier','Vendor']);
+        if (s) supplierSet[s] = true;
+        if (String(col(r, ['ActiveSupplier'])).toLowerCase() === 'true') activeCount++;
+      });
 
-      buildTableView('view-suppliers', headerHtml);
+      buildTableView('view-suppliers',
+        '<div class="toolbar">' +
+          '<div class="search-wrap">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>' +
+            '<input class="search-input" type="text" placeholder="Search by SKU, supplier or country..." oninput="filterTable(this,\'tbl-suppliers\')">' +
+          '</div>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>Filter' +
+          '</button>' +
+          '<div class="toolbar-spacer"></div>' +
+          '<button class="toolbar-btn">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+        '</div>' +
+        '<div class="table-wrap">' +
+          '<table>' +
+            '<thead><tr>' +
+              '<th style="width:36px;"><input type="checkbox" class="cb" onchange="document.querySelectorAll(\'#tbl-suppliers .cb\').forEach(function(c){c.checked=event.target.checked})"></th>' +
+              defs.map(function(d){ return '<th class="sortable' + d.cls + '">' + d.label + '</th>'; }).join('') +
+            '</tr></thead>' +
+            '<tbody id="tbl-suppliers">' + rows.join('') + '</tbody>' +
+          '</table>' +
+        '</div>' +
+        '<div class="action-bar">' +
+          '<button class="action-btn action-btn-secondary">' +
+            '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export' +
+          '</button>' +
+          '<div class="action-spacer"></div>' +
+          '<span class="action-summary">Total: <span>' + data.length + '</span> SKU–supplier links &nbsp;·&nbsp; Suppliers: <span>' + Object.keys(supplierSet).length + '</span> &nbsp;·&nbsp; Active: <span>' + activeCount + '</span></span>' +
+        '</div>'
+      );
       updateSidebarBadges(0, data.length, 0);
 
       if (typeof app !== 'undefined' && app.showView) {

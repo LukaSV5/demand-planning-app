@@ -125,16 +125,67 @@ const Models = (() => {
     const n   = data.length;
     const inS = new Array(n).fill(null);
     let level = data[0];
-    inS[0] = round2(level);
+    // One-step-ahead fitted values: the prediction for period t is the level
+    // BEFORE observing data[t] — otherwise EMA gets a look-ahead advantage
+    // over SMA/WMA whose fits exclude the current observation.
     for (let i = 1; i < n; i++) {
-      level = round2(alpha * data[i] + (1 - alpha) * level);
-      inS[i] = level;
+      inS[i] = round2(level);
+      level  = round2(alpha * data[i] + (1 - alpha) * level);
     }
     return {
       inSample: inS,
       forecast: Array(horizon).fill(round2(level)),
       metrics:  computeMetrics(data, inS)
     };
+  }
+
+  // ── 3b. Holt-Winters (triple exponential smoothing, additive) ───────────────
+  //
+  //  Level + trend + seasonal components updated recursively. The classic
+  //  demand-planning workhorse: handles trending AND seasonal series, which
+  //  neither EMA (no trend/season) nor SMA/WMA can.
+
+  function holtwinters(data, params = {}, horizon = 6) {
+    const alpha = Math.max(0.05, Math.min(params.alpha != null ? params.alpha : 0.3,  0.95));
+    const beta  = Math.max(0.01, Math.min(params.beta  != null ? params.beta  : 0.1,  0.5));
+    const gamma = Math.max(0.05, Math.min(params.gamma != null ? params.gamma : 0.3,  0.95));
+    const s     = Math.max(2, Math.min(params.season || 12, 24));
+    const n     = data.length;
+
+    // Need at least one full season + a few points to initialise components
+    if (n < s + 4) {
+      console.warn('[Holt-Winters] Insufficient data (' + n + ' pts) for season ' + s +
+                   '. Need ≥' + (s + 4) + '. Falling back to EMA.');
+      return ema(data, { alpha }, horizon);
+    }
+
+    // ── Initialise components from the first season(s) ──
+    let level = _mean(data.slice(0, s));
+    let trend = (n >= 2 * s)
+      ? (_mean(data.slice(s, 2 * s)) - _mean(data.slice(0, s))) / s
+      : (data[n - 1] - data[0]) / (n - 1);
+    const seas = [];
+    for (let i = 0; i < s; i++) seas.push(data[i] - level);
+
+    // ── Recursive smoothing with one-step-ahead fitted values ──
+    // First season is left null: those "fits" would only echo initialisation.
+    const inS = new Array(n).fill(null);
+    for (let t = 0; t < n; t++) {
+      const si = t % s;
+      if (t >= s) inS[t] = round2(Math.max(0, level + trend + seas[si]));
+      const lastLevel = level;
+      level    = alpha * (data[t] - seas[si]) + (1 - alpha) * (level + trend);
+      trend    = beta  * (level - lastLevel)  + (1 - beta)  * trend;
+      seas[si] = gamma * (data[t] - level)    + (1 - gamma) * seas[si];
+    }
+
+    const forecast = [];
+    for (let h = 1; h <= horizon; h++) {
+      const si = (n + h - 1) % s;
+      forecast.push(round2(Math.max(0, level + h * trend + seas[si])));
+    }
+
+    return { inSample: inS, forecast, metrics: computeMetrics(data, inS) };
   }
 
   // ── Linear algebra helpers (OLS) ─────────────────────────────────────────────
@@ -519,6 +570,33 @@ const Models = (() => {
         body: 'Exponentially decreasing weights across all past data. α controls the speed of adaptation.'
       }
     },
+    holtwinters: {
+      name: 'Holt-Winters', tag: 'HW', tagColor: '#22d3ee',
+      fn: holtwinters,
+      autopilot: false,
+      params: [
+        { id: 'alpha', label: 'Level (α)', type: 'range', min: 0.05, max: 0.95, step: 0.05, default: 0.3,
+          leftLabel: 'Stable', rightLabel: 'Reactive',
+          help: 'How fast the base level adapts to new observations.' },
+        { id: 'beta', label: 'Trend (β)', type: 'range', min: 0.01, max: 0.5, step: 0.01, default: 0.1,
+          leftLabel: 'Stable', rightLabel: 'Reactive',
+          help: 'How fast the trend slope adapts. Keep low for noisy data.' },
+        { id: 'gamma', label: 'Seasonal (γ)', type: 'range', min: 0.05, max: 0.95, step: 0.05, default: 0.3,
+          leftLabel: 'Stable', rightLabel: 'Reactive',
+          help: 'How fast the seasonal pattern adapts each cycle.' },
+        { id: 'season', label: 'Seasonal Period', type: 'select', default: 12,
+          options: [
+            { value: 4,  label: 'Quarterly (4)' },
+            { value: 6,  label: 'Semi-annual (6)' },
+            { value: 12, label: 'Annual monthly (12)' }
+          ],
+          help: 'Length of one seasonal cycle.' }
+      ],
+      explain: {
+        title: 'Holt-Winters (Triple Exponential Smoothing)',
+        body: 'Smooths <em>level, trend and seasonality</em> as separate components. The classic demand-planning workhorse — handles growing seasonal products that defeat simple averages.'
+      }
+    },
     sarimax: {
       name: 'SARIMAX', tag: 'SARIMAX', tagColor: '#0ea5e9',
       fn: sarimax,
@@ -604,6 +682,65 @@ const Models = (() => {
   function getMeta(modelKey) { return MODEL_META[modelKey] || null; }
   function allKeys()         { return Object.keys(MODEL_META); }
 
-  return { run, getMeta, allKeys };
+  // ── Out-of-sample backtest ────────────────────────────────────────────────────
+  //
+  //  Train on everything except the last `holdout` months, forecast them blind,
+  //  and score against the actuals. This is honest forecast accuracy — unlike
+  //  the in-sample fit metrics, it can't be gamed by memorising the history.
+  //  Autopilot models re-run their spike cleaning + grid search on the train
+  //  slice only, so no information leaks from the holdout.
+
+  function backtest(modelKey, data, params, holdout) {
+    if (!data || data.length < 12) return null;
+    const n = data.length;
+    const h = holdout || Math.min(6, Math.max(3, Math.floor(n * 0.2)));
+    if (n - h < 8) return null;
+
+    const train  = data.slice(0, n - h);
+    const actual = data.slice(n - h);
+
+    let result;
+    try { result = run(modelKey, train, params || {}, h); }
+    catch (e) { return null; }
+
+    return {
+      holdout : h,
+      metrics : computeMetrics(actual, result.forecast),
+      forecast: result.forecast,
+      actual  : actual
+    };
+  }
+
+  // ── Auto-select best model per SKU ───────────────────────────────────────────
+  //
+  //  Backtests every registered model on the same holdout and ranks by MAE.
+  //  Returns { best, holdout, results: [{model, name, mae, mape}, ...] }.
+
+  function autoSelect(data, keys) {
+    keys = keys || allKeys();
+    const results = [];
+    let holdout = null;
+
+    keys.forEach(k => {
+      const bt = backtest(k, data);
+      if (!bt || bt.metrics.mae == null) return;
+      holdout = bt.holdout;
+      results.push({
+        model: k,
+        name : MODEL_META[k].name,
+        mae  : bt.metrics.mae,
+        mape : bt.metrics.mape
+      });
+    });
+
+    results.sort((a, b) => a.mae - b.mae);
+    return {
+      best   : results.length ? results[0].model : null,
+      holdout: holdout,
+      results: results
+    };
+  }
+
+  return { run, getMeta, allKeys, backtest, autoSelect };
 
 })();
