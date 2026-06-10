@@ -1165,6 +1165,18 @@
       0%, 100% { opacity: 1; box-shadow: 0 0 5px currentColor; }
       50%       { opacity: 0.5; box-shadow: 0 0 12px currentColor; }
     }
+    /* Best Fit ranking rows — clickable model switcher */
+    .fc-bf-row {
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      padding: 4px 7px; margin: 1px -4px; border-radius: 6px;
+      cursor: pointer; color: #9ca3af;
+      transition: background 0.12s, color 0.12s;
+    }
+    .fc-bf-row:hover { background: rgba(255,255,255,0.06); color: #e8eaf0; }
+    .fc-bf-row.active {
+      background: rgba(34,197,94,0.12); color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.25); padding: 3px 6px;
+    }
   </style>
 
   <script>
@@ -1253,6 +1265,7 @@
       document.querySelectorAll('.fc-mpill').forEach(function(b) {
         b.classList.toggle('active', b.dataset.model === key);
       });
+      _highlightBestFitRow(key);
       _buildParamFields(key);
       run();
     }
@@ -1464,12 +1477,45 @@
       _renderTable(months, values, result, horizon);
     }
 
-    /* ── Best Fit: backtest every model, switch to the winner ── */
+    /* ── Best Fit: backtest every model, switch to the winner ──
+       Results are cached per SKU + history slice, so clicking ★ Best Fit
+       again (after trying other models) switches back instantly instead of
+       re-running all the grid searches. The ranking rows are clickable. */
+    var _bestFitCache = {};
+
+    function _renderBestFitPanel(sel) {
+      var panel = document.getElementById('fc-bestfit-result');
+      if (!panel) return;
+      panel.style.display = 'block';
+      panel.innerHTML =
+        '<strong style="color:#22c55e;">★ Best fit: ' + sel.results[0].name + '</strong>' +
+        '<span style="color:#4b5563;"> · ' + sel.holdout + '-month holdout</span>' +
+        '<div style="font-size:9.5px;color:#4b5563;margin:2px 0 6px;">Click any model below to switch</div>' +
+        sel.results.map(function(r, i) {
+          return '<div class="fc-bf-row" data-model="' + r.model + '" onclick="ForecastDashboard.selectModel(\'' + r.model + '\')">' +
+            '<span>' + (i + 1) + '. ' + r.name + (i === 0 ? ' ★' : '') + '</span>' +
+            '<span style="color:#4b5563;font-family:monospace;">' + r.mae.toLocaleString() + '</span>' +
+            '</div>';
+        }).join('');
+      _highlightBestFitRow(_model);
+    }
+
+    function _highlightBestFitRow(key) {
+      document.querySelectorAll('.fc-bf-row').forEach(function(rw) {
+        rw.classList.toggle('active', rw.dataset.model === key);
+      });
+    }
+
     function autoSelectBest() {
       var skuData = window._monthlySalesBySKU && _sku
         ? window._monthlySalesBySKU[_sku]
         : null;
-      if (!skuData || !skuData.values.length || !Models.autoSelect) return;
+      if (!skuData || !skuData.values.length) return;
+      if (!Models.autoSelect) {
+        /* stale cached models.js from a previous visit */
+        alert('A newer version of this page is available — press Ctrl+F5 to refresh.');
+        return;
+      }
 
       /* Same history-horizon slice as run() */
       var histHorizon = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
@@ -1477,13 +1523,23 @@
         ? skuData.values.slice(-histHorizon)
         : skuData.values;
 
+      /* Cached? Switch back to the winner instantly. */
+      var cacheKey = _sku + '|' + histHorizon + '|' + values.length;
+      var cached = _bestFitCache[cacheKey];
+      if (cached) {
+        _renderBestFitPanel(cached);
+        selectModel(cached.best);
+        return;
+      }
+
       var btn = document.getElementById('fc-best-btn');
-      if (btn) { btn.textContent = 'Testing…'; btn.disabled = true; }
+      if (btn) { btn.textContent = 'Testing 7 models…'; btn.disabled = true; }
 
       /* Defer so the button label paints before the grid searches block the thread */
       setTimeout(function() {
-        var sel;
+        var sel = null;
         try { sel = Models.autoSelect(values); }
+        catch (e) { console.warn('Best Fit failed:', e); }
         finally {
           if (btn) { btn.textContent = '★ Best Fit'; btn.disabled = false; }
         }
@@ -1495,18 +1551,8 @@
           }
           return;
         }
-        if (panel) {
-          panel.style.display = 'block';
-          panel.innerHTML =
-            '<strong style="color:#22c55e;">★ Best fit: ' + sel.results[0].name + '</strong>' +
-            '<span style="color:#4b5563;"> · ' + sel.holdout + '-month holdout</span><br>' +
-            sel.results.map(function(r, i) {
-              var col = i === 0 ? '#22c55e' : '#6b7280';
-              return '<span style="color:' + col + ';">' + (i + 1) + '. ' + r.name +
-                     ' — MAE ' + r.mae.toLocaleString() +
-                     (r.mape != null ? ' (' + r.mape + '%)' : '') + '</span>';
-            }).join('<br>');
-        }
+        _bestFitCache[cacheKey] = sel;
+        _renderBestFitPanel(sel);
         selectModel(sel.best);
       }, 30);
     }
