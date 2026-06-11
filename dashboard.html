@@ -934,10 +934,7 @@
   </div><!-- end dashboard view -->
 
   <!-- Analytics engine — dependency order: data → models → charts → app -->
-  <script src="js/data.js"></script>
   <script src="js/models.js"></script>
-  <script src="js/charts.js"></script>
-  <script src="js/app.js"></script>
 
   <!-- ── EMPTY VIEWS (warehouse bar + coming soon) ── -->
   <script>
@@ -1016,15 +1013,9 @@
         <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Demand Forecast</div>
         <div id="fc-drawer-sku" style="font-size:14px;font-weight:800;color:#c4b5fd;font-family:monospace;letter-spacing:0.02em;">—</div>
       </div>
-      <!-- Model pills -->
+      <!-- Model pills (populated from the Models registry at drawer init) -->
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;">
-        <button class="fc-mpill" data-model="sma"         onclick="ForecastDashboard.selectModel('sma')">SMA</button>
-        <button class="fc-mpill" data-model="wma"         onclick="ForecastDashboard.selectModel('wma')">WMA</button>
-        <button class="fc-mpill" data-model="ema"         onclick="ForecastDashboard.selectModel('ema')">EMA</button>
-        <button class="fc-mpill" data-model="holtwinters" onclick="ForecastDashboard.selectModel('holtwinters')">Holt-Winters</button>
-        <button class="fc-mpill" data-model="sarimax"     onclick="ForecastDashboard.selectModel('sarimax')">SARIMAX</button>
-        <button class="fc-mpill" data-model="prophet"     onclick="ForecastDashboard.selectModel('prophet')">Prophet</button>
-        <button class="fc-mpill active" data-model="xgboost" onclick="ForecastDashboard.selectModel('xgboost')">XGBoost</button>
+        <span id="fc-mpills" style="display:contents;"></span>
         <button class="fc-mpill" id="fc-best-btn" onclick="ForecastDashboard.autoSelectBest()"
                 title="Backtest every model on held-out months and switch to the most accurate"
                 style="border-color:rgba(34,197,94,0.45);color:#22c55e;">★ Best Fit</button>
@@ -1054,13 +1045,33 @@
               onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
     </div>
 
-    <!-- ── Metrics row ── -->
+    <!-- ── Metrics row (headline = honest walk-forward validation) ── -->
     <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
-      <div class="fc-metric-card"><div class="fc-metric-label">MAE</div><div class="fc-metric-value" id="fc-v-mae">—</div><div class="fc-metric-sub">Mean Abs Error</div></div>
-      <div class="fc-metric-card"><div class="fc-metric-label">RMSE</div><div class="fc-metric-value" id="fc-v-rmse">—</div><div class="fc-metric-sub">Root Mean Sq Error</div></div>
-      <div class="fc-metric-card"><div class="fc-metric-label" id="fc-l-mape" style="cursor:default;">MAPE</div><div class="fc-metric-value" id="fc-v-mape">—</div><div class="fc-metric-sub">Mean Abs % Error</div></div>
-      <div class="fc-metric-card" title="Trained without the most recent months, then scored on forecasting them blind — honest out-of-sample accuracy, unlike the in-sample fit metrics to the left."><div class="fc-metric-label" style="color:#22c55e;">Holdout MAE</div><div class="fc-metric-value" id="fc-v-holdout" style="color:#22c55e;">—</div><div class="fc-metric-sub" id="fc-v-holdout-sub">out-of-sample</div></div>
-      <div class="fc-metric-card" style="border-right:none;"><div class="fc-metric-label">Next Period</div><div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div><div class="fc-metric-sub" id="fc-v-next-label">units forecast</div></div>
+      <div class="fc-metric-card" title="Weighted Absolute Percentage Error from walk-forward validation — the model repeatedly forecasts months it has never seen. Lower is better.">
+        <div class="fc-metric-label" style="color:#22c55e;">WAPE</div>
+        <div class="fc-metric-value" id="fc-v-wape" style="color:#22c55e;">—</div>
+        <div class="fc-metric-sub" id="fc-v-wape-sub">walk-forward</div>
+      </div>
+      <div class="fc-metric-card" title="Mean Absolute Scaled Error vs a seasonal-naive forecast. Below 1.0 = better than seasonal naive; above 1.2 = clearly worse.">
+        <div class="fc-metric-label">MASE</div>
+        <div class="fc-metric-value" id="fc-v-mase">—</div>
+        <div class="fc-metric-sub">&lt; 1.0 beats seasonal naive</div>
+      </div>
+      <div class="fc-metric-card" title="Mean Absolute Error in units, averaged across all walk-forward validation forecasts.">
+        <div class="fc-metric-label">WF MAE</div>
+        <div class="fc-metric-value" id="fc-v-wfmae">—</div>
+        <div class="fc-metric-sub">walk-forward, units</div>
+      </div>
+      <div class="fc-metric-card" style="border-right:none;">
+        <div class="fc-metric-label">Next Period</div>
+        <div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div>
+        <div class="fc-metric-sub" id="fc-v-next-label">units forecast</div>
+      </div>
+    </div>
+    <!-- ── Secondary strip: demoted in-sample fit + fallback notice ── -->
+    <div style="display:flex;align-items:center;gap:16px;padding:5px 18px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;min-height:24px;">
+      <span id="fc-insample" style="font-size:10px;color:#4b5563;" title="One-step-ahead fit on training data — optimistic by construction; trust the walk-forward metrics above.">In-sample fit: —</span>
+      <span id="fc-fallback-notice" style="display:none;font-size:10px;color:#f59e0b;"></span>
     </div>
 
     <!-- ── Body: params panel + chart area ── -->
@@ -1078,12 +1089,13 @@
           <div>
             <label class="fc-param-label">History Horizon</label>
             <select id="fc-history-horizon" class="fc-param-input" style="padding:5px 8px;cursor:pointer;"
+                    title="Seasonal models (Auto-ETS, sNaive, Prophet) need 2+ years of history for walk-forward validation — keep All History unless the SKU changed recently."
                     onchange="ForecastDashboard.run()">
-              <option value="0">Full Available History</option>
+              <option value="0" selected>All History (recommended)</option>
               <option value="24">Last 24 Months</option>
               <option value="12">Last 12 Months</option>
             </select>
-            <div class="fc-param-help">Slice historical data before any model runs.</div>
+            <div class="fc-param-help">Slice history before models run. Seasonal models need 2+ years.</div>
           </div>
           <div>
             <label class="fc-param-label">Forecast Horizon</label>
@@ -1185,7 +1197,7 @@
   ══════════════════════════════════════════════════════════════ */
   const ForecastDashboard = (function() {
     let _chart       = null;
-    let _model       = 'xgboost';
+    let _model       = 'holtwinters';
     let _sku         = null;
     let _params      = {};
     let _initialized = false;
@@ -1195,9 +1207,50 @@
     function init() {
       if (_initialized) return;
       _initialized = true;
-      _buildParamFields(_model);
       var exportBtn = document.getElementById('fc-export-btn');
       if (exportBtn) exportBtn.addEventListener('click', exportPNG);
+    }
+
+    /* ── Slice history per the History Horizon selector (shared by run / Best Fit / cache key) ── */
+    function _histSlice(skuData) {
+      var hist   = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
+      var values = skuData.values, months = skuData.months;
+      if (hist > 0 && values.length > hist) {
+        values = values.slice(-hist);
+        months = months.slice(-hist);
+      }
+      return { values: values, months: months, hist: hist };
+    }
+
+    /* ── Cached Best Fit result for the current SKU + history slice (or null) ── */
+    function _cachedBestFit() {
+      var skuData = window._monthlySalesBySKU && _sku ? window._monthlySalesBySKU[_sku] : null;
+      if (!skuData || !skuData.values || !skuData.values.length) return null;
+      var s = _histSlice(skuData);
+      return _bestFitCache[_sku + '|' + s.hist + '|' + s.values.length] || null;
+    }
+
+    /* ── Render model pills from the Models registry ── */
+    function _renderPills() {
+      var host = document.getElementById('fc-mpills');
+      if (!host || typeof Models === 'undefined' || !Models.allKeys) return;
+      host.innerHTML = '';
+      Models.allKeys().forEach(function(key) {
+        var meta = Models.getMeta(key) || {};
+        var btn  = document.createElement('button');
+        btn.className     = 'fc-mpill' + (key === _model ? ' active' : '');
+        btn.dataset.model = key;
+        btn.textContent   = meta.tag || meta.name || key;
+        btn.title         = meta.name || '';
+        if (meta.tagColor) {
+          var dot = document.createElement('span');
+          dot.style.cssText = 'display:inline-block;width:6px;height:6px;border-radius:50%;' +
+            'background:' + meta.tagColor + ';margin-right:6px;vertical-align:1px;';
+          btn.insertBefore(dot, btn.firstChild);
+        }
+        btn.onclick = function() { selectModel(key); };
+        host.appendChild(btn);
+      });
     }
 
     function onDataReady() {
@@ -1216,6 +1269,14 @@
       /* Update SKU label in header */
       var label = document.getElementById('fc-drawer-sku');
       if (label) label.textContent = _sku || '—';
+      /* Land on this SKU's cached Best Fit winner (no auto-run of the full
+         autoSelect on open — too slow; cache only). */
+      var cachedBF = _cachedBestFit();
+      if (cachedBF && cachedBF.best && typeof Models !== 'undefined' && Models.getMeta(cachedBF.best)) {
+        _model = cachedBF.best;
+      }
+      _renderPills();
+      _buildParamFields(_model);
       /* Stale ranking belongs to the previous SKU — hide it */
       var bfPanel = document.getElementById('fc-bestfit-result');
       if (bfPanel) { bfPanel.style.display = 'none'; bfPanel.innerHTML = ''; }
@@ -1281,21 +1342,21 @@
       var html = '';
 
       if (meta.autopilot) {
-        /* ── Autopilot badge ── */
+        /* ── Autopilot badge (accent from registry tagColor) ── */
+        var apColor = meta.autopilotColor || meta.tagColor || '#22d3ee';
         html +=
           '<div style="display:flex;flex-direction:column;gap:8px;">' +
             '<div style="display:flex;align-items:center;gap:7px;padding:9px 11px;' +
-                        'background:' + meta.autopilotColor + '14;border:1px solid ' + meta.autopilotColor + '40;' +
+                        'background:' + apColor + '14;border:1px solid ' + apColor + '40;' +
                         'border-radius:9px;">' +
-              '<div style="width:8px;height:8px;border-radius:50%;background:' + meta.autopilotColor + ';' +
-                          'box-shadow:0 0 6px ' + meta.autopilotColor + ';flex-shrink:0;' +
+              '<div style="width:8px;height:8px;border-radius:50%;background:' + apColor + ';' +
+                          'box-shadow:0 0 6px ' + apColor + ';flex-shrink:0;' +
                           'animation:fc-pulse 2s infinite;"></div>' +
-              '<span style="font-size:11px;font-weight:700;color:' + meta.autopilotColor + ';letter-spacing:0.01em;">AI Autopilot Active</span>' +
+              '<span style="font-size:11px;font-weight:700;color:' + apColor + ';letter-spacing:0.01em;">AI Autopilot Active</span>' +
             '</div>' +
             '<div style="font-size:10.5px;color:#6b7280;line-height:1.55;padding:0 2px;">' +
-              'Automatically running <strong style="color:#9ca3af;">spike detection</strong> (IQR fencing) ' +
-              'and <strong style="color:#9ca3af;">grid search</strong> across hyperparameter combinations to find the ' +
-              'lowest MAE configuration for this SKU.' +
+              'Parameters are chosen <strong style="color:#9ca3af;">automatically</strong> for this SKU and scored with ' +
+              '<strong style="color:#9ca3af;">walk-forward validation</strong> — no manual tuning needed.' +
             '</div>' +
             '<div id="fc-autopilot-result" style="display:none;padding:9px 11px;background:rgba(255,255,255,0.03);' +
                  'border:1px solid rgba(255,255,255,0.07);border-radius:8px;font-size:10px;color:#6b7280;line-height:1.6;">' +
@@ -1369,37 +1430,29 @@
       if (!isNaN(num)) { _params[id] = num; run(); }
     }
 
-    /* ── Show autopilot result card after a run ── */
+    /* ── Show the engine's auto-selected params after a run ── */
+    function _fmtAutoVal(v) {
+      if (typeof v === 'number') {
+        return (v % 1 !== 0) ? String(Math.round(v * 1000) / 1000) : String(v);
+      }
+      if (v && typeof v === 'object') {
+        return Object.keys(v).map(function(k) {
+          var vv = v[k];
+          return k + ': ' + (typeof vv === 'number' ? Math.round(vv * 100) / 100 : vv);
+        }).join(', ');
+      }
+      return String(v);
+    }
     function _showAutopilotResult(result) {
       var el = document.getElementById('fc-autopilot-result');
       if (!el) return;
-      var ap = result.autoParams || {};
-      var si = result.spikeInfo  || {};
-      var lines = [];
-
-      if (si.spikes && si.spikes.length > 0) {
-        lines.push('<span style="color:#f59e0b;">⚡ ' + si.spikes.length + ' spike' +
-          (si.spikes.length > 1 ? 's' : '') + ' detected & capped</span>');
-        lines.push('<span style="color:#4b5563;">IQR fence: ≤ ' + si.upper + ' units</span>');
-      } else {
-        lines.push('<span style="color:#22c55e;">✓ No anomalous spikes detected</span>');
-      }
-
-      if (ap._gridTrials && ap._gridTrials.length) {
-        lines.push('<span style="color:#9ca3af;margin-top:4px;display:block;">Best config:</span>');
-        if (ap.learning_rate != null) {
-          lines.push('LR: <strong style="color:#e8eaf0;">' + ap.learning_rate + '</strong>  ' +
-                     'Depth: <strong style="color:#e8eaf0;">' + ap.max_depth + '</strong>');
-        }
-        if (ap.changepoints != null) {
-          lines.push('Changepoints: <strong style="color:#e8eaf0;">' + ap.changepoints + '</strong>  ' +
-                     'Fourier: <strong style="color:#e8eaf0;">' + ap.fourier_order + '</strong>');
-        }
-        if (ap._gridMAE != null) {
-          lines.push('Grid val MAE: <strong style="color:#a78bfa;">' + ap._gridMAE + '</strong>');
-        }
-      }
-
+      var ap   = result.autoParams || {};
+      var keys = Object.keys(ap).filter(function(k) { return k.charAt(0) !== '_'; });
+      if (!keys.length) { el.style.display = 'none'; el.innerHTML = ''; return; }
+      var lines = ['<span style="color:#9ca3af;">Auto-selected configuration:</span>'];
+      keys.slice(0, 8).forEach(function(k) {
+        lines.push(k + ': <strong style="color:#e8eaf0;">' + _fmtAutoVal(ap[k]) + '</strong>');
+      });
       el.style.display = 'block';
       el.innerHTML = lines.join('<br>');
     }
@@ -1427,17 +1480,9 @@
       if (emptyEl) emptyEl.style.display = 'none';
 
       /* ── History Horizon slice ── */
-      var histHorizon = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
-      var allValues   = skuData.values;
-      var allMonths   = skuData.months;
-      var values, months;
-      if (histHorizon > 0 && allValues.length > histHorizon) {
-        values = allValues.slice(-histHorizon);
-        months = allMonths.slice(-histHorizon);
-      } else {
-        values = allValues;
-        months = allMonths;
-      }
+      var slice  = _histSlice(skuData);
+      var values = slice.values;
+      var months = slice.months;
 
       /* ── Forecast horizon ── */
       var horizon = parseInt((document.getElementById('fc-horizon') || {}).value) || 6;
@@ -1469,11 +1514,9 @@
       /* Show autopilot result card if applicable */
       if (meta && meta.autopilot) _showAutopilotResult(result);
 
-      /* Out-of-sample backtest: retrain without the last months, score blind */
-      var bt = (Models.backtest) ? Models.backtest(_model, values) : null;
-
       _renderChart(months, values, result, horizon);
-      _renderMetrics(result.metrics, result.forecast[0], bt);
+      _renderMetrics(result);
+      _renderFallback(result.fallback);
       _renderTable(months, values, result, horizon);
     }
 
@@ -1485,16 +1528,21 @@
 
     function _renderBestFitPanel(sel) {
       var panel = document.getElementById('fc-bestfit-result');
-      if (!panel) return;
+      if (!panel || !sel || !sel.results || !sel.results.length) return;
+      var wfLabel = 'walk-forward' +
+        (sel.origins ? ' · ' + sel.origins + ' origins' : '') +
+        (sel.horizon ? ' × ' + sel.horizon + 'mo' : '');
       panel.style.display = 'block';
       panel.innerHTML =
         '<strong style="color:#22c55e;">★ Best fit: ' + sel.results[0].name + '</strong>' +
-        '<span style="color:#4b5563;"> · ' + sel.holdout + '-month holdout</span>' +
-        '<div style="font-size:9.5px;color:#4b5563;margin:2px 0 6px;">Click any model below to switch</div>' +
+        '<span style="color:#4b5563;"> · ' + wfLabel + '</span>' +
+        '<div style="font-size:9.5px;color:#4b5563;margin:2px 0 6px;">Ranked by WAPE · MASE — click any model to switch</div>' +
         sel.results.map(function(r, i) {
+          var wape = (r.wape != null && isFinite(r.wape)) ? Number(r.wape).toFixed(1) + '%' : '—';
+          var mase = (r.mase != null && isFinite(r.mase)) ? Number(r.mase).toFixed(2) : '—';
           return '<div class="fc-bf-row" data-model="' + r.model + '" onclick="ForecastDashboard.selectModel(\'' + r.model + '\')">' +
             '<span>' + (i + 1) + '. ' + r.name + (i === 0 ? ' ★' : '') + '</span>' +
-            '<span style="color:#4b5563;font-family:monospace;">' + r.mae.toLocaleString() + '</span>' +
+            '<span style="color:#4b5563;font-family:monospace;" title="WAPE · MASE">' + wape + ' · ' + mase + '</span>' +
             '</div>';
         }).join('');
       _highlightBestFitRow(_model);
@@ -1518,13 +1566,11 @@
       }
 
       /* Same history-horizon slice as run() */
-      var histHorizon = parseInt((document.getElementById('fc-history-horizon') || {}).value) || 0;
-      var values = (histHorizon > 0 && skuData.values.length > histHorizon)
-        ? skuData.values.slice(-histHorizon)
-        : skuData.values;
+      var slice  = _histSlice(skuData);
+      var values = slice.values;
 
       /* Cached? Switch back to the winner instantly. */
-      var cacheKey = _sku + '|' + histHorizon + '|' + values.length;
+      var cacheKey = _sku + '|' + slice.hist + '|' + values.length;
       var cached = _bestFitCache[cacheKey];
       if (cached) {
         _renderBestFitPanel(cached);
@@ -1532,8 +1578,9 @@
         return;
       }
 
+      var modelCount = (Models.allKeys) ? Models.allKeys().length : 0;
       var btn = document.getElementById('fc-best-btn');
-      if (btn) { btn.textContent = 'Testing 7 models…'; btn.disabled = true; }
+      if (btn) { btn.textContent = 'Testing ' + (modelCount || 'all') + ' models…'; btn.disabled = true; }
 
       /* Defer so the button label paints before the grid searches block the thread */
       setTimeout(function() {
@@ -1547,7 +1594,7 @@
         if (!sel || !sel.best) {
           if (panel) {
             panel.style.display = 'block';
-            panel.innerHTML = '<strong style="color:#f59e0b;">Not enough history</strong><br>Backtesting needs ≥12 months of sales for this SKU.';
+            panel.innerHTML = '<strong style="color:#f59e0b;">Not enough history</strong><br>Walk-forward validation needs more months of sales for this SKU.';
           }
           return;
         }
@@ -1566,21 +1613,32 @@
       var futureMonths = _futureMonths(months[months.length - 1], horizon);
       var allLabels    = months.concat(futureMonths);
 
-      /* Confidence bands (±1 sigma of residuals) */
-      var residuals = [];
-      result.inSample.forEach(function(v, i) {
-        if (v != null) residuals.push(Math.abs(values[i] - v));
-      });
-      var sigma = residuals.length
-        ? residuals.reduce(function(a,b){return a+b;},0) / residuals.length
-        : 0;
+      /* Prediction band: prefer the engine's 80% empirical interval (result.lower/upper);
+         fall back to the old ±1σ √h-widening heuristic when they're absent. */
+      var hasPI = Array.isArray(result.lower) && Array.isArray(result.upper) &&
+                  result.lower.length === result.forecast.length &&
+                  result.upper.length === result.forecast.length;
+      var upperVals, lowerVals;
+      if (hasPI) {
+        upperVals = result.upper.map(function(v) { return Math.round(v); });
+        lowerVals = result.lower.map(function(v) { return Math.max(0, Math.round(v)); });
+      } else {
+        var residuals = [];
+        (result.inSample || []).forEach(function(v, i) {
+          if (v != null) residuals.push(Math.abs(values[i] - v));
+        });
+        var sigma = residuals.length
+          ? residuals.reduce(function(a,b){return a+b;},0) / residuals.length
+          : 0;
+        /* Bands widen with √h — uncertainty compounds the further out you forecast */
+        upperVals = result.forecast.map(function(v, i){ return Math.round(v + sigma * Math.sqrt(i + 1)); });
+        lowerVals = result.forecast.map(function(v, i){ return Math.max(0, Math.round(v - sigma * Math.sqrt(i + 1))); });
+      }
+      var bandLabel = hasPI ? '80% interval' : '±1σ band (approx.)';
 
       var forecastWithNulls = new Array(values.length).fill(null).concat(result.forecast);
-      /* Bands widen with √h — uncertainty compounds the further out you forecast */
-      var upperBand = new Array(values.length).fill(null)
-        .concat(result.forecast.map(function(v, i){ return Math.round(v + sigma * Math.sqrt(i + 1)); }));
-      var lowerBand = new Array(values.length).fill(null)
-        .concat(result.forecast.map(function(v, i){ return Math.max(0, Math.round(v - sigma * Math.sqrt(i + 1))); }));
+      var upperBand = new Array(values.length).fill(null).concat(upperVals);
+      var lowerBand = new Array(values.length).fill(null).concat(lowerVals);
 
       var datasets = [
         {
@@ -1621,7 +1679,7 @@
           spanGaps: false
         },
         {
-          label: 'Upper band',
+          label: bandLabel + ' — upper',
           data: upperBand,
           borderColor: 'rgba(245,158,11,0.2)',
           backgroundColor: 'rgba(245,158,11,0.07)',
@@ -1632,7 +1690,7 @@
           spanGaps: false
         },
         {
-          label: 'Lower band',
+          label: bandLabel + ' — lower',
           data: lowerBand,
           borderColor: 'rgba(167,139,250,0.2)',
           borderWidth: 0,
@@ -1659,7 +1717,7 @@
           plugins: {
             legend: {
               labels: { color: '#6b7280', font: { size: 11 },
-                filter: function(item) { return item.text !== 'Upper band' && item.text !== 'Lower band'; } }
+                filter: function(item) { return item.text.indexOf('— upper') === -1 && item.text.indexOf('— lower') === -1; } }
             },
             tooltip: {
               backgroundColor: '#13161e',
@@ -1703,47 +1761,85 @@
       return result;
     }
 
-    /* ── Metrics ── */
-    function _renderMetrics(metrics, nextVal, bt) {
+    /* ── Metrics: headline = walk-forward validation; in-sample fit demoted ── */
+    function _renderMetrics(result) {
       function set(id, val) {
         var el = document.getElementById(id);
         if (el) el.textContent = val != null ? val : '—';
       }
-      set('fc-v-mae',  metrics.mae  != null ? metrics.mae.toLocaleString()  : null);
-      set('fc-v-rmse', metrics.rmse != null ? metrics.rmse.toLocaleString() : null);
-      // MAPE excludes zero-actual months (division by zero). Append a marker when
-      // months were dropped so users know the figure covers non-zero demand only.
-      var mapeStr = null;
-      if (metrics.mape != null) {
-        mapeStr = metrics.mape + '%';
-        if (metrics.mapeExcludedZeros > 0) mapeStr += '*';
+      var v       = result.validation || null;
+      var metrics = result.metrics    || {};
+
+      /* WAPE — honest out-of-sample headline */
+      set('fc-v-wape', (v && v.wape != null && isFinite(v.wape)) ? Number(v.wape).toFixed(1) + '%' : null);
+      var wapeSub = document.getElementById('fc-v-wape-sub');
+      if (wapeSub) {
+        wapeSub.textContent = v
+          ? 'walk-forward · ' + (v.origins || '?') + ' origins × ' + (v.horizon || '?') + 'mo'
+          : 'needs more history';
       }
-      set('fc-v-mape', mapeStr);
-      // Update MAPE label to show disclaimer if zeros were excluded
-      var mapeLabel = document.getElementById('fc-l-mape');
-      if (mapeLabel) {
-        mapeLabel.title = metrics.mapeExcludedZeros > 0
-          ? '* ' + metrics.mapeExcludedZeros + ' zero-demand month(s) excluded from MAPE calculation'
-          : '';
+
+      /* MASE — green when beating seasonal naive, red when clearly worse */
+      var maseEl = document.getElementById('fc-v-mase');
+      if (maseEl) {
+        if (v && v.mase != null && isFinite(v.mase)) {
+          maseEl.textContent = Number(v.mase).toFixed(2);
+          maseEl.style.color = v.mase < 1 ? '#22c55e' : (v.mase > 1.2 ? '#ef4444' : '#e8eaf0');
+          maseEl.title = v.mase < 1
+            ? 'Beats a seasonal-naive forecast (MASE < 1.0)'
+            : 'A seasonal-naive forecast would do as well or better (MASE ≥ 1.0)';
+        } else {
+          maseEl.textContent = '—';
+          maseEl.style.color = '#e8eaf0';
+          maseEl.title = '';
+        }
       }
+
+      /* Walk-forward MAE */
+      set('fc-v-wfmae', (v && v.mae != null && isFinite(v.mae)) ? Math.round(v.mae).toLocaleString() : null);
+
+      /* Next period point forecast */
+      var nextVal = result.forecast && result.forecast.length ? result.forecast[0] : null;
       set('fc-v-next', nextVal != null ? Math.round(nextVal).toLocaleString() + ' units' : null);
 
-      /* Out-of-sample holdout metrics */
-      var hSub = document.getElementById('fc-v-holdout-sub');
-      if (bt && bt.metrics && bt.metrics.mae != null) {
-        set('fc-v-holdout', bt.metrics.mae.toLocaleString());
-        if (hSub) hSub.textContent = 'last ' + bt.holdout + ' months blind' +
-          (bt.metrics.mape != null ? ' · ' + bt.metrics.mape + '%' : '');
+      /* Demoted in-sample fit strip */
+      var ins = document.getElementById('fc-insample');
+      if (ins) {
+        var parts = [];
+        if (metrics.mae  != null) parts.push('MAE ' + Math.round(metrics.mae).toLocaleString());
+        if (metrics.mape != null) parts.push('MAPE ' + metrics.mape + '%' + (metrics.mapeExcludedZeros > 0 ? '*' : ''));
+        ins.textContent = 'In-sample fit: ' + (parts.length ? parts.join(' · ') : '—');
+        ins.title = 'One-step-ahead fit on training data — optimistic by construction; trust the walk-forward metrics above.' +
+          (metrics.mapeExcludedZeros > 0 ? ' (* ' + metrics.mapeExcludedZeros + ' zero-demand month(s) excluded from MAPE.)' : '');
+      }
+    }
+
+    /* ── Fallback notice: shown when insufficient data forced a simpler model ── */
+    function _renderFallback(fb) {
+      var el = document.getElementById('fc-fallback-notice');
+      if (!el) return;
+      if (fb && fb.model) {
+        var nm = (typeof Models !== 'undefined' && Models.getMeta && Models.getMeta(fb.model))
+          ? Models.getMeta(fb.model).name : fb.model;
+        el.textContent = '⚠ Insufficient data — showing ' + nm + ' (' + (fb.reason || 'fallback') + ')';
+        el.style.display = 'inline';
       } else {
-        set('fc-v-holdout', '—');
-        if (hSub) hSub.textContent = 'needs ≥12 months history';
+        el.textContent = '';
+        el.style.display = 'none';
       }
     }
 
     function _clearMetrics() {
-      ['fc-v-mae','fc-v-rmse','fc-v-mape','fc-v-next','fc-v-holdout'].forEach(function(id){
+      ['fc-v-wape','fc-v-mase','fc-v-wfmae','fc-v-next'].forEach(function(id){
         var el = document.getElementById(id); if (el) el.textContent = '—';
       });
+      var maseEl = document.getElementById('fc-v-mase');
+      if (maseEl) { maseEl.style.color = '#e8eaf0'; maseEl.title = ''; }
+      var wapeSub = document.getElementById('fc-v-wape-sub');
+      if (wapeSub) wapeSub.textContent = 'walk-forward';
+      var ins = document.getElementById('fc-insample');
+      if (ins) ins.textContent = 'In-sample fit: —';
+      _renderFallback(null);
     }
 
     /* ── Forecast table ── */
@@ -1754,20 +1850,29 @@
 
       var futureMonths = _futureMonths(months[months.length - 1], horizon);
 
+      /* 80% interval from the engine when available; ±1σ heuristic otherwise */
+      var hasPI = Array.isArray(result.lower) && Array.isArray(result.upper) &&
+                  result.lower.length === result.forecast.length &&
+                  result.upper.length === result.forecast.length;
+      var sigma = 0;
+      if (!hasPI) {
+        var residuals = [];
+        (result.inSample || []).forEach(function(v, i) {
+          if (v != null) residuals.push(Math.abs(values[i] - v));
+        });
+        sigma = residuals.length
+          ? Math.round(residuals.reduce(function(a,b){return a+b;},0) / residuals.length)
+          : 0;
+      }
+      var bandTitle = hasPI ? '80% prediction interval' : 'Approximate ±1σ band (no interval returned by model)';
+
       head.innerHTML = '<tr style="background:#0d0f14;">' +
         '<th class="tbl-cell" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Month</th>' +
         '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Forecast (units)</th>' +
+        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;" title="' + bandTitle + '">Lower (80%)</th>' +
+        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;" title="' + bandTitle + '">Upper (80%)</th>' +
         '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">vs Last Year</th>' +
-        '<th class="tbl-cell right" style="color:#4b5563;font-size:10px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;">Confidence Band</th>' +
         '</tr>';
-
-      var residuals = [];
-      result.inSample.forEach(function(v, i) {
-        if (v != null) residuals.push(Math.abs(values[i] - v));
-      });
-      var sigma = residuals.length
-        ? Math.round(residuals.reduce(function(a,b){return a+b;},0) / residuals.length)
-        : 0;
 
       body.innerHTML = result.forecast.map(function(fc, i) {
         var m       = futureMonths[i];
@@ -1780,13 +1885,21 @@
           ? (diff >= 0 ? '+' : '') + diff.toLocaleString() + ' (' + (ly > 0 ? ((diff/ly*100).toFixed(1)+'%') : 'N/A') + ')'
           : '—';
         var diffColor = diff == null ? '#4b5563' : diff > 0 ? '#22c55e' : diff < 0 ? '#ef4444' : '#4b5563';
-        var band  = sigma * Math.sqrt(i + 1);
-        var upper = Math.round(fc + band), lower = Math.max(0, Math.round(fc - band));
+        var lower, upper;
+        if (hasPI) {
+          lower = Math.max(0, Math.round(result.lower[i]));
+          upper = Math.round(result.upper[i]);
+        } else {
+          var band = sigma * Math.sqrt(i + 1);
+          upper = Math.round(fc + band);
+          lower = Math.max(0, Math.round(fc - band));
+        }
         return '<tr>' +
           '<td class="tbl-cell" style="font-family:monospace;font-size:11px;color:#9ca3af;">' + m + '</td>' +
           '<td class="tbl-cell right" style="font-weight:700;color:#a78bfa;">' + Math.round(fc).toLocaleString() + '</td>' +
+          '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + lower.toLocaleString() + '</td>' +
+          '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + upper.toLocaleString() + '</td>' +
           '<td class="tbl-cell right" style="font-size:11px;color:' + diffColor + ';">' + diffStr + '</td>' +
-          '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + lower.toLocaleString() + ' – ' + upper.toLocaleString() + '</td>' +
         '</tr>';
       }).join('');
     }
@@ -1832,7 +1945,109 @@
       if (e.key === 'Escape') closeDrawer();
     });
 
-    return { init, onDataReady, openDrawer, closeDrawer, toggleFullscreen, selectModel, onParamChange, run, autoSelectBest };
+    /* ── PER-SKU AUTO-ROUTING ────────────────────────────────────────────
+       After data aggregation, a Web Worker walk-forward-validates every
+       model on every SKU (js/forecast-worker.js) and streams back each
+       SKU's winner + its forecast. Results land in window._skuRouting
+       (consumed by enrichLoadedSKUs for forward-looking demand) and seed
+       _bestFitCache so the drawer opens on the routed model instantly.
+       Falls back to chunked main-thread routing if Workers are blocked. */
+    var _routingWorker = null;
+
+    function _routingChip(text, done) {
+      var el = document.getElementById('fc-routing-status');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'fc-routing-status';
+        el.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:900;background:#13111c;' +
+          'border:1px solid rgba(124,58,237,0.45);border-radius:10px;padding:9px 14px;font-size:12px;' +
+          'color:#c4b5fd;box-shadow:0 4px 24px rgba(0,0,0,0.45);transition:opacity 0.4s;';
+        document.body.appendChild(el);
+      }
+      el.style.opacity = '1';
+      el.textContent = text;
+      if (done) setTimeout(function() {
+        el.style.opacity = '0';
+        setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, 450);
+      }, 5000);
+    }
+
+    function _onRouted(msg, state) {
+      window._skuRouting = window._skuRouting || {};
+      window._skuRouting[msg.sku] = msg;
+      /* Seed the drawer's Best Fit cache (hist=0 ⇒ 'All History' default) */
+      var series = window._monthlySalesBySKU[msg.sku];
+      if (series && msg.sel) _bestFitCache[msg.sku + '|0|' + series.values.length] = msg.sel;
+      state.doneCount++;
+      if (state.doneCount === state.total || state.doneCount % 5 === 0) {
+        _routingChip('⚡ Auto-routing forecasts… ' + state.doneCount + '/' + state.total);
+      }
+      /* Refresh the replenishment table progressively, not just at the end */
+      if (state.doneCount % 20 === 0 && typeof window.enrichLoadedSKUs === 'function') {
+        window.enrichLoadedSKUs();
+      }
+    }
+
+    function _onRoutingFinished(state) {
+      _routingChip('★ ' + state.doneCount + ' SKUs routed to their best model — table updated', true);
+      if (typeof window.enrichLoadedSKUs === 'function') window.enrichLoadedSKUs();
+    }
+
+    function startAutoRouting() {
+      var bySKU = window._monthlySalesBySKU;
+      if (!bySKU || typeof Models === 'undefined') return;
+      var skus = Object.keys(bySKU).sort();
+      if (!skus.length) return;
+      var state = { doneCount: 0, total: skus.length };
+      window._skuRouting = {};
+      _routingChip('⚡ Auto-routing forecasts… 0/' + state.total);
+
+      function mainThreadFallback() {
+        var i = 0;
+        (function next() {
+          if (i >= skus.length) { _onRoutingFinished(state); return; }
+          var sku = skus[i++];
+          try {
+            var series = bySKU[sku];
+            if (series && series.values.length >= 12) {
+              var sel = Models.autoSelect(series.values);
+              if (sel && sel.best) {
+                var run  = Models.run(sel.best, series.values, {}, sel.horizon || 6);
+                var meta = Models.getMeta(sel.best) || {};
+                var top  = sel.results[0] || {};
+                _onRouted({ sku: sku, sel: sel, best: sel.best, name: meta.name || sel.best,
+                            tag: meta.tag || sel.best, tagColor: meta.tagColor || '#a78bfa',
+                            wape: top.wape, mase: top.mase, forecast: run.forecast,
+                            lower: run.lower, upper: run.upper, horizon: sel.horizon || 6 }, state);
+              }
+            }
+          } catch (e) { /* skip SKU */ }
+          setTimeout(next, 30);   /* yield so the UI stays responsive */
+        })();
+      }
+
+      try {
+        if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
+        _routingWorker = new Worker('js/forecast-worker.js');
+        _routingWorker.onmessage = function(e) {
+          var msg = e.data || {};
+          if (msg.type === 'ready')  _routingWorker.postMessage({ type: 'route', skus: skus });
+          if (msg.type === 'routed') _onRouted(msg, state);
+          if (msg.type === 'done')   { _onRoutingFinished(state); _routingWorker.terminate(); _routingWorker = null; }
+        };
+        _routingWorker.onerror = function(err) {
+          console.warn('Routing worker failed (' + (err.message || 'unknown') + ') — falling back to main thread.');
+          if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
+          mainThreadFallback();
+        };
+        _routingWorker.postMessage({ type: 'init', bySKU: bySKU });
+      } catch (e) {
+        console.warn('Web Worker unavailable — routing on main thread.', e);
+        mainThreadFallback();
+      }
+    }
+
+    return { init, onDataReady, openDrawer, closeDrawer, toggleFullscreen, selectModel, onParamChange, run, autoSelectBest, startAutoRouting };
   })();
   </script>
 
@@ -2256,6 +2471,7 @@
       { key:'stock',    label:'Stock',            align:'right',  sortable:true  },
       { key:'cover',    label:'Stock Cover',      align:'center', sortable:true  },
       { key:'monthly',  label:'Monthly Sales',    align:'right',  sortable:true  },
+      { key:'model',    label:'Forecast Model',   align:'center', sortable:false },
       { key:'safety',   label:'Safety Stock',     align:'right',  sortable:true  },
       { key:'leadtime', label:'Lead Time (days)', align:'center', sortable:true  },
       { key:'moq',      label:'MOQ',              align:'right',  sortable:true  },
@@ -2956,7 +3172,21 @@
               '<span style="color:' + (d.cover_days<14?'#ef4444':d.cover_days<30?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
             return '<td style="text-align:center;">' + cvr + '</td>';
           case 'monthly':
-            return '<td style="text-align:right;">' + (d.monthly_sales>0 ? d.monthly_sales.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+            var mTitle = d.fc_model
+              ? ' title="Forward forecast — next 3 months, ' + escHtml(d.fc_model) + '"'
+              : ' title="Trailing 3-month average"';
+            var mMark = d.fc_model ? ' <span style="color:#a78bfa;font-size:9px;vertical-align:top;">▲</span>' : '';
+            return '<td style="text-align:right;"' + mTitle + '>' +
+              (d.monthly_sales>0 ? d.monthly_sales.toLocaleString() + mMark : '<span style="color:#4b5563;">—</span>') + '</td>';
+          case 'model':
+            if (!d.fc_model) return '<td style="text-align:center;"><span style="color:#4b5563;">—</span></td>';
+            var fcCol = d.fc_color || '#a78bfa';
+            return '<td style="text-align:center;" title="' + escHtml(d.fc_model) +
+              (d.fc_wape != null ? ' · walk-forward WAPE ' + d.fc_wape + '%' : '') + '">' +
+              '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;' +
+              'border:1px solid ' + fcCol + '55;color:' + fcCol + ';background:' + fcCol + '14;">' + escHtml(d.fc_tag || d.fc_model) + '</span>' +
+              (d.fc_wape != null ? '<span style="display:block;font-size:9px;color:#6b7280;margin-top:2px;">' + d.fc_wape + '%</span>' : '') +
+              '</td>';
           case 'safety':
             return '<td style="text-align:right;">' + (d.safety_stock>0 ? d.safety_stock.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'leadtime':
@@ -3814,6 +4044,19 @@
           d.monthly_sales = Math.round(tail.reduce(function(a,b){ return a+b; }, 0) / tail.length);
         }
 
+        /* Forward-looking demand — when auto-routing has picked this SKU's
+           best model (walk-forward winner), drive replenishment from its
+           forecast for the next 3 months instead of the trailing average. */
+        var rt = window._skuRouting && (window._skuRouting[d.sku] || window._skuRouting[key]);
+        if (rt && rt.forecast && rt.forecast.length) {
+          var f3 = rt.forecast.slice(0, 3);
+          d.monthly_sales = Math.round(f3.reduce(function(a,b){ return a+b; }, 0) / f3.length);
+          d.fc_model = rt.name;  d.fc_tag = rt.tag;  d.fc_color = rt.tagColor;
+          d.fc_wape  = rt.wape;
+        } else {
+          d.fc_model = null;
+        }
+
         /* Recompute derived fields */
         var monthly = d.monthly_sales || 0;
         d.cover_days = monthly > 0 ? Math.floor(d.stock / (monthly / 30)) : '—';
@@ -3838,6 +4081,9 @@
       updateSidebarBadges(skus.length, 0, 0);
       renderDashboard();
     }
+    /* Exposed so the forecast auto-router (separate script scope) can
+       re-enrich the table once per-SKU best models are known. */
+    window.enrichLoadedSKUs = enrichLoadedSKUs;
 
     /* ── Exposed: route ALL uploaded files into their views (called by loadDataToViews only) ── */
     window.routeAllFiles = function () {
@@ -4114,8 +4360,14 @@
         result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m]; }) };
       });
       window._monthlySalesBySKU = result;
+      /* Feed the cross-SKU global model (XGBoost trains lazily inside models.js) */
+      if (typeof Models !== 'undefined' && Models.setGlobalSales) Models.setGlobalSales(result);
       /* notify forecast view if it's already open */
       if (typeof ForecastDashboard !== 'undefined') ForecastDashboard.onDataReady();
+      /* kick off per-SKU best-model routing in a background worker */
+      if (typeof ForecastDashboard !== 'undefined' && ForecastDashboard.startAutoRouting) {
+        setTimeout(function(){ ForecastDashboard.startAutoRouting(); }, 400);
+      }
       renderDashboard();
       /* update nav status indicator */
       var lu = document.getElementById('last-updated');

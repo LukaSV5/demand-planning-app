@@ -529,8 +529,8 @@
             <span class="flt-chart-title">Demand Forecast · 12-Month Window</span>
             <div class="flt-chart-legend">
               <span><span class="flt-dot" style="background:#6b7280;"></span>Actuals</span>
-              <span><span class="flt-dot" style="background:#a78bfa;"></span>Prophet</span>
-              <span><span class="flt-dot" style="background:#f59e0b;"></span>XGBoost</span>
+              <span><span class="flt-dot" style="background:#a78bfa;"></span>Auto-ETS</span>
+              <span><span class="flt-dot" style="background:#f59e0b;"></span>Ensemble</span>
             </div>
           </div>
           <svg viewBox="0 0 520 190" width="100%" style="display:block;">
@@ -555,13 +555,13 @@
             <circle cx="222" cy="77"  r="3"   fill="#6b7280"/>
             <circle cx="280" cy="55"  r="3"   fill="#6b7280"/>
             <circle cx="295" cy="50"  r="3.5" fill="#8b8fa8"/>
-            <!-- PROPHET (dashed purple) -->
+            <!-- AUTO-ETS (dashed purple) -->
             <path d="M 295,50 C 315,44 332,38 355,42 C 373,45 390,52 412,47 C 430,43 450,38 472,34"
                   fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="5,3" stroke-linecap="round"/>
             <circle cx="355" cy="42" r="2.5" fill="#a78bfa"/>
             <circle cx="412" cy="47" r="2.5" fill="#a78bfa"/>
             <circle cx="472" cy="34" r="3"   fill="#a78bfa"/>
-            <!-- XGBOOST (dashed amber, best = lower error) -->
+            <!-- ENSEMBLE (dashed amber, best = lower error) -->
             <path d="M 295,50 C 313,42 330,33 352,37 C 369,40 386,47 408,41 C 426,36 446,29 468,25"
                   fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,3" stroke-linecap="round"/>
             <circle cx="352" cy="37" r="2.5" fill="#f59e0b"/>
@@ -581,7 +581,7 @@
           <div class="flt-stat-label">6-Month Forecast</div>
           <div class="flt-stat-period">Jan 2024 → Jun 2024</div>
           <div class="flt-stat-value">8,240 <span class="flt-stat-up">↑ 11%</span></div>
-          <div class="flt-stat-sub">units projected · XGBoost ★</div>
+          <div class="flt-stat-sub">units projected · Best Fit ★</div>
         </div>
 
         <!-- Assumptions card (bottom right) -->
@@ -604,37 +604,37 @@
     <div class="ticker-track">
       <!-- Set A -->
       <div class="ticker-set">
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet Forecasting</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>SARIMAX Model</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>XGBoost Engine</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Simple Moving Average</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet-Style Harmonics</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Auto-ETS Holt-Winters</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>MAE · RMSE · MAPE</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Demand Sensing</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>80% Prediction Intervals</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PNG</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stockout Prevention</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Seasonal · Trend · Flat Presets</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Walk-Forward Validation</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Inventory Optimisation</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Runs fully in the browser</div>
       </div>
       <!-- Set B (identical, for seamless loop) -->
       <div class="ticker-set">
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet Forecasting</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>SARIMAX Model</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>XGBoost Engine</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Simple Moving Average</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet-Style Harmonics</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Auto-ETS Holt-Winters</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>MAE · RMSE · MAPE</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Demand Sensing</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>80% Prediction Intervals</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PNG</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stockout Prevention</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Seasonal · Trend · Flat Presets</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Walk-Forward Validation</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Inventory Optimisation</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Runs fully in the browser</div>
       </div>
@@ -650,45 +650,46 @@
       <p class="models-sub">
         Different products behave differently — some follow <mark>strong seasonal cycles</mark>, others respond to
         <mark>external market signals</mark>, and many are too complex for a <mark>single algorithm</mark> to capture.
-        Throughout my career I've tested <mark>many forecasting approaches</mark>, and these are the three that
-        consistently delivered the <mark>best results</mark> across the widest range of <mark>demand scenarios</mark>.
-        I evaluate all three against each SKU's <mark>historical pattern</mark> and select the one with the
-        <mark>lowest error</mark> on held-out data.
+        The workspace runs a <mark>seven-model lineup</mark> — from a Seasonal Naive benchmark through SES, Theta,
+        and Auto-ETS to a <mark>Top-3 Ensemble</mark> — and the three spotlighted below deliver the
+        <mark>best results</mark> across the widest range of <mark>demand scenarios</mark>.
+        Best Fit evaluates every model against each SKU's <mark>historical pattern</mark> with
+        <mark>walk-forward validation</mark> and selects the one with the <mark>lowest error</mark> automatically.
       </p>
     </div>
 
     <!-- Model Cards -->
     <div class="models-grid">
 
-      <!-- Prophet -->
+      <!-- Prophet-Style -->
       <div class="model-card">
         <div class="model-icon" style="background:rgba(124,58,237,0.12);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
           </svg>
         </div>
-        <div class="model-tag">Meta Open Source</div>
-        <h3 class="model-name">Prophet</h3>
+        <div class="model-tag">Harmonic Regression</div>
+        <h3 class="model-name">Prophet-Style</h3>
         <p class="model-tagline">Built for seasonality &amp; real-world messiness</p>
-        <p class="model-body">Meta's model that automatically detects trend shifts, multi-layer seasonality, and holiday effects. Reliable with minimal tuning, even on messy or incomplete data.</p>
+        <p class="model-body">A Prophet-style decomposition — trend plus Fourier seasonal harmonics fitted by regression. Captures recurring seasonal shape with minimal tuning, even on noisy histories.</p>
         <div class="model-strengths">
           <div class="strength-label">Strengths</div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#a78bfa;"></span>
-            Handles seasonal spikes automatically
+            Flexible multi-wave seasonality
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#a78bfa;"></span>
-            Robust to missing data &amp; outliers
+            Stable on short or noisy histories
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#a78bfa;"></span>
-            Incorporates promotions &amp; holidays
+            80% prediction intervals included
           </div>
         </div>
       </div>
 
-      <!-- SARIMAX -->
+      <!-- Auto-ETS -->
       <div class="model-card model-card--featured">
         <div class="model-icon" style="background:rgba(34,197,94,0.1);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -696,27 +697,27 @@
           </svg>
         </div>
         <div class="model-tag" style="color:#22c55e;border-color:rgba(34,197,94,0.25);background:rgba(34,197,94,0.06);">Classical Statistical</div>
-        <h3 class="model-name">SARIMAX</h3>
-        <p class="model-tagline">The statistical gold standard</p>
-        <p class="model-body">Models autocorrelation in historical demand while incorporating external drivers like pricing, promotions, or macro indicators. Every coefficient is mathematically interpretable.</p>
+        <h3 class="model-name">Auto-ETS</h3>
+        <p class="model-tagline">The flagship: damped-trend Holt-Winters</p>
+        <p class="model-body">Damped-trend Holt-Winters with smoothing parameters auto-tuned per SKU. Level, trend, and seasonality adapt to each product, and every state is mathematically interpretable.</p>
         <div class="model-strengths">
           <div class="strength-label">Strengths</div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#22c55e;"></span>
-            Fully interpretable coefficients
+            Auto-tuned per SKU, zero manual config
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#22c55e;"></span>
-            Integrates exogenous variables
+            Damped trend avoids runaway forecasts
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#22c55e;"></span>
-            Best for structured, predictable demand
+            Top walk-forward accuracy overall
           </div>
         </div>
       </div>
 
-      <!-- XGBoost -->
+      <!-- Global XGBoost -->
       <div class="model-card">
         <div class="model-icon" style="background:rgba(245,158,11,0.1);">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -725,14 +726,14 @@
           </svg>
         </div>
         <div class="model-tag" style="color:#f59e0b;border-color:rgba(245,158,11,0.25);background:rgba(245,158,11,0.06);">Machine Learning</div>
-        <h3 class="model-name">XGBoost</h3>
-        <p class="model-tagline">Machine learning at SKU scale</p>
-        <p class="model-body">Builds decision trees sequentially, each correcting the last. Engineered with lag features and calendar variables, it captures non-linear demand patterns statistical models miss.</p>
+        <h3 class="model-name">Global XGBoost</h3>
+        <p class="model-tagline">One model trained across every SKU</p>
+        <p class="model-body">A single gradient-boosting model trained across all SKUs at once. Lag, calendar, and SKU-level features let sparse products borrow strength from patterns learned portfolio-wide.</p>
         <div class="model-strengths">
           <div class="strength-label">Strengths</div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#f59e0b;"></span>
-            Scales to thousands of SKUs
+            Learns across the entire portfolio
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#f59e0b;"></span>
@@ -740,7 +741,7 @@
           </div>
           <div class="strength-item">
             <span class="strength-dot" style="background:#f59e0b;"></span>
-            Consistently strong on large portfolios
+            Strong on sparse, irregular SKUs
           </div>
         </div>
       </div>
@@ -749,7 +750,7 @@
 
     <!-- Bottom note -->
     <p class="models-footnote">
-      Each model is evaluated on <span style="color:var(--text-1);font-weight:600;">MAE</span>, <span style="color:var(--text-1);font-weight:600;">RMSE</span>, and <span style="color:var(--text-1);font-weight:600;">MAPE</span> — and the best performer is selected per SKU based on hold-out accuracy.
+      All 7 models are evaluated on <span style="color:var(--text-1);font-weight:600;">MAE</span>, <span style="color:var(--text-1);font-weight:600;">RMSE</span>, and <span style="color:var(--text-1);font-weight:600;">MAPE</span> under walk-forward (rolling-origin) validation — Best Fit selects the top performer per SKU, with 80% prediction intervals on every forecast.
     </p>
 
   </section>
