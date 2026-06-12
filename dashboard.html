@@ -8,7 +8,7 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:        #0d0f14;
+      --bg:        #0c0c0e;
       --sidebar:   #0b0d11;
       --surface:   #13161e;
       --surface-2: #1a1d27;
@@ -18,11 +18,16 @@
       --purple-lt: #a78bfa;
       --purple-dim:rgba(124,58,237,0.15);
       --text-1:    #e8eaf0;
-      --text-2:    #6b7280;
-      --text-3:    #3a3d4a;
+      --text-2:    #71717a;        /* nudged up for contrast (was #6b7280) */
+      --text-3:    #4b5563;        /* nudged up for contrast (was #3a3d4a) */
+      /* Semantic legend — mirrors the landing page's "Glass Box" language */
+      --verify:    #22c55e;        /* validated / beats seasonal naive */
+      --caution:   #f59e0b;        /* uncertainty / at-risk */
+      --actual:    #9ca3af;        /* ground truth — humble gray */
       --green:     #22c55e;
       --amber:     #f59e0b;
       --red:       #ef4444;
+      --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
     }
 
     html, body {
@@ -30,8 +35,12 @@
       background: var(--bg);
       color: var(--text-1);
       font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-variant-numeric: tabular-nums;   /* digits align in columns, ledger-style */
       overflow: hidden;
     }
+    /* Numbers read as instrument output across the app */
+    .fc-metric-value { font-family: var(--mono); }
+    .num-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
     /* App content uses 13px base; nav inherits from explicit declarations */
     /* ── NAV ── */
@@ -1045,6 +1054,9 @@
               onmouseout="this.style.background='rgba(255,255,255,0.05)'">✕</button>
     </div>
 
+    <!-- ── Verdict banner: leads the drawer the way the Backtest Theater does ── -->
+    <div id="fc-verdict" style="display:none;align-items:center;gap:9px;padding:9px 18px;font-size:12.5px;font-weight:600;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;font-family:var(--mono);"></div>
+
     <!-- ── Metrics row (headline = honest walk-forward validation) ── -->
     <div style="display:flex;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0;">
       <div class="fc-metric-card" title="Weighted Absolute Percentage Error from walk-forward validation — the model repeatedly forecasts months it has never seen. Lower is better.">
@@ -1644,8 +1656,8 @@
         {
           label: 'Actual',
           data: values,
-          borderColor: '#6366f1',
-          backgroundColor: 'rgba(99,102,241,0.08)',
+          borderColor: '#9ca3af',
+          backgroundColor: 'rgba(156,163,175,0.06)',
           borderWidth: 2,
           pointRadius: 3,
           pointHoverRadius: 5,
@@ -1656,7 +1668,7 @@
         {
           label: 'Fitted',
           data: result.inSample,
-          borderColor: 'rgba(34,197,94,0.7)',
+          borderColor: 'rgba(34,197,94,0.6)',
           borderWidth: 1.5,
           borderDash: [4, 3],
           pointRadius: 0,
@@ -1668,11 +1680,11 @@
         {
           label: 'Forecast',
           data: forecastWithNulls,
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245,158,11,0.15)',
+          borderColor: '#a78bfa',
+          backgroundColor: 'rgba(167,139,250,0.12)',
           borderWidth: 2.5,
           pointRadius: 4,
-          pointBackgroundColor: '#f59e0b',
+          pointBackgroundColor: '#a78bfa',
           tension: 0.3,
           fill: false,
           order: 1,
@@ -1681,8 +1693,8 @@
         {
           label: bandLabel + ' — upper',
           data: upperBand,
-          borderColor: 'rgba(245,158,11,0.2)',
-          backgroundColor: 'rgba(245,158,11,0.07)',
+          borderColor: 'rgba(245,158,11,0.25)',
+          backgroundColor: 'rgba(245,158,11,0.14)',
           borderWidth: 0,
           pointRadius: 0,
           fill: '+1',
@@ -1770,6 +1782,29 @@
       var v       = result.validation || null;
       var metrics = result.metrics    || {};
 
+      /* Verdict banner — frame the whole drawer with one honest line */
+      var verdictEl = document.getElementById('fc-verdict');
+      if (verdictEl) {
+        var modelName = (typeof Models !== 'undefined' && Models.getMeta && Models.getMeta(_model))
+          ? Models.getMeta(_model).name : _model;
+        if (v && v.mase != null && isFinite(v.mase) && v.wape != null) {
+          var beats = v.mase < 1;
+          var wapeTxt = Number(v.wape).toFixed(1) + '%';
+          verdictEl.style.display = 'flex';
+          if (beats) {
+            verdictEl.style.color = '#22c55e';
+            verdictEl.style.background = 'rgba(34,197,94,0.06)';
+            verdictEl.innerHTML = '✓ ' + modelName + ' beats seasonal naive · WAPE ' + wapeTxt + ' · MASE ' + Number(v.mase).toFixed(2) + ' on held-out months';
+          } else {
+            verdictEl.style.color = '#f59e0b';
+            verdictEl.style.background = 'rgba(245,158,11,0.06)';
+            verdictEl.innerHTML = '✗ ' + modelName + ' doesn’t beat copy-last-year here (MASE ' + Number(v.mase).toFixed(2) + ') · try ★ Best Fit';
+          }
+        } else {
+          verdictEl.style.display = 'none';
+        }
+      }
+
       /* WAPE — honest out-of-sample headline */
       set('fc-v-wape', (v && v.wape != null && isFinite(v.wape)) ? Number(v.wape).toFixed(1) + '%' : null);
       var wapeSub = document.getElementById('fc-v-wape-sub');
@@ -1837,6 +1872,8 @@
       if (maseEl) { maseEl.style.color = '#e8eaf0'; maseEl.title = ''; }
       var wapeSub = document.getElementById('fc-v-wape-sub');
       if (wapeSub) wapeSub.textContent = 'walk-forward';
+      var verdictEl = document.getElementById('fc-verdict');
+      if (verdictEl) verdictEl.style.display = 'none';
       var ins = document.getElementById('fc-insample');
       if (ins) ins.textContent = 'In-sample fit: —';
       _renderFallback(null);
@@ -2468,6 +2505,7 @@
       { key:'img',      label:'Image',            align:'left',   sortable:false },
       { key:'sku',      label:'SKU',              align:'left',   sortable:true  },
       { key:'name',     label:'Item Name',        align:'left',   sortable:true  },
+      { key:'trend',    label:'36-Mo Demand',     align:'center', sortable:false },
       { key:'stock',    label:'Stock',            align:'right',  sortable:true  },
       { key:'cover',    label:'Stock Cover',      align:'center', sortable:true  },
       { key:'monthly',  label:'Monthly Sales',    align:'right',  sortable:true  },
@@ -3165,18 +3203,35 @@
             return '<td style="font-family:monospace;font-size:11px;color:#a78bfa;font-weight:600;">' + escHtml(d.sku) + '</td>';
           case 'name':
             return '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="' + escHtml(d.name) + '">' + escHtml(d.name) + '</td>';
+          case 'trend':
+            var sk = window._monthlySalesBySKU && (window._monthlySalesBySKU[d.sku] || window._monthlySalesBySKU[(d.sku||'').toUpperCase()]);
+            if (!sk || !sk.values || sk.values.length < 2)
+              return '<td style="text-align:center;"><span style="color:#4b5563;">—</span></td>';
+            var sv = sk.values, sn = sv.length, sw = 78, sh = 22, sp = 2;
+            var smin = Math.min.apply(null, sv), smax = Math.max.apply(null, sv), srng = (smax - smin) || 1;
+            var spts = sv.map(function(val, i){
+              var x = sp + (sw - 2*sp) * i / (sn - 1);
+              var y = sh - sp - (sh - 2*sp) * (val - smin) / srng;
+              return x.toFixed(1) + ',' + y.toFixed(1);
+            }).join(' ');
+            var slx = (sw - sp).toFixed(1);
+            var sly = (sh - sp - (sh - 2*sp) * (sv[sn-1] - smin) / srng).toFixed(1);
+            return '<td style="text-align:center;padding:4px 10px;" title="36-month demand history">' +
+              '<svg width="' + sw + '" height="' + sh + '" viewBox="0 0 ' + sw + ' ' + sh + '" style="display:block;margin:0 auto;overflow:visible;">' +
+              '<polyline points="' + spts + '" fill="none" stroke="#9ca3af" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>' +
+              '<circle cx="' + slx + '" cy="' + sly + '" r="1.9" fill="#a78bfa"/></svg></td>';
           case 'stock':
-            return '<td style="text-align:right;font-weight:600;">' + (d.stock||0).toLocaleString() + '</td>';
+            return '<td class="num-mono" style="text-align:right;font-weight:600;">' + (d.stock||0).toLocaleString() + '</td>';
           case 'cover':
             var cvr = d.cover_days === '—' ? '<span style="color:#4b5563;">—</span>' :
-              '<span style="color:' + (d.cover_days<14?'#ef4444':d.cover_days<30?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
+              '<span class="num-mono" style="color:' + (d.cover_days<14?'#ef4444':d.cover_days<30?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
             return '<td style="text-align:center;">' + cvr + '</td>';
           case 'monthly':
             var mTitle = d.fc_model
               ? ' title="Forward forecast — next 3 months, ' + escHtml(d.fc_model) + '"'
               : ' title="Trailing 3-month average"';
             var mMark = d.fc_model ? ' <span style="color:#a78bfa;font-size:9px;vertical-align:top;">▲</span>' : '';
-            return '<td style="text-align:right;"' + mTitle + '>' +
+            return '<td class="num-mono" style="text-align:right;"' + mTitle + '>' +
               (d.monthly_sales>0 ? d.monthly_sales.toLocaleString() + mMark : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'model':
             if (!d.fc_model) return '<td style="text-align:center;"><span style="color:#4b5563;">—</span></td>';
@@ -3188,15 +3243,15 @@
               (d.fc_wape != null ? '<span style="display:block;font-size:9px;color:#6b7280;margin-top:2px;">' + d.fc_wape + '%</span>' : '') +
               '</td>';
           case 'safety':
-            return '<td style="text-align:right;">' + (d.safety_stock>0 ? d.safety_stock.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:right;">' + (d.safety_stock>0 ? d.safety_stock.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'leadtime':
-            return '<td style="text-align:center;">' + (d.lead_time>0 ? d.lead_time+'d' : '<span style="color:#4b5563;">14d</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:center;">' + (d.lead_time>0 ? d.lead_time+'d' : '<span style="color:#4b5563;">14d</span>') + '</td>';
           case 'moq':
-            return '<td style="text-align:right;">' + (d.moq>0 ? d.moq.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:right;">' + (d.moq>0 ? d.moq.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'price':
-            return '<td style="text-align:right;">' + (d.price>0 ? '$'+d.price.toFixed(2) : '<span style="color:#4b5563;">—</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:right;">' + (d.price>0 ? '$'+d.price.toFixed(2) : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'toorder':
-            return '<td style="text-align:right;">' + (d.to_order>0 ? '<span style="color:#a78bfa;font-weight:700;">'+d.to_order.toLocaleString()+'</span>' : '<span style="color:#4b5563;">0</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:right;">' + (d.to_order>0 ? '<span style="color:#a78bfa;font-weight:700;">'+d.to_order.toLocaleString()+'</span>' : '<span style="color:#4b5563;">0</span>') + '</td>';
           case 'health':
             var hc = HCFG[d.health] || HCFG.healthy;
             return '<td style="text-align:center;"><span class="badge ' + hc.cls + '"><span class="badge-dot"></span>' + hc.label + '</span></td>';
@@ -3206,8 +3261,9 @@
         }
       }
 
+      var HEALTH_ACCENT = { stockout:'#ef4444', atrisk:'#f59e0b', healthy:'#22c55e' };
       tbody.innerHTML = skuArray.map(function(d) {
-        var cells = '<td onclick="event.stopPropagation()"><input type="checkbox" class="cb"/></td>';
+        var cells = '<td onclick="event.stopPropagation()" style="border-left:2px solid ' + (HEALTH_ACCENT[d.health] || 'transparent') + ';"><input type="checkbox" class="cb"/></td>';
         visCols.forEach(function(c) { cells += cell(c.key, d); });
         extraKeys.forEach(function(k) {
           var val = (rawBySKU[d.sku] && rawBySKU[d.sku][k] != null) ? rawBySKU[d.sku][k] : '—';
