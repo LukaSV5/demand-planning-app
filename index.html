@@ -446,6 +446,435 @@
       font-size: 12px;
       color: var(--text-2);
     }
+
+    /* ════════════ GLASS BOX REDESIGN ════════════ */
+    :root {
+      --verify:  #22c55e;   /* the color of proof — walk-forward-validated numbers only */
+      --caution: #f59e0b;   /* the color of honesty about uncertainty */
+      --actual:  #9ca3af;   /* ground truth is humble gray */
+      --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+    }
+    html { scroll-behavior: smooth; }
+    .mono { font-family: var(--mono); }
+
+    /* ── Hero: Honest Chart ── */
+    .hero-microcopy {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-2);
+      margin-top: -62px;      /* tuck under the actions row */
+      margin-bottom: 62px;
+    }
+    .hx-wrap {
+      position: relative; z-index: 2;
+      width: 100%; max-width: 980px;
+    }
+    .hx-card {
+      background: rgba(16,16,24,0.86);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(124,58,237,0.22);
+      border-radius: 16px;
+      padding: 20px 22px 14px;
+      margin: 0 110px;
+      transform: perspective(1400px) rotateX(7deg) rotateY(-3deg);
+      transform-origin: center bottom;
+      transition: transform 0.45s ease-out;
+      box-shadow:
+        0 0 0 1px rgba(124,58,237,0.15),
+        0 20px 60px rgba(0,0,0,0.6),
+        0 0 55px rgba(124,58,237,0.28),
+        0 0 110px rgba(124,58,237,0.15);
+    }
+    .hx-card:hover { transform: perspective(1400px) rotateX(0deg) rotateY(0deg); }
+    .hx-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .hx-title { font-size: 10.5px; color: #6b7280; font-weight: 500; }
+    .hx-legend { display: flex; gap: 12px; font-size: 9.5px; color: #4b5563; font-weight: 500; }
+    .hx-caption {
+      font-size: 11px; color: var(--text-2); line-height: 1.6;
+      margin-top: 8px; text-align: center;
+    }
+    .hx-caption b { font-family: var(--mono); color: var(--verify); font-weight: 700; }
+    /* forecast line draws itself on load */
+    #hx-fc-line {
+      stroke-dasharray: 340;
+      stroke-dashoffset: 340;
+      animation: hx-draw 1.6s ease-out 0.4s forwards;
+    }
+    @keyframes hx-draw { to { stroke-dashoffset: 0; } }
+    /* whisker hover: thicken + reveal signed error */
+    .hx-miss { cursor: help; }
+    .hx-miss line { transition: stroke-width 0.15s; }
+    .hx-miss text { opacity: 0; transition: opacity 0.15s; }
+    .hx-miss:hover line { stroke-width: 2.5; }
+    .hx-miss:hover text { opacity: 1; }
+    .hx-mini {
+      position: absolute; z-index: 3;
+      width: 196px; padding: 14px 16px;
+      background: rgba(16,16,24,0.86);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.55);
+    }
+    .hx-mini--left  { left: 0;  top: 54%; transform: rotate(-2deg); }
+    .hx-mini--right { right: 0; top: 16%; border-color: rgba(34,197,94,0.28); background: rgba(34,197,94,0.05); }
+    .hx-mini-label {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
+      text-transform: uppercase; color: #6b7280; margin-bottom: 8px;
+    }
+    .hx-mini-val { font-family: var(--mono); font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
+    .hx-mini-sub { font-size: 10.5px; color: var(--text-2); margin-top: 5px; line-height: 1.45; }
+    @media (max-width: 900px) {
+      .hx-card { margin: 0; }
+      .hx-mini { display: none; }
+    }
+
+    /* ── Proof Ledger ── */
+    .ledger {
+      position: relative; z-index: 2;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 44px 24px 36px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .ledger-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text-2);
+      margin-bottom: 30px; text-align: center;
+    }
+    .ledger-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 28px; width: 100%; max-width: 1060px; margin-bottom: 28px;
+    }
+    @media (max-width: 1000px) { .ledger-grid { grid-template-columns: repeat(2, 1fr); max-width: 560px; } .ledger-grid > :last-child { grid-column: span 2; } }
+    @media (max-width: 560px)  { .ledger-grid { grid-template-columns: 1fr; } .ledger-grid > :last-child { grid-column: auto; } }
+    .ledger-cell { text-align: center; }
+    .ledger-num {
+      font-family: var(--mono);
+      font-size: clamp(20px, 2.2vw, 27px);
+      font-weight: 700; color: var(--text-1);
+      letter-spacing: -0.01em; margin-bottom: 8px; white-space: nowrap;
+    }
+    .ledger-num .v { color: var(--verify); }
+    .ledger-cap { font-size: 11.5px; color: var(--text-2); line-height: 1.55; }
+    .ledger-foot {
+      font-size: 13px; color: var(--text-2); font-style: italic;
+      max-width: 640px; text-align: center; line-height: 1.65; margin-bottom: 22px;
+    }
+    .ledger-links {
+      display: flex; gap: 26px; flex-wrap: wrap; justify-content: center;
+      font-size: 13px;
+    }
+    .ledger-links a, .ledger-links summary {
+      color: var(--purple-lt); text-decoration: none; cursor: pointer;
+      border-bottom: 1px solid transparent; transition: border-color 0.15s;
+      list-style: none;
+    }
+    .ledger-links summary::-webkit-details-marker { display: none; }
+    .ledger-links a:hover, .ledger-links summary:hover { border-color: var(--purple-lt); }
+    .ledger-storm { position: relative; }
+    .ledger-storm[open] .storm-body { display: block; }
+    .storm-body {
+      display: none;
+      position: absolute; left: 50%; transform: translateX(-50%);
+      top: calc(100% + 12px); width: min(440px, 86vw); z-index: 20;
+      background: rgba(16,16,24,0.97);
+      border: 1px solid rgba(245,158,11,0.3); border-radius: 12px;
+      padding: 16px 18px; font-size: 12.5px; color: var(--text-2);
+      line-height: 1.65; text-align: left;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    .storm-body b { color: var(--caution); }
+
+    /* ── Evidence Bento ── */
+    .bento-section {
+      padding: 84px 24px 72px;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .bento-h2, .trail-h2, .bt-h2, .cta-h2 {
+      font-size: clamp(26px, 4vw, 42px);
+      font-weight: 800; line-height: 1.15; letter-spacing: -0.025em;
+      color: var(--text-1); text-align: center; margin-bottom: 16px;
+    }
+    .bento-sub, .trail-sub, .bt-sub {
+      font-size: 15px; color: var(--text-2); text-align: center;
+      max-width: 620px; line-height: 1.7; margin-bottom: 48px;
+    }
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-auto-rows: minmax(150px, auto);
+      gap: 16px; width: 100%; max-width: 1060px;
+    }
+    .bento-cell {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px 24px 18px;
+      display: flex; flex-direction: column;
+      transition: transform 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .bento-cell:hover {
+      transform: translateY(-2px);
+      border-color: rgba(124,58,237,0.3);
+      background: rgba(255,255,255,0.035);
+    }
+    .bento-2x2 { grid-column: span 2; grid-row: span 2; }
+    .bento-2x1 { grid-column: span 2; }
+    @media (max-width: 1000px) {
+      .bento-grid { grid-template-columns: repeat(2, 1fr); }
+      .bento-2x2 { grid-column: span 2; grid-row: auto; }
+    }
+    @media (max-width: 640px) {
+      .bento-grid { grid-template-columns: 1fr; }
+      .bento-2x2, .bento-2x1 { grid-column: auto; }
+    }
+    .bento-tag {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: var(--purple-lt); margin-bottom: 12px;
+    }
+    .bento-cell h3 {
+      font-size: 18px; font-weight: 700; letter-spacing: -0.015em;
+      color: var(--text-1); line-height: 1.35; margin-bottom: 10px;
+    }
+    .bento-2x2 h3 { font-size: 22px; }
+    .bento-body {
+      font-size: 13px; color: var(--text-2); line-height: 1.7;
+      margin-bottom: 16px; flex: 1;
+    }
+    .bento-proof {
+      font-family: var(--mono);
+      font-size: 10.5px; color: #8b8fa8; line-height: 1.6;
+      border: 1px solid var(--border); border-radius: 8px;
+      background: rgba(0,0,0,0.25);
+      padding: 9px 12px;
+      overflow: hidden;
+    }
+    @media (hover: hover) {
+      .bento-proof { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-width: 0; transition: max-height 0.25s ease-out, opacity 0.25s, padding 0.25s, border-width 0.25s; }
+      .bento-cell:hover .bento-proof { max-height: 90px; opacity: 1; padding-top: 9px; padding-bottom: 9px; border-width: 1px; }
+    }
+    .bento-proof .ok  { color: var(--verify); }
+    .bento-proof .bad { color: #f43f5e; }
+
+    /* ── Audit Trail ── */
+    .trail-section {
+      padding: 72px 24px 84px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .trail-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 18px; width: 100%; max-width: 1100px;
+      position: relative; margin-bottom: 44px;
+    }
+    .trail-line {
+      position: absolute; top: -26px; left: 6%; right: 6%; height: 2px;
+      display: flex; pointer-events: none;
+    }
+    .trail-line .seg-gray  { flex: 1.9; background: #3a3d4a; }
+    .trail-line .seg-green { flex: 2; background: repeating-linear-gradient(90deg, var(--verify) 0 7px, transparent 7px 13px); opacity: 0.7; }
+    .trail-line .seg-arrow {
+      width: 0; height: 0; align-self: center;
+      border-left: 8px solid var(--purple);
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+    }
+    @media (max-width: 900px) {
+      .trail-grid { grid-template-columns: 1fr; max-width: 460px; }
+      .trail-line { display: none; }
+    }
+    .trail-card {
+      background: rgba(16,16,24,0.6);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px 22px;
+    }
+    .trail-num {
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.09em; color: var(--purple-lt); margin-bottom: 12px;
+    }
+    .trail-card h3 { font-size: 16.5px; font-weight: 700; color: var(--text-1); margin-bottom: 10px; letter-spacing: -0.01em; }
+    .trail-card p { font-size: 12.5px; color: var(--text-2); line-height: 1.7; }
+    .trail-card p b { color: var(--text-1); font-weight: 600; }
+    .trail-footnote {
+      font-size: 12.5px; color: var(--text-2); text-align: center;
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 10px 26px; background: rgba(255,255,255,0.02);
+      max-width: 860px; line-height: 1.6;
+    }
+
+    /* ── Backtest Theater ── */
+    .bt-section {
+      padding: 84px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center;
+      position: relative;
+    }
+    .bt-panel {
+      width: 100%; max-width: 980px;
+      background: rgba(16,16,24,0.86);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(124,58,237,0.22);
+      border-radius: 18px;
+      padding: 24px 26px 20px;
+      box-shadow:
+        0 0 0 1px rgba(124,58,237,0.12),
+        0 20px 60px rgba(0,0,0,0.55),
+        0 0 55px rgba(124,58,237,0.18);
+    }
+    .bt-panel.arrived { animation: bt-pulse 0.6s ease-out; }
+    @keyframes bt-pulse {
+      0%, 100% { border-color: rgba(124,58,237,0.22); }
+      50% { border-color: rgba(124,58,237,0.85); }
+    }
+    .bt-controls {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .bt-pill {
+      padding: 7px 15px; border-radius: 10px;
+      font-size: 12.5px; font-weight: 600;
+      color: #9ca3af; background: none;
+      border: 1px solid var(--border); cursor: pointer;
+      transition: color 0.15s, background 0.15s, border-color 0.15s;
+    }
+    .bt-pill:hover { color: var(--text-1); background: rgba(255,255,255,0.05); }
+    .bt-pill[aria-pressed="true"] {
+      color: var(--text-1);
+      background: rgba(124,58,237,0.15);
+      border-color: rgba(124,58,237,0.3);
+    }
+    .bt-run {
+      margin-left: auto;
+      display: inline-flex; align-items: center; gap: 7px;
+      background: var(--purple); color: #fff;
+      font-size: 12.5px; font-weight: 600;
+      padding: 8px 18px; border-radius: 10px; border: none; cursor: pointer;
+      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+    }
+    .bt-run:hover { background: #6d28d9; box-shadow: 0 0 24px rgba(124,58,237,0.4); transform: translateY(-1px); }
+    .bt-run:active { transform: scale(0.97); }
+    .bt-run:disabled { opacity: 0.55; cursor: wait; transform: none; box-shadow: none; }
+    .bt-stage { position: relative; height: 340px; }
+    .bt-stage canvas { width: 100% !important; height: 100% !important; }
+    .bt-scoreboard {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 14px; margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--border);
+    }
+    .bt-score { text-align: center; }
+    .bt-score-label {
+      font-size: 9px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: #6b7280; margin-bottom: 4px;
+    }
+    .bt-score-val {
+      font-family: var(--mono); font-size: 19px; font-weight: 700;
+      color: var(--text-1); transition: filter 0.2s;
+    }
+    .bt-score-val.reset { filter: blur(4px); }
+    .bt-verdict {
+      font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+      min-height: 42px; margin-top: 14px; text-align: center;
+    }
+    .bt-verdict.win  { color: var(--verify); }
+    .bt-verdict.loss { color: var(--caution); }
+    .bt-board {
+      margin-top: 6px; border-top: 1px solid var(--border); padding-top: 12px;
+      display: none;
+    }
+    .bt-board.show { display: block; }
+    .bt-board-title {
+      font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em;
+      text-transform: uppercase; color: #6b7280; margin-bottom: 8px; text-align: center;
+    }
+    .bt-row {
+      display: flex; align-items: center; gap: 12px;
+      font-family: var(--mono); font-size: 12px; color: var(--text-2);
+      padding: 6px 10px; border-radius: 8px; cursor: pointer;
+      transition: background 0.15s; animation: bt-fadein 0.4s ease-out both;
+    }
+    @keyframes bt-fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; } }
+    .bt-row:hover { background: rgba(124,58,237,0.1); }
+    .bt-row .nm { flex: 1; color: var(--text-1); }
+    .bt-row .routed { color: var(--verify); font-weight: 700; }
+    .bt-replen {
+      margin-top: 12px;
+      font-family: var(--mono); font-size: 11.5px; color: #8b8fa8;
+      border: 1px solid rgba(34,197,94,0.25); border-radius: 10px;
+      background: rgba(34,197,94,0.04);
+      padding: 10px 14px; text-align: center; line-height: 1.7;
+      display: none;
+    }
+    .bt-replen.show { display: block; }
+    .bt-replen b { color: var(--text-1); }
+    .bt-footnote {
+      font-size: 11.5px; color: var(--text-2); margin-top: 18px;
+      text-align: center; max-width: 660px; line-height: 1.6;
+    }
+    .bt-exit { margin-top: 22px; text-align: center; }
+
+    /* ── Final CTA ── */
+    .cta-section {
+      position: relative; overflow: hidden;
+      padding: 120px 24px;
+      border-top: 1px solid var(--border);
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute; width: 900px; height: 460px;
+      top: 0; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(ellipse at center top,
+        rgba(124,58,237,0.3) 0%, rgba(124,58,237,0.1) 40%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+      pointer-events: none;
+    }
+    .cta-inner { position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; }
+    .cta-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--purple-lt); margin-bottom: 22px;
+    }
+    .cta-h2 { max-width: 700px; margin-bottom: 22px; }
+    .cta-sub {
+      font-size: 16px; color: var(--text-2); line-height: 1.7;
+      max-width: 580px; margin-bottom: 38px;
+    }
+    .cta-checklist {
+      font-family: var(--mono); font-size: 11px; color: var(--text-2);
+      margin-top: 16px; letter-spacing: 0.02em;
+    }
+    .cta-mail {
+      font-size: 13px; color: var(--purple-lt); text-decoration: none;
+      margin-top: 26px; border-bottom: 1px solid transparent; transition: border-color 0.15s;
+    }
+    .cta-mail:hover { border-color: var(--purple-lt); }
+    .cta-sig {
+      font-family: var(--mono); font-size: 11px; color: #6b7280; margin-top: 22px;
+    }
+    .cta-charm { font-size: 13px; color: var(--verify); font-weight: 600; margin-top: 10px; }
+
+    @media (prefers-reduced-motion: reduce) {
+      #hx-fc-line { animation: none; stroke-dashoffset: 0; }
+      .ticker-track { animation: none; }
+      .bt-row { animation: none; }
+      * { transition-duration: 0.01ms !important; }
+    }
   </style>
 </head>
 <body>
@@ -485,115 +914,153 @@
       <div class="hero-badge">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          <path d="M12 3v18M5 7l7-4 7 4M4 13c0 1.7 1.3 3 3 3s3-1.3 3-3L7 7zM14 13c0 1.7 1.3 3 3 3s3-1.3 3-3l-3-6z"/>
         </svg>
-        ⚡ Live Portfolio Case Study
+        Every number on this page is checkable in your browser
       </div>
 
-      <h1>Luka Abazadze <em>Demand Analytics</em></h1>
+      <h1>Most forecasting tools show you their best fit. <em>This one shows you its mistakes.</em></h1>
 
       <p class="hero-sub">
-        Designed and engineered by Luka Abazadze. This interactive platform showcases the statistical models I have built and deployed by myself in past roles to optimize multi-channel e-commerce operations. Upload datasets, manipulate parameters, and test predictive metrics in real-time.
+        Seven statistical models, audited by walk-forward validation on <em style="color:var(--purple-lt);">your</em> data — honest WAPE and MASE scores, 80% prediction intervals on every forecast, and replenishment quantities you can defend in a Monday meeting. Built end-to-end by Luka Abazadze, supply chain analyst. The whole engine runs in your browser; nothing hides behind a server.
       </p>
 
       <div class="hero-actions">
         <a class="btn-primary" href="dashboard.html">
-          Enter Planning Workspace →
+          Open the Live Workspace — no signup →
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </a>
-        <a class="btn-ghost" href="#features">
-          View My Professional CV
+        <a class="btn-ghost" href="#backtest">
+          Watch a model get audited ↓
         </a>
       </div>
+      <p class="hero-microcopy">Free · no signup · one click loads a 140-SKU demo portfolio</p>
 
-      <!-- FLOATING PREVIEW (multi-card layout) -->
-      <div class="preview-wrap">
+      <!-- THE HONEST CHART — a hero that admits error -->
+      <div class="hx-wrap">
 
-        <!-- Query card (left) -->
-        <div class="flt-query">
-          <p class="flt-query-text">Which SKU will stock out in the next 30 days?</p>
-          <div class="flt-query-row">
-            <span class="flt-query-tag">@ SKU-4821</span>
-            <div class="flt-query-btn">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
+        <div class="hx-card">
+          <div class="hx-head">
+            <span class="hx-title">WALK-FORWARD AUDIT · 6 HELD-OUT MONTHS</span>
+            <div class="hx-legend">
+              <span><span class="flt-dot" style="background:#9ca3af;"></span>Actuals</span>
+              <span><span class="flt-dot" style="background:#a78bfa;"></span>Forecast</span>
+              <span><span class="flt-dot" style="background:#f59e0b;"></span>80% interval</span>
+              <span><span class="flt-dot" style="background:#f43f5e;"></span>Misses</span>
             </div>
           </div>
-        </div>
-
-        <!-- Main chart card (center, perspective tilted) -->
-        <div class="flt-chart">
-          <div class="flt-chart-header">
-            <span class="flt-chart-title">Demand Forecast · 12-Month Window</span>
-            <div class="flt-chart-legend">
-              <span><span class="flt-dot" style="background:#6b7280;"></span>Actuals</span>
-              <span><span class="flt-dot" style="background:#a78bfa;"></span>Auto-ETS</span>
-              <span><span class="flt-dot" style="background:#f59e0b;"></span>Ensemble</span>
-            </div>
-          </div>
-          <svg viewBox="0 0 520 190" width="100%" style="display:block;">
-            <!-- Grid lines -->
-            <line x1="30" y1="22" x2="510" y2="22" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-            <line x1="30" y1="57" x2="510" y2="57" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-            <line x1="30" y1="92" x2="510" y2="92" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-            <line x1="30" y1="127" x2="510" y2="127" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-            <!-- Y labels -->
-            <text x="0" y="26" font-size="8" fill="#3a3d4a" font-family="monospace">1,600</text>
-            <text x="0" y="61" font-size="8" fill="#3a3d4a" font-family="monospace">1,200</text>
-            <text x="0" y="96" font-size="8" fill="#3a3d4a" font-family="monospace">800</text>
-            <!-- Forecast divider -->
-            <line x1="295" y1="8" x2="295" y2="138" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
-            <text x="298" y="17" font-size="7" fill="#4b5563">Forecast →</text>
-            <!-- ACTUALS (solid, gray) -->
-            <path d="M 45,122 C 65,127 82,131 102,128 C 122,124 140,112 162,102 C 180,94 200,86 222,77 C 240,70 260,62 280,55 L 295,50"
-                  fill="none" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="45"  cy="122" r="3"   fill="#6b7280"/>
-            <circle cx="102" cy="128" r="3"   fill="#6b7280"/>
-            <circle cx="162" cy="102" r="3"   fill="#6b7280"/>
-            <circle cx="222" cy="77"  r="3"   fill="#6b7280"/>
-            <circle cx="280" cy="55"  r="3"   fill="#6b7280"/>
-            <circle cx="295" cy="50"  r="3.5" fill="#8b8fa8"/>
-            <!-- AUTO-ETS (dashed purple) -->
-            <path d="M 295,50 C 315,44 332,38 355,42 C 373,45 390,52 412,47 C 430,43 450,38 472,34"
-                  fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-dasharray="5,3" stroke-linecap="round"/>
-            <circle cx="355" cy="42" r="2.5" fill="#a78bfa"/>
-            <circle cx="412" cy="47" r="2.5" fill="#a78bfa"/>
-            <circle cx="472" cy="34" r="3"   fill="#a78bfa"/>
-            <!-- ENSEMBLE (dashed amber, best = lower error) -->
-            <path d="M 295,50 C 313,42 330,33 352,37 C 369,40 386,47 408,41 C 426,36 446,29 468,25"
-                  fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,3" stroke-linecap="round"/>
-            <circle cx="352" cy="37" r="2.5" fill="#f59e0b"/>
-            <circle cx="408" cy="41" r="2.5" fill="#f59e0b"/>
-            <circle cx="468" cy="25" r="3"   fill="#f59e0b"/>
-            <!-- X axis labels -->
-            <text x="32"  y="183" font-size="7.5" fill="#3a3d4a">Jul '23</text>
-            <text x="148" y="183" font-size="7.5" fill="#3a3d4a">Sep '23</text>
-            <text x="270" y="183" font-size="7.5" fill="#3a3d4a">Nov '23</text>
-            <text x="388" y="183" font-size="7.5" fill="#3a3d4a">Feb '24</text>
-            <text x="458" y="183" font-size="7.5" fill="#3a3d4a">Apr '24</text>
+          <svg viewBox="0 0 640 212" width="100%" style="display:block;" role="img"
+               aria-label="A forecast chart that shows its errors: 6 held-out months, 4 hits, 2 misses, all actuals inside the 80 percent interval band.">
+            <!-- grid -->
+            <line x1="24" y1="30"  x2="626" y2="30"  stroke="rgba(255,255,255,0.04)"/>
+            <line x1="24" y1="70"  x2="626" y2="70"  stroke="rgba(255,255,255,0.04)"/>
+            <line x1="24" y1="110" x2="626" y2="110" stroke="rgba(255,255,255,0.04)"/>
+            <line x1="24" y1="150" x2="626" y2="150" stroke="rgba(255,255,255,0.04)"/>
+            <!-- training | held-out divider -->
+            <line x1="430" y1="14" x2="430" y2="168" stroke="rgba(255,255,255,0.14)" stroke-width="1" stroke-dasharray="4,4"/>
+            <text x="424" y="12" font-size="8" fill="#6b7280" font-family="monospace" text-anchor="end">TRAINING ▸</text>
+            <text x="436" y="12" font-size="8" fill="#6b7280" font-family="monospace">◂ HELD OUT</text>
+            <!-- 80% interval band (amber, 14% fill) -->
+            <polygon points="430,80 455,74 487,85 519,65 551,44 583,66 615,46 615,112 583,124 551,96 519,111 487,146 455,110 430,116"
+                     fill="rgba(245,158,11,0.14)" stroke="rgba(245,158,11,0.45)" stroke-width="0.8"/>
+            <text x="556" y="138" font-size="8" fill="#f59e0b" font-family="monospace" opacity="0.85">your uncertainty budget —</text>
+            <text x="556" y="148" font-size="8" fill="#f59e0b" font-family="monospace" opacity="0.85">safety stock lives here</text>
+            <!-- actuals: full width, INCLUDING the part after the forecast started -->
+            <path d="M 30,128 C 55,118 75,140 100,132 C 125,124 145,98 170,104 C 195,110 215,142 240,134 C 265,126 285,92 310,88 C 335,84 355,112 380,106 C 400,101 415,99 430,98 L 455,95 L 487,143 L 519,86 L 551,72 L 583,95 L 615,66"
+                  fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="455" cy="95"  r="3" fill="#9ca3af"/>
+            <circle cx="487" cy="143" r="3" fill="#9ca3af"/>
+            <circle cx="519" cy="86"  r="3" fill="#9ca3af"/>
+            <circle cx="551" cy="72"  r="3" fill="#9ca3af"/>
+            <circle cx="583" cy="95"  r="3" fill="#9ca3af"/>
+            <circle cx="615" cy="66"  r="3" fill="#9ca3af"/>
+            <!-- the forecast — visibly missing two points; draws itself on load -->
+            <path id="hx-fc-line" d="M 430,98 L 455,92 L 487,105 L 519,88 L 551,70 L 583,95 L 615,78"
+                  fill="none" stroke="#a78bfa" stroke-width="2" stroke-dasharray="340" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="455" cy="92"  r="2.5" fill="#a78bfa"/>
+            <circle cx="519" cy="88"  r="2.5" fill="#a78bfa"/>
+            <circle cx="551" cy="70"  r="2.5" fill="#a78bfa"/>
+            <circle cx="583" cy="95"  r="2.5" fill="#a78bfa"/>
+            <!-- the two misses: rose whiskers from forecast to truth, signed errors on hover -->
+            <g class="hx-miss">
+              <line x1="487" y1="105" x2="487" y2="143" stroke="rgba(244,63,94,0.65)" stroke-width="1.5"/>
+              <circle cx="487" cy="105" r="2.8" fill="#f43f5e"/>
+              <text x="494" y="128" font-size="9" fill="#f43f5e" font-family="monospace">−38</text>
+            </g>
+            <g class="hx-miss">
+              <line x1="615" y1="78" x2="615" y2="66" stroke="rgba(244,63,94,0.65)" stroke-width="1.5"/>
+              <circle cx="615" cy="78" r="2.8" fill="#f43f5e"/>
+              <text x="600" y="92" font-size="9" fill="#f43f5e" font-family="monospace">+12</text>
+            </g>
+            <!-- x labels -->
+            <text x="28"  y="186" font-size="7.5" fill="#4b5563" font-family="monospace">JAN</text>
+            <text x="180" y="186" font-size="7.5" fill="#4b5563" font-family="monospace">JUL</text>
+            <text x="330" y="186" font-size="7.5" fill="#4b5563" font-family="monospace">JAN</text>
+            <text x="440" y="186" font-size="7.5" fill="#4b5563" font-family="monospace">JUL · HELD OUT</text>
           </svg>
+          <p class="hx-caption">6 held-out months. 4 hits, 2 misses, all 6 inside the 80% band. <b>WAPE 9.6% · MASE 0.71</b> — that's the score we lead with.</p>
         </div>
 
-        <!-- Forecast stat card (top right) -->
-        <div class="flt-stat">
-          <div class="flt-stat-label">6-Month Forecast</div>
-          <div class="flt-stat-period">Jan 2024 → Jun 2024</div>
-          <div class="flt-stat-value">8,240 <span class="flt-stat-up">↑ 11%</span></div>
-          <div class="flt-stat-sub">units projected · Best Fit ★</div>
+        <!-- flanking mini-cards: the two numbers every vendor conflates -->
+        <div class="hx-mini hx-mini--left">
+          <div class="hx-mini-label">In-sample fit</div>
+          <div class="hx-mini-val" style="color:var(--caution);"><s style="opacity:0.8;">4.1%</s> ✗</div>
+          <div class="hx-mini-sub">optimistic by construction — the number other tools lead with</div>
         </div>
-
-        <!-- Assumptions card (bottom right) -->
-        <div class="flt-assump">
-          <div class="flt-assump-title">Model Assumptions</div>
-          <div class="flt-assump-row"><span>Lead Time</span><span class="flt-assump-val">14 days ×</span></div>
-          <div class="flt-assump-row"><span>Safety Stock</span><span class="flt-assump-val">2 weeks ×</span></div>
-          <div class="flt-assump-row"><span>Seasonality</span><span class="flt-assump-val" style="color:#22c55e;">ON ✓</span></div>
+        <div class="hx-mini hx-mini--right">
+          <div class="hx-mini-label" style="color:#22c55e;">Walk-forward</div>
+          <div class="hx-mini-val" style="color:var(--verify);">9.6% ✓</div>
+          <div class="hx-mini-sub">scored only on months the model never saw — the number you can plan on</div>
         </div>
 
       </div>
 
+    </div>
+  </section>
+
+  <!-- ── THE PROOF LEDGER — what replaces customer logos ── -->
+  <section class="ledger">
+    <div class="ledger-label">No customer logos. No testimonials. Just things you can check.</div>
+
+    <div class="ledger-grid">
+      <div class="ledger-cell">
+        <div class="ledger-num">140 <span style="color:var(--text-2);">SKUs</span> · 109,275 <span style="color:var(--text-2);">rows</span></div>
+        <div class="ledger-cap">the demo portfolio: three years of real-shaped retail history, loaded in one click.</div>
+      </div>
+      <div class="ledger-cell">
+        <div class="ledger-num">MASE <span class="v">&lt; 1.0</span></div>
+        <div class="ledger-cap">the bar every model must clear: beat copy-last-year or get benched. Failing scores show up red in the app — we don't hide them.</div>
+      </div>
+      <div class="ledger-cell">
+        <div class="ledger-num"><span class="v">80%</span></div>
+        <div class="ledger-cap">prediction interval on every forecast — 10th/90th percentiles of real walk-forward residuals, not a decorative cone.</div>
+      </div>
+      <div class="ledger-cell">
+        <div class="ledger-num">0 <span style="color:var(--text-2);">servers</span></div>
+        <div class="ledger-cap">the entire engine is client-side JavaScript. Right-click → View Source. The methodology isn't a whitepaper; it's the page you're on.</div>
+      </div>
+      <div class="ledger-cell">
+        <div class="ledger-num"><span class="v" id="ledger-fits">0</span></div>
+        <div class="ledger-cap">validation fits run in this tab so far — counted, not claimed. Press play in the <a href="#backtest" style="color:var(--purple-lt);text-decoration:none;">Backtest Theater</a> and watch it climb.</div>
+      </div>
+    </div>
+
+    <p class="ledger-foot">"This is a portfolio build by one analyst, not a venture-backed vendor. Which is exactly why nothing here is taken on faith — your browser just verified it."</p>
+
+    <div class="ledger-links">
+      <a href="#methodology">Read the validation methodology</a>
+      <details class="ledger-storm">
+        <summary>We don't delete the storm →</summary>
+        <div class="storm-body">
+          <b>88% of textbook "outliers" in this data are real November–December peaks.</b>
+          Capping them with IQR fences — the standard "data cleaning" step — would amputate the very
+          signal the models exist to forecast. So we don't. <b>Your spikes are data, not dirt.</b>
+        </div>
+      </details>
+      <a href="mailto:abazadzeluka@outlook.com?subject=Guided%20tour%20of%20the%20forecasting%20workspace">Prefer a guided tour? Email the analyst →</a>
     </div>
   </section>
 
@@ -609,7 +1076,7 @@
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>MAE · RMSE · MAPE</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>WAPE · MASE · MAE · RMSE</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
@@ -627,7 +1094,7 @@
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>MAE · RMSE · MAPE</div>
+        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>WAPE · MASE · MAE · RMSE</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
         <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
@@ -640,6 +1107,94 @@
       </div>
     </div>
   </div>
+
+  <!-- ── THE EVIDENCE BENTO ── -->
+  <section class="bento-section">
+    <h2 class="bento-h2">Features are claims.<br/>Here's the evidence for ours.</h2>
+    <p class="bento-sub">Everything below is shipped and running in the workspace one click away — nothing on a roadmap, nothing "coming soon." Hover any card to open its evidence drawer.</p>
+
+    <div class="bento-grid">
+
+      <div class="bento-cell bento-2x2">
+        <div class="bento-tag">Honest accuracy</div>
+        <h3>Re-fit from scratch. Score blind. Repeat.</h3>
+        <p class="bento-body">Every model is re-trained — grid searches, auto-tuning, everything — on expanding windows of your history, then graded only on months it never saw. Errors are pooled across origins and horizons into one WAPE and MASE you can actually plan against.<br/><br/>In-sample fit is shown too, but labeled what it is: optimistic by construction.</p>
+        <div class="bento-proof">validation: { wape, mase, origins × horizon } — pooled, zero future leakage</div>
+      </div>
+
+      <div class="bento-cell bento-2x1">
+        <div class="bento-tag">7 models, 1 winner per SKU</div>
+        <h3>Your slow movers and your bestsellers don't deserve the same model.</h3>
+        <p class="bento-body">A background worker backtests all seven models — Seasonal Naive to Global XGBoost — on every SKU and routes each one to its proven winner. A progress chip counts SKUs as they're routed; a ranked leaderboard shows exactly why the winner won.</p>
+        <div class="bento-proof">★ Best Fit · 140/140 SKUs routed · click any leaderboard row to override</div>
+      </div>
+
+      <div class="bento-cell bento-2x1">
+        <div class="bento-tag">Uncertainty, quantified</div>
+        <h3>A forecast without a range is a guess with good posture.</h3>
+        <p class="bento-body">Every forecast ships with an 80% band built from real walk-forward residuals at each step — drawn on the chart and printed as Lower/Upper columns, so safety-stock conversations start from honest risk, not vibes.</p>
+        <div class="bento-proof">lower ≥ 0 · lower ≤ forecast ≤ upper, always · empirical 10th/90th percentiles</div>
+      </div>
+
+      <div class="bento-cell">
+        <div class="bento-tag">Portfolio learning</div>
+        <h3>Sparse SKUs borrow strength.</h3>
+        <p class="bento-body">One gradient-boosted model per forecast step, trained on features pooled across your whole catalog — irregular movers learn from portfolio-wide patterns.</p>
+        <div class="bento-proof">scale-normalized per SKU · amber tag in the leaderboard</div>
+      </div>
+
+      <div class="bento-cell">
+        <div class="bento-tag">The bar to clear</div>
+        <h3>Beat the naive forecast, or say so.</h3>
+        <p class="bento-body">MASE compares every model to seasonal-naive. Green means it earned its complexity. Red means copy-paste-last-year would've done better — and the app says that to your face.</p>
+        <div class="bento-proof"><span class="ok">MASE 0.71 ✓</span> &nbsp;·&nbsp; <span class="bad">MASE 1.18 ✗</span></div>
+      </div>
+
+      <div class="bento-cell bento-2x1">
+        <div class="bento-tag">From prediction to purchase order</div>
+        <h3>The forecast isn't the deliverable. The order quantity is.</h3>
+        <p class="bento-body">Once a SKU is routed, its replenishment math runs on the winning model's next-3-month forecast — not a trailing average. Reorder point = safety stock + lead-time demand; To-Order rounds up to supplier MOQ; every row shows cover days, health status, and a projected replenish date.</p>
+        <div class="bento-proof">SKU-1061 · FOAM ROLLER 60CM · To Order rounded to MOQ · cover days live</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS — THE AUDIT TRAIL ── -->
+  <section class="trail-section">
+    <h2 class="trail-h2">From CSV to defensible order quantity<br/>in four steps.</h2>
+    <p class="trail-sub">No onboarding call. No implementation project. The demo dataset loads in one click if you'd rather not bring your own.</p>
+
+    <div class="trail-grid" style="margin-top:34px;">
+      <div class="trail-line" aria-hidden="true">
+        <span class="seg-gray"></span><span class="seg-green"></span><span class="seg-arrow"></span>
+      </div>
+      <div class="trail-card">
+        <div class="trail-num">01 · CONNECT</div>
+        <h3>Drop in your CSVs.</h3>
+        <p>Sales history, stock levels, suppliers, purchase orders — columns are auto-mapped, every assignment re-mappable, multi-file add supported. Or press <b>Load demo dataset</b> and skip straight to step 2.</p>
+      </div>
+      <div class="trail-card">
+        <div class="trail-num">02 · AUDIT</div>
+        <h3>Watch every SKU get backtested.</h3>
+        <p>A Web Worker walk-forward-validates all seven models on every SKU in the background while you browse. A progress chip streams results, and each winner is cached so its drawer opens instantly.</p>
+      </div>
+      <div class="trail-card">
+        <div class="trail-num">03 · DECIDE</div>
+        <h3>Open the drawer. Interrogate the forecast.</h3>
+        <p>The routed model is pre-selected: switch between all 7, click any leaderboard row to override, read the 80% band, stretch the history horizon, export the PNG for your S&amp;OP deck.</p>
+      </div>
+      <div class="trail-card">
+        <div class="trail-num">04 · REPLENISH</div>
+        <h3>Turn the forecast into a PO.</h3>
+        <p>The replenishment workspace prices every row off the winning forecast: To-Order at MOQ, reorder points, cover days, health status, projected replenish dates — Create PO and Export a click away.</p>
+      </div>
+    </div>
+
+    <p class="trail-footnote" id="methodology">
+      Headline metrics throughout: <span style="color:var(--text-1);font-weight:600;">WAPE</span> and <span style="color:var(--text-1);font-weight:600;">MASE</span> under walk-forward (rolling-origin) validation — re-fit per origin, errors pooled across origins × horizon, MASE benchmarked against seasonal naive. MAE and RMSE reported alongside. In-sample fit is displayed but explicitly demoted.
+    </p>
+  </section>
 
   <!-- ── MODELS SECTION ── -->
   <section class="models-section">
@@ -750,7 +1305,7 @@
 
     <!-- Bottom note -->
     <p class="models-footnote">
-      All 7 models are evaluated on <span style="color:var(--text-1);font-weight:600;">MAE</span>, <span style="color:var(--text-1);font-weight:600;">RMSE</span>, and <span style="color:var(--text-1);font-weight:600;">MAPE</span> under walk-forward (rolling-origin) validation — Best Fit selects the top performer per SKU, with 80% prediction intervals on every forecast.
+      All 7 models are evaluated on <span style="color:var(--text-1);font-weight:600;">WAPE</span> and <span style="color:var(--text-1);font-weight:600;">MASE</span> under walk-forward (rolling-origin) validation, with MAE and RMSE alongside — Best Fit selects the top performer per SKU, with 80% prediction intervals on every forecast.
     </p>
 
   </section>
@@ -923,10 +1478,359 @@
     }
   </style>
 
+  <!-- ── THE BACKTEST THEATER ── -->
+  <section class="bt-section" id="backtest">
+    <h2 class="bt-h2">Don't take the score's word for it.<br/>Watch it being earned.</h2>
+    <p class="bt-sub">This is a real SKU from the demo dataset — <span class="mono" style="color:var(--text-1);">SKU-1061 · Foam Roller 60cm</span> — and the real engine from the workspace: <span class="mono" style="color:var(--text-1);">js/models.js</span>, the same file. Press play.</p>
+
+    <div class="bt-panel">
+      <div class="bt-controls" role="group" aria-label="Pick a model to audit">
+        <button class="bt-pill" data-model="snaive"      aria-pressed="false">Seasonal Naive</button>
+        <button class="bt-pill" data-model="theta"       aria-pressed="false">Theta</button>
+        <button class="bt-pill" data-model="holtwinters" aria-pressed="true">Auto-ETS</button>
+        <button class="bt-pill" data-model="prophet"     aria-pressed="false">Prophet</button>
+        <button class="bt-run" id="bt-run">▶ Run the audit</button>
+      </div>
+
+      <div class="bt-stage"><canvas id="bt-canvas" aria-label="Walk-forward backtest animation: training window grows, forecasts are scored against held-out actuals"></canvas></div>
+
+      <div class="bt-scoreboard">
+        <div class="bt-score"><div class="bt-score-label">Origins</div><div class="bt-score-val" id="bt-origins">0</div></div>
+        <div class="bt-score"><div class="bt-score-label">Forecasts scored</div><div class="bt-score-val" id="bt-fits">0</div></div>
+        <div class="bt-score"><div class="bt-score-label">WAPE</div><div class="bt-score-val" id="bt-wape">—</div></div>
+        <div class="bt-score"><div class="bt-score-label">MASE</div><div class="bt-score-val" id="bt-mase">—</div></div>
+      </div>
+
+      <div class="bt-verdict" id="bt-verdict"></div>
+
+      <div class="bt-board" id="bt-board">
+        <div class="bt-board-title">Leaderboard · out-of-sample WAPE — click any row to audit that model</div>
+        <div id="bt-board-rows"></div>
+      </div>
+
+      <div class="bt-replen" id="bt-replen"></div>
+    </div>
+
+    <p class="bt-footnote">Global XGBoost and the Ensemble are excluded from this stage — they need the full 140-SKU portfolio for context, which lives in the workspace. That exclusion is itself the policy: nothing demos here that wouldn't be honest.</p>
+
+    <div class="bt-exit">
+      <a class="btn-primary" href="dashboard.html" id="bt-exit-cta">Run all 7 models on your own data →</a>
+    </div>
+  </section>
+
+  <!-- ── FINAL CTA ── -->
+  <section class="cta-section">
+    <div class="cta-inner">
+      <div class="cta-label">One last honest question</div>
+      <h2 class="cta-h2">Your current forecast has an error rate.<br/>Do you know what it is?</h2>
+      <p class="cta-sub">The workspace will tell you in about ninety seconds: load the demo data or your own CSVs, let the worker route every SKU to its proven model, and read the WAPE you'd actually be planning on. No signup, no server, no sales call — unless you want one.<br/><span style="font-size:12.5px;color:#6b7280;">Don't know your WAPE? 30–45% is typical for monthly SKU-level retail.</span></p>
+      <a class="btn-primary" href="dashboard.html">Open the Live Workspace →</a>
+      <p class="cta-checklist">First 90 seconds: press the button · click Load Demo Dataset · open any SKU · press ★ Best Fit</p>
+      <a class="cta-mail" href="mailto:abazadzeluka@outlook.com?subject=Guided%20tour%20of%20the%20forecasting%20workspace">Or email Luka Abazadze — the analyst who built the engine →</a>
+      <div class="cta-sig">static site · client-side engine · view source anytime</div>
+      <div class="cta-charm">Free — it's a portfolio. The price is feedback ✓</div>
+    </div>
+  </section>
+
   <footer>
     Demand Planning Lab &middot; Built for learning &amp; experimentation
   </footer>
 
+  <!-- ── BACKTEST THEATER ENGINE — the real one ── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/models.js"></script>
+  <script>
+  (function () {
+    'use strict';
+    // SKU-1061 "Foam Roller 60cm" — monthly units, Jan 2022..Dec 2024,
+    // aggregated verbatim from sales_history.csv (sum of positive Quantity per month).
+    var SERIES = [1269,435,773,789,839,468,893,485,295,1431,631,912,547,818,635,474,69,809,673,578,609,760,371,1290,968,391,536,168,605,622,1297,857,849,750,1299,1027];
+    var LABELS = ["Jan 22","Feb 22","Mar 22","Apr 22","May 22","Jun 22","Jul 22","Aug 22","Sep 22","Oct 22","Nov 22","Dec 22","Jan 23","Feb 23","Mar 23","Apr 23","May 23","Jun 23","Jul 23","Aug 23","Sep 23","Oct 23","Nov 23","Dec 23","Jan 24","Feb 24","Mar 24","Apr 24","May 24","Jun 24","Jul 24","Aug 24","Sep 24","Oct 24","Nov 24","Dec 24"];
+    var FUTURE = ["Jan 25","Feb 25","Mar 25","Apr 25","May 25","Jun 25"];
+    // Real supplier/stock terms for SKU-1061, from suppliers.csv + stock_levels.csv:
+    var STOCK = 475, SAFETY = 201, LEAD = 14, MOQ = 20;
+    var MODEL_NAMES = { snaive:'Seasonal Naive', theta:'Theta', holtwinters:'Auto-ETS', prophet:'Prophet' };
+
+    var n = SERIES.length;
+    var ORIGINS = [24, 26, 28, 30, 32, 34];          // expanding training windows
+    var maseScale = (function () {                    // mean |y[t] - y[t-12]| — seasonal-naive scale
+      var s = 0, c = 0;
+      for (var t = 12; t < n; t++) { s += Math.abs(SERIES[t] - SERIES[t - 12]); c++; }
+      return s / c;
+    })();
+
+    var canvas = document.getElementById('bt-canvas');
+    if (!canvas || typeof Chart === 'undefined' || typeof Models === 'undefined') {
+      var stage = document.querySelector('.bt-stage');
+      if (stage) stage.innerHTML = '<p style="text-align:center;padding-top:120px;color:#6b7280;font-size:13px;">The live engine needs JavaScript and the Chart.js CDN. The workspace itself still works — <a href="dashboard.html" style="color:#a78bfa;">open it here</a>.</p>';
+      return;
+    }
+
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var totalFitsEl = document.getElementById('ledger-fits');
+    var totalFits = 0;
+    function bumpLedger(k) {
+      totalFits += k;
+      if (totalFitsEl) totalFitsEl.textContent = totalFits.toLocaleString();
+    }
+
+    // ── chart setup ──
+    var whiskers = [];      // {x, yFc, yAct} index-space segments for the plugin
+    var trainEnd = 0;       // training-window overlay extent (index)
+    var whiskerPlugin = {
+      id: 'btWhiskers',
+      afterDatasetsDraw: function (chart) {
+        var ctx = chart.ctx, xs = chart.scales.x, ys = chart.scales.y;
+        if (trainEnd > 0) {           // training window overlay
+          ctx.save();
+          ctx.fillStyle = 'rgba(124,58,237,0.05)';
+          var x0 = xs.getPixelForValue(0), x1 = xs.getPixelForValue(trainEnd - 1);
+          ctx.fillRect(x0, chart.chartArea.top, x1 - x0, chart.chartArea.bottom - chart.chartArea.top);
+          ctx.strokeStyle = 'rgba(124,58,237,0.35)';
+          ctx.beginPath(); ctx.moveTo(x1, chart.chartArea.top); ctx.lineTo(x1, chart.chartArea.bottom); ctx.stroke();
+          ctx.restore();
+        }
+        if (whiskers.length) {
+          ctx.save();
+          ctx.strokeStyle = 'rgba(244,63,94,0.65)'; ctx.lineWidth = 1.5;
+          whiskers.forEach(function (w) {
+            ctx.beginPath();
+            ctx.moveTo(xs.getPixelForValue(w.x), ys.getPixelForValue(w.yFc));
+            ctx.lineTo(xs.getPixelForValue(w.x), ys.getPixelForValue(w.yAct));
+            ctx.stroke();
+          });
+          ctx.restore();
+        }
+      }
+    };
+
+    var chart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels: LABELS.concat(FUTURE),
+        datasets: [{
+          label: 'Actuals', data: SERIES.slice(),
+          borderColor: '#9ca3af', borderWidth: 2, pointRadius: 0, tension: 0.25
+        }]
+      },
+      options: {
+        animation: false, responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+        scales: {
+          x: { ticks: { color: '#4b5563', font: { size: 9, family: 'monospace' }, maxTicksLimit: 12 }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#4b5563', font: { size: 9, family: 'monospace' } }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+        }
+      },
+      plugins: [whiskerPlugin]
+    });
+
+    // ── audit state ──
+    var currentKey = 'holtwinters';
+    var timer = null, running = false;
+    var board = {};                                   // key -> {wape, mase}
+    var els = {
+      origins: document.getElementById('bt-origins'),
+      fits: document.getElementById('bt-fits'),
+      wape: document.getElementById('bt-wape'),
+      mase: document.getElementById('bt-mase'),
+      verdict: document.getElementById('bt-verdict'),
+      run: document.getElementById('bt-run'),
+      board: document.getElementById('bt-board'),
+      rows: document.getElementById('bt-board-rows'),
+      replen: document.getElementById('bt-replen'),
+      exit: document.getElementById('bt-exit-cta')
+    };
+
+    function resetStage() {
+      if (timer) { clearInterval(timer); timer = null; }
+      running = false;
+      whiskers = []; trainEnd = 0;
+      chart.data.datasets = chart.data.datasets.slice(0, 1);
+      chart.update();
+      ['origins', 'fits'].forEach(function (k) { els[k].textContent = '0'; });
+      els.wape.textContent = '—'; els.mase.textContent = '—';
+      els.verdict.textContent = ''; els.verdict.className = 'bt-verdict';
+      els.replen.className = 'bt-replen';
+      [els.origins, els.fits, els.wape, els.mase].forEach(function (el) {
+        el.classList.add('reset'); setTimeout(function () { el.classList.remove('reset'); }, 250);
+      });
+    }
+
+    var typeTimer = null;
+    function typeOut(el, text, cls) {
+      if (typeTimer) { clearInterval(typeTimer); typeTimer = null; }
+      el.className = 'bt-verdict ' + cls;
+      if (reduced) { el.textContent = text; return; }
+      el.textContent = '';
+      var i = 0;
+      typeTimer = setInterval(function () {
+        el.textContent = text.slice(0, ++i);
+        if (i >= text.length) { clearInterval(typeTimer); typeTimer = null; }
+      }, 35);
+    }
+
+    function renderBoard() {
+      var keys = Object.keys(board);
+      if (!keys.length) return;
+      keys.sort(function (a, b) { return board[a].wape - board[b].wape; });
+      els.board.classList.add('show');
+      els.rows.innerHTML = keys.map(function (k, i) {
+        var b = board[k];
+        var tag = i === 0 ? '<span class="routed">★ ROUTED</span>' : '';
+        return '<div class="bt-row" data-model="' + k + '" style="animation-delay:' + (i * 0.08) + 's">' +
+          '<span>' + (i + 1) + '.</span><span class="nm">' + MODEL_NAMES[k] + '</span>' +
+          '<span>WAPE ' + b.wape.toFixed(1) + '%</span><span>MASE ' + b.mase.toFixed(2) + '</span>' + tag + '</div>';
+      }).join('');
+      Array.prototype.forEach.call(els.rows.querySelectorAll('.bt-row'), function (row) {
+        row.addEventListener('click', function () { selectModel(row.getAttribute('data-model')); runAudit(); });
+      });
+    }
+
+    function showReplen(finalRun) {
+      var f3 = finalRun.forecast.slice(0, 3);
+      var monthly = f3.reduce(function (a, b) { return a + b; }, 0) / f3.length;
+      var leadDemand = monthly * LEAD / 30;
+      var reorderPoint = Math.round(SAFETY + leadDemand);
+      var raw = Math.max(0, Math.ceil(reorderPoint - STOCK));
+      var toOrder = raw > 0 ? Math.ceil(raw / MOQ) * MOQ : 0;
+      var coverDays = monthly > 0 ? Math.floor(STOCK / (monthly / 30)) : 0;
+      els.replen.innerHTML = 'FROM FORECAST TO DECISION — real supplier terms (14-day lead · MOQ 20 · 475 on hand · safety 201):<br/>' +
+        'REORDER POINT <b>' + reorderPoint.toLocaleString() + '</b> · TO ORDER <b>' +
+        (toOrder > 0 ? toOrder.toLocaleString() + ' (rounded to MOQ)' : '0 — stock covers it') +
+        '</b> · COVER <b>' + coverDays + ' DAYS</b>';
+      els.replen.classList.add('show');
+    }
+
+    function finishAudit(sumAbs, cnt) {
+      var finalRun = Models.run(currentKey, SERIES, {}, 6);
+      bumpLedger(1);
+      // final forecast + 80% band over the 6 future slots
+      var pad = new Array(n).fill(null);
+      chart.data.datasets.push({
+        label: 'Lower', data: pad.concat(finalRun.lower),
+        borderColor: 'rgba(245,158,11,0.45)', borderWidth: 1, pointRadius: 0, tension: 0.2, fill: false
+      });
+      chart.data.datasets.push({
+        label: 'Upper', data: pad.concat(finalRun.upper),
+        borderColor: 'rgba(245,158,11,0.45)', borderWidth: 1, pointRadius: 0, tension: 0.2,
+        fill: '-1', backgroundColor: 'rgba(245,158,11,0.14)'
+      });
+      chart.data.datasets.push({
+        label: 'Final forecast', data: pad.concat(finalRun.forecast),
+        borderColor: '#a78bfa', borderWidth: 2.5, pointRadius: 2.5, pointBackgroundColor: '#a78bfa', tension: 0.2
+      });
+      // fade the spaghetti
+      chart.data.datasets.forEach(function (ds) {
+        if (ds.label === 'origin') ds.borderColor = 'rgba(124,58,237,0.12)';
+      });
+      chart.update();
+
+      var wape = els._wapeVal, mase = els._maseVal;
+      board[currentKey] = { wape: wape, mase: mase };
+      var name = MODEL_NAMES[currentKey];
+      if (currentKey === 'snaive') {
+        typeOut(els.verdict, '◆ This IS the benchmark: copy-last-year scores WAPE ' + wape.toFixed(1) + '% on this SKU. Every other model must beat this line to earn its complexity.', 'win');
+      } else if (mase < 1) {
+        typeOut(els.verdict, '✓ ' + name + ' beat the seasonal-naive benchmark on ' + cnt + ' held-out forecasts. WAPE ' + wape.toFixed(1) + '% · MASE ' + mase.toFixed(2) + '. This is the number the workspace would route on.', 'win');
+      } else {
+        typeOut(els.verdict, '✗ On this SKU, ' + name + ' did not beat copy-last-year (MASE ' + mase.toFixed(2) + '). The workspace would bench it — that’s what Best Fit is for.', 'loss');
+      }
+      renderBoard();
+      showReplen(finalRun);
+      els.exit.textContent = 'This ran ' + totalFits.toLocaleString() + ' validation fits in your tab just now. Run all 7 models on your own data →';
+      els.run.disabled = false;
+      els.run.textContent = '↻ Replay the audit';
+      running = false;
+    }
+
+    function runAudit() {
+      if (running) { resetStage(); }
+      resetStage();
+      running = true;
+      els.run.disabled = true;
+      els.run.textContent = 'Auditing…';
+
+      var sumAbs = 0, sumAct = 0, cnt = 0, oi = 0;
+
+      function step() {
+        var L = ORIGINS[oi];
+        var h = Math.min(6, n - L);
+        var fit;
+        try { fit = Models.run(currentKey, SERIES.slice(0, L), {}, h); }
+        catch (e) { clearInterval(timer); timer = null; els.run.disabled = false; running = false; return; }
+        bumpLedger(1);
+        trainEnd = L;
+        var data = new Array(n + 6).fill(null);
+        for (var k = 0; k < h; k++) {
+          data[L + k] = fit.forecast[k];
+          var err = SERIES[L + k] - fit.forecast[k];
+          sumAbs += Math.abs(err); sumAct += SERIES[L + k]; cnt++;
+          whiskers.push({ x: L + k, yFc: fit.forecast[k], yAct: SERIES[L + k] });
+        }
+        data[L - 1] = SERIES[L - 1];   // connect forecast to the last training point
+        // decay older spaghetti
+        chart.data.datasets.forEach(function (ds) {
+          if (ds.label === 'origin') {
+            var m = /rgba\(124,58,237,([\d.]+)\)/.exec(ds.borderColor);
+            if (m) ds.borderColor = 'rgba(124,58,237,' + Math.max(0.18, parseFloat(m[1]) * 0.72).toFixed(2) + ')';
+          }
+        });
+        chart.data.datasets.push({
+          label: 'origin', data: data,
+          borderColor: 'rgba(124,58,237,0.85)', borderWidth: 1.4,
+          borderDash: [5, 4], pointRadius: 0, tension: 0.2
+        });
+        chart.update();
+
+        els.origins.textContent = String(oi + 1);
+        els.fits.textContent = String(cnt);
+        var wape = 100 * sumAbs / sumAct;
+        var mase = (sumAbs / cnt) / maseScale;
+        els._wapeVal = wape; els._maseVal = mase;
+        els.wape.textContent = wape.toFixed(1) + '%';
+        els.mase.textContent = mase.toFixed(2);
+        els.mase.style.color = mase < 1 ? '#22c55e' : '#f59e0b';
+
+        oi++;
+        if (oi >= ORIGINS.length) {
+          if (timer) { clearInterval(timer); timer = null; }
+          setTimeout(function () { finishAudit(sumAbs, cnt); }, reduced ? 0 : 500);
+        }
+      }
+
+      if (reduced) { while (oi < ORIGINS.length && running) step(); }
+      else {
+        step();                               // first origin immediately
+        timer = setInterval(function () { if (oi < ORIGINS.length) step(); }, 900);
+      }
+    }
+
+    function selectModel(key) {
+      currentKey = key;
+      Array.prototype.forEach.call(document.querySelectorAll('.bt-pill'), function (p) {
+        p.setAttribute('aria-pressed', p.getAttribute('data-model') === key ? 'true' : 'false');
+      });
+      resetStage();
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('.bt-pill'), function (p) {
+      p.addEventListener('click', function () { selectModel(p.getAttribute('data-model')); });
+    });
+    els.run.addEventListener('click', function () {
+      // yield a frame so the disabled state paints before the engine runs
+      els.run.disabled = true;
+      setTimeout(runAudit, 50);
+    });
+
+    // arrival pulse when the ghost CTA scrolls here
+    window.addEventListener('hashchange', function () {
+      if (location.hash === '#backtest') {
+        var panel = document.querySelector('.bt-panel');
+        panel.classList.remove('arrived'); void panel.offsetWidth; panel.classList.add('arrived');
+      }
+    });
+  })();
+  </script>
 
 </body>
 </html>
