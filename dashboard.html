@@ -640,6 +640,21 @@
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
         </button>
 
+        <div class="toolbar-btn" style="cursor:default;gap:7px;"
+             title="Cycle service level — safety stock is derived from each routed SKU's measured forecast uncertainty (the 80% walk-forward interval) over its lead time. 'Static' keeps the values from stock_levels.csv.">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Service level
+          <select id="service-level"
+                  onchange="window._serviceLevel = parseFloat(this.value); if (typeof window.enrichLoadedSKUs === 'function') window.enrichLoadedSKUs();"
+                  style="background:var(--surface-2);border:1px solid var(--border-2);color:var(--text-1);font-size:11px;font-weight:600;border-radius:7px;padding:3px 6px;cursor:pointer;outline:none;">
+            <option value="0">Static (CSV)</option>
+            <option value="0.90">90%</option>
+            <option value="0.95" selected>95%</option>
+            <option value="0.99">99%</option>
+          </select>
+        </div>
+        <span id="ss-total" class="num-mono" style="font-size:10.5px;color:var(--text-2);white-space:nowrap;"></span>
+
         <div class="toolbar-spacer"></div>
 
         <button class="toolbar-btn">
@@ -890,6 +905,17 @@
       <div style="width:260px;flex-shrink:0;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Stock Cover Buckets</div>
         <div style="flex:1;position:relative;min-height:0;"><canvas id="db-cover-chart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- 6-month portfolio outlook (aggregated from per-SKU routed forecasts) -->
+    <div style="flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);padding:13px 18px;">
+      <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:9px;">
+        <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">6-Month Portfolio Outlook</div>
+        <span id="db-outlook-note" style="font-size:10px;color:#4b5563;"></span>
+      </div>
+      <div id="db-outlook-body" style="display:flex;flex-direction:column;gap:4px;">
+        <span style="font-size:11px;color:#4b5563;">Waiting for per-SKU routing — category forecasts aggregate here once models are assigned.</span>
       </div>
     </div>
 
@@ -3243,7 +3269,17 @@
               (d.fc_wape != null ? '<span style="display:block;font-size:9px;color:#6b7280;margin-top:2px;">' + d.fc_wape + '%</span>' : '') +
               '</td>';
           case 'safety':
-            return '<td class="num-mono" style="text-align:right;">' + (d.safety_stock>0 ? d.safety_stock.toLocaleString() : '<span style="color:#4b5563;">—</span>') + '</td>';
+            var ssTip, ssMark = '';
+            if (d.ss_source === 'interval') {
+              var ssPct = Math.round((window._serviceLevel || 0.95) * 100);
+              ssTip = ssPct + '% service — derived from the routed model&#39;s 80% walk-forward interval over the ' +
+                (d.lead_time || 14) + '-day lead time. Static CSV value: ' + (d.safety_stock_csv || 0).toLocaleString();
+              ssMark = ' <span style="color:#22c55e;font-size:8.5px;vertical-align:top;">@' + ssPct + '%</span>';
+            } else {
+              ssTip = 'Static value from stock_levels.csv — routing pending for this SKU, or service level set to Static';
+            }
+            return '<td class="num-mono" style="text-align:right;" title="' + ssTip + '">' +
+              (d.safety_stock>0 ? d.safety_stock.toLocaleString() + ssMark : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'leadtime':
             return '<td class="num-mono" style="text-align:center;">' + (d.lead_time>0 ? d.lead_time+'d' : '<span style="color:#4b5563;">14d</span>') + '</td>';
           case 'moq':
@@ -3697,11 +3733,97 @@
       });
     }
 
+    /* ── 6-month portfolio outlook ────────────────────────────────────────
+       Aggregates each routed SKU's 6-month forecast into category totals.
+       Point forecasts sum; interval HALF-WIDTHS DO NOT — the upper bounds
+       of independent SKUs cannot be added. Each SKU-month's one-sided 80%
+       half-width U = upper − forecast is treated as a scaled error std and
+       combined by root-sum-of-squares across SKUs and months. Errors that
+       correlate across SKUs (shared seasonality, market shocks) would widen
+       the true band, so the displayed interval is a floor — said on-page. */
+    function renderPortfolioOutlook() {
+      var body = document.getElementById('db-outlook-body');
+      var note = document.getElementById('db-outlook-note');
+      if (!body) return;
+      var routing = window._skuRouting || {};
+      var sales   = window._monthlySalesBySKU || {};
+      var raw     = window._rawDataBySKU || {};
+      var keys = Object.keys(routing).filter(function(k){
+        return routing[k] && routing[k].forecast && routing[k].forecast.length;
+      });
+      var totalSkus = Object.keys(sales).length;
+      if (!keys.length) {
+        body.innerHTML = '<span style="font-size:11px;color:#4b5563;">Waiting for per-SKU routing — category forecasts aggregate here once models are assigned.</span>';
+        if (note) note.textContent = '';
+        return;
+      }
+
+      var H = 6, groups = {};
+      keys.forEach(function(sku) {
+        var rt  = routing[sku];
+        var rr  = raw[sku] || raw[(sku || '').toUpperCase()];
+        var cat = (rr && (rr.Category || rr.category)) || 'Other';
+        var g = groups[cat] || (groups[cat] = { fc: 0, varSum: 0, prevYr: 0, hasPrev: false, n: 0 });
+        for (var h = 0; h < H; h++) {
+          var idx = Math.min(h, rt.forecast.length - 1);
+          var f = rt.forecast[idx] || 0;
+          var u = Math.max(0, ((rt.upper && rt.upper[idx]) || f) - f);
+          g.fc += f; g.varSum += u * u;
+        }
+        /* Year-over-year baseline: the SAME 6 months one year earlier
+           (values[n-12 .. n-6]), NOT the trailing 6 months — comparing a
+           trough-season forecast to a peak-season tail would invent a
+           false decline on seasonal SKUs. */
+        var hist = sales[sku];
+        if (hist && hist.values && hist.values.length >= 12) {
+          var nv = hist.values.length;
+          g.prevYr += hist.values.slice(nv - 12, nv - 6).reduce(function(a,b){ return a+b; }, 0);
+          g.hasPrev = true;
+        }
+        g.n++;
+      });
+
+      var cats = Object.keys(groups).sort(function(a,b){ return groups[b].fc - groups[a].fc; });
+      var all = { fc: 0, varSum: 0, prevYr: 0, hasPrev: false, n: 0 };
+      cats.forEach(function(c){ var g = groups[c]; all.fc += g.fc; all.varSum += g.varSum; all.prevYr += g.prevYr; all.hasPrev = all.hasPrev || g.hasPrev; all.n += g.n; });
+      var maxFc = groups[cats[0]].fc || 1;
+
+      function row(label, g, isTotal) {
+        var band   = Math.round(Math.sqrt(g.varSum));
+        var growth = (g.hasPrev && g.prevYr > 0) ? (g.fc - g.prevYr) / g.prevYr * 100 : null;
+        var gTxt   = growth == null ? '—'
+                   : (growth >= 0 ? '+' : '') + growth.toFixed(1) + '%';
+        var gCol   = growth == null ? '#4b5563' : growth >= 2 ? '#22c55e' : growth <= -2 ? '#ef4444' : '#9ca3af';
+        var barPct = Math.max(2, Math.round(100 * g.fc / maxFc));
+        return '<div style="display:flex;align-items:center;gap:12px;font-size:11px;' + (isTotal ? 'padding-bottom:5px;border-bottom:1px solid var(--border);margin-bottom:2px;' : '') + '">' +
+          '<span style="width:130px;flex-shrink:0;font-weight:' + (isTotal ? '800' : '600') + ';color:' + (isTotal ? 'var(--text-1)' : '#9ca3af') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(label) + '</span>' +
+          (isTotal
+            ? '<span style="flex:1;"></span>'
+            : '<span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.05);overflow:hidden;"><span style="display:block;height:100%;width:' + barPct + '%;background:rgba(167,139,250,0.55);border-radius:2px;"></span></span>') +
+          '<span class="num-mono" style="width:172px;text-align:right;color:var(--text-1);font-weight:' + (isTotal ? '700' : '500') + ';" title="Next 6 months, point forecast ± 80% interval (root-sum-of-squares)">' +
+            Math.round(g.fc).toLocaleString() + ' <span style="color:#f59e0b;">± ' + band.toLocaleString() + '</span></span>' +
+          '<span class="num-mono" style="width:64px;text-align:right;color:' + gCol + ';font-weight:600;" title="Year-over-year: next 6 months forecast vs the same 6 months last year">' + gTxt + '</span>' +
+          '<span style="width:56px;text-align:right;color:#4b5563;font-size:10px;">' + g.n + ' SKU' + (g.n === 1 ? '' : 's') + '</span>' +
+          '</div>';
+      }
+
+      var html = row('All categories', all, true);
+      cats.forEach(function(c){ html += row(c, groups[c], false); });
+      body.innerHTML = html;
+      if (note) {
+        note.textContent = keys.length < totalSkus
+          ? 'aggregating ' + keys.length + '/' + totalSkus + ' routed SKUs · units, next 6 months · intervals assume independent SKU errors (a floor)'
+          : 'all ' + keys.length + ' SKUs routed · units, next 6 months · intervals assume independent SKU errors (a floor)';
+      }
+    }
+
     function renderDashboard() {
       var skus = window._loadedSKUs || [];
       var salesSkus = window._monthlySalesBySKU ? Object.keys(window._monthlySalesBySKU).length : 0;
 
       function set(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+
+      renderPortfolioOutlook();
 
       if (!skus.length) {
         set('db-total-skus', '—'); set('db-inv-value', '—');
@@ -4075,6 +4197,39 @@
        After all files are routed, join supplier terms (price/lead/MOQ) and
        sales velocity (avg of last 3 months) onto each SKU, then recompute
        cover days, reorder point and order quantity.                       */
+    /* ── Interval-driven safety stock ─────────────────────────────────────
+       The routed model's 80% interval upper edge is the EMPIRICAL 90th
+       percentile of walk-forward forecast errors — so the one-sided
+       90%-service buffer for month h is simply U_h = upper[h] − forecast[h],
+       no distribution assumed. The buffer over a lead time of L months
+       combines month variances by root-sum-of-squares (independent errors),
+       and 95/99% extrapolate the empirical 90% buffer by the normal
+       quantile ratio (1.645 / 2.326 vs 1.282).                              */
+    window._serviceLevel = window._serviceLevel != null ? window._serviceLevel : 0.95;
+
+    function intervalSafetyStock(rt, leadDays, slvl) {
+      if (!rt || !rt.forecast || !rt.upper || !rt.forecast.length) return null;
+      var H = rt.forecast.length;
+      var U = [], any = false;
+      for (var h = 0; h < H; h++) {
+        var u = Math.max(0, (rt.upper[h] || 0) - (rt.forecast[h] || 0));
+        if (u > 0) any = true;
+        U.push(u);
+      }
+      if (!any) return null;                       // degenerate interval — keep CSV value
+      var L = Math.max(1, leadDays || 14) / 30;    // lead time in months
+      var varSum = 0;
+      for (var i = 0; i < Math.ceil(L); i++) {
+        var w = Math.min(1, L - i);                // fractional coverage of month i
+        var ui = U[Math.min(i, U.length - 1)];
+        varSum += w * ui * ui;
+      }
+      var zRatio = slvl >= 0.99 ? 2.326 / 1.282    // extrapolate the empirical 90% buffer
+                 : slvl >= 0.95 ? 1.645 / 1.282
+                 : 1.0;                            // 90% service = the measured band itself
+      return Math.round(Math.sqrt(varSum) * zRatio);
+    }
+
     function enrichLoadedSKUs() {
       var skus      = window._loadedSKUs;
       if (!skus || !skus.length) return;
@@ -4113,6 +4268,20 @@
           d.fc_model = null;
         }
 
+        /* Safety stock: service level × measured forecast uncertainty.
+           Falls back to the static CSV value when routing hasn't reached
+           this SKU yet or the user selected 'Static'. */
+        if (d.safety_stock_csv == null) d.safety_stock_csv = d.safety_stock;
+        d.ss_source = 'static';
+        var slvl = window._serviceLevel || 0;
+        if (slvl > 0 && rt) {
+          var ssVal = intervalSafetyStock(rt, d.lead_time, slvl);
+          if (ssVal != null) { d.safety_stock = ssVal; d.ss_source = 'interval'; }
+          else { d.safety_stock = d.safety_stock_csv; }
+        } else {
+          d.safety_stock = d.safety_stock_csv;
+        }
+
         /* Recompute derived fields */
         var monthly = d.monthly_sales || 0;
         d.cover_days = monthly > 0 ? Math.floor(d.stock / (monthly / 30)) : '—';
@@ -4131,6 +4300,41 @@
               .toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' })
           : '—';
       });
+
+      /* Service-level trade-off curve: total safety-stock cost at each level,
+         so raising the service target shows its working-capital price. */
+      var ssEl = document.getElementById('ss-total');
+      if (ssEl) {
+        var slvlNow = window._serviceLevel || 0;
+        var routedCount = skus.filter(function(d){ return d.ss_source === 'interval'; }).length;
+        if (slvlNow > 0 && routedCount > 0) {
+          var totals = {};
+          [0.90, 0.95, 0.99].forEach(function(lv) {
+            var units = 0, value = 0;
+            skus.forEach(function(d) {
+              var key2 = (d.sku || '').toUpperCase();
+              var rt2 = window._skuRouting && (window._skuRouting[d.sku] || window._skuRouting[key2]);
+              var ss = (rt2 && intervalSafetyStock(rt2, d.lead_time, lv));
+              if (ss == null) ss = d.safety_stock_csv || 0;
+              units += ss; value += ss * (d.price || 0);
+            });
+            totals[lv] = { u: units, v: value };
+          });
+          function fmtK(v) { return '$' + (v >= 1000 ? (v/1000).toFixed(0) + 'k' : Math.round(v)); }
+          ssEl.innerHTML = 'SS tied up — ' + [0.90, 0.95, 0.99].map(function(lv) {
+            var cur = Math.abs(lv - slvlNow) < 0.001;
+            var txt = Math.round(lv*100) + '%: ' + fmtK(totals[lv].v);
+            return cur ? '<b style="color:#22c55e;">' + txt + '</b>' : txt;
+          }).join(' · ');
+          ssEl.title = 'Total safety-stock value (units × purchase price) at each cycle service level, derived from ' +
+            routedCount + ' routed SKUs with measured forecast intervals. ' +
+            '90%: ' + Math.round(totals[0.90].u).toLocaleString() + ' units · 95%: ' +
+            Math.round(totals[0.95].u).toLocaleString() + ' · 99%: ' + Math.round(totals[0.99].u).toLocaleString();
+        } else {
+          ssEl.innerHTML = '';
+          ssEl.title = '';
+        }
+      }
 
       /* Push the enriched data back into the UI */
       renderReplenishmentTable(skus);
