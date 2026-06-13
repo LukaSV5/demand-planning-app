@@ -2005,5 +2005,155 @@
   })();
   </script>
 
+  <!-- ── HERO 3D CENTERPIECE — stylized supply-chain network on a globe ── -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+  (function () {
+    var mount = document.getElementById('hero-canvas');
+    if (!mount || typeof THREE === 'undefined') return;
+
+    function webglOK() {
+      try { var c = document.createElement('canvas'); return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl'))); }
+      catch (e) { return false; }
+    }
+    if (!webglOK()) return;   /* CSS glow/grid fallback stays */
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var R = 1;
+    var ACCENT = 0x2dd4bf, ELECTRIC = 0x38bdf8;
+
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(0, 0, 3.15);
+
+    var renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setClearColor(0x000000, 0);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    mount.appendChild(renderer.domElement);
+
+    var group = new THREE.Group();
+    group.position.y = -0.18;
+    group.rotation.z = 0.18;        /* slight axial tilt */
+    scene.add(group);
+
+    /* soft radial glow sprite, reused for nodes + flow */
+    function glowTexture() {
+      var c = document.createElement('canvas'); c.width = c.height = 64;
+      var g = c.getContext('2d');
+      var grd = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0, 'rgba(255,255,255,1)');
+      grd.addColorStop(0.25, 'rgba(255,255,255,0.55)');
+      grd.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = grd; g.fillRect(0, 0, 64, 64);
+      var t = new THREE.CanvasTexture(c); return t;
+    }
+    var GLOW = glowTexture();
+
+    /* dotted globe — fibonacci-distributed points */
+    function fibSphere(n, r) {
+      var pts = [], gold = Math.PI * (3 - Math.sqrt(5));
+      for (var i = 0; i < n; i++) {
+        var y = 1 - (i / (n - 1)) * 2, rad = Math.sqrt(1 - y * y), th = gold * i;
+        pts.push(new THREE.Vector3(Math.cos(th) * rad * r, y * r, Math.sin(th) * rad * r));
+      }
+      return pts;
+    }
+    var globePts = fibSphere(1500, R);
+    var gGeo = new THREE.BufferGeometry().setFromPoints(globePts);
+    var gMat = new THREE.PointsMaterial({ color: ACCENT, size: 0.013, transparent: true, opacity: 0.42, sizeAttenuation: true });
+    group.add(new THREE.Points(gGeo, gMat));
+
+    /* faint wireframe shell for depth */
+    var shell = new THREE.Mesh(
+      new THREE.SphereGeometry(R * 0.995, 24, 18),
+      new THREE.MeshBasicMaterial({ color: ELECTRIC, wireframe: true, transparent: true, opacity: 0.05 })
+    );
+    group.add(shell);
+
+    /* network nodes — 3 primary "sites" (brighter) + secondary hubs */
+    function llToVec(latDeg, lonDeg, r) {
+      var lat = latDeg * Math.PI / 180, lon = lonDeg * Math.PI / 180;
+      return new THREE.Vector3(
+        r * Math.cos(lat) * Math.cos(lon),
+        r * Math.sin(lat),
+        r * Math.cos(lat) * Math.sin(lon)
+      );
+    }
+    var primaries = [ llToVec(34, -20, R), llToVec(8, 32, R), llToVec(46, 78, R) ];
+    var secondary = [ llToVec(-18, 5, R), llToVec(20, -70, R), llToVec(58, 18, R), llToVec(-8, 60, R), llToVec(30, 120, R) ];
+    var nodes = [];
+    function addNode(pos, primary) {
+      var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: primary ? ACCENT : ELECTRIC, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      s.position.copy(pos);
+      var base = primary ? 0.17 : 0.1;
+      s.scale.set(base, base, base);
+      s.userData = { base: base, phase: Math.random() * Math.PI * 2, primary: primary };
+      group.add(s); nodes.push(s);
+    }
+    primaries.forEach(function (p) { addNode(p, true); });
+    secondary.forEach(function (p) { addNode(p, false); });
+
+    /* arcs — primaries fully meshed + each to nearest couple of secondaries */
+    var arcs = [];
+    function addArc(a, b) {
+      var mid = a.clone().add(b).multiplyScalar(0.5);
+      var lift = 1 + 0.28 * (a.distanceTo(b) / 2);
+      mid.normalize().multiplyScalar(R * lift);
+      var curve = new THREE.QuadraticBezierCurve3(a, mid, b);
+      var geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(50));
+      var line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: ELECTRIC, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false }));
+      group.add(line);
+      var flow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xbdf3ff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }));
+      flow.scale.set(0.06, 0.06, 0.06);
+      group.add(flow);
+      arcs.push({ curve: curve, flow: flow, t: Math.random(), speed: 0.12 + Math.random() * 0.12 });
+    }
+    addArc(primaries[0], primaries[1]); addArc(primaries[1], primaries[2]); addArc(primaries[0], primaries[2]);
+    secondary.forEach(function (s, i) { addArc(primaries[i % 3], s); });
+
+    /* sizing */
+    function resize() {
+      var w = mount.clientWidth || window.innerWidth, h = mount.clientHeight || window.innerHeight;
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+      renderer.setSize(w, h, false);
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    /* mouse parallax */
+    var mx = 0, my = 0, tmx = 0, tmy = 0;
+    window.addEventListener('mousemove', function (e) {
+      tmx = (e.clientX / window.innerWidth - 0.5);
+      tmy = (e.clientY / window.innerHeight - 0.5);
+    });
+
+    var clock = new THREE.Clock();
+    function frame() {
+      var t = clock.getElapsedTime();
+      group.rotation.y += 0.0016;                 /* slow auto-rotate */
+      mx += (tmx - mx) * 0.05; my += (tmy - my) * 0.05;
+      group.rotation.x = -0.12 + my * 0.28;       /* parallax tilt */
+      group.rotation.z = 0.18 + mx * 0.12;
+      for (var i = 0; i < nodes.length; i++) {
+        var n = nodes[i], p = 1 + 0.18 * Math.sin(t * 1.6 + n.userData.phase);
+        var sc = n.userData.base * p; n.scale.set(sc, sc, sc);
+      }
+      for (var j = 0; j < arcs.length; j++) {
+        var a = arcs[j]; a.t = (a.t + a.speed * 0.016) % 1;
+        a.curve.getPointAt(a.t, a.flow.position);
+      }
+      renderer.render(scene, camera);
+      if (!reduce && !document.hidden) requestAnimationFrame(frame);
+      else running = false;
+    }
+    var running = true;
+    requestAnimationFrame(frame);
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && !reduce && !running) { running = true; clock.getDelta(); requestAnimationFrame(frame); }
+    });
+    if (reduce) { group.rotation.y = 0.6; renderer.render(scene, camera); }  /* one static frame */
+  })();
+  </script>
+
 </body>
 </html>
