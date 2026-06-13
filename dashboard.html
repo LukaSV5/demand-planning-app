@@ -2309,6 +2309,81 @@
     // Expose so the data-router IIFE (loaded later) can share the same implementation
     window._parseLine = parseLine;
 
+    /* ── IndexedDB persistence ───────────────────────────────────────────────
+       Survives reloads so a loaded dataset auto-restores without re-uploading.
+       (localStorage caps at ~5MB; the sales history alone is ~11MB, so we need
+       IndexedDB.) Tiny vanilla key/value wrapper — no library. ─────────────── */
+    var IDB = (function () {
+      var DB = 'la-forecasting', STORE = 'kv', _db = null;
+      function open() {
+        return new Promise(function (resolve, reject) {
+          if (_db) return resolve(_db);
+          if (!('indexedDB' in window)) return reject(new Error('IndexedDB unavailable'));
+          var rq = indexedDB.open(DB, 1);
+          rq.onupgradeneeded = function () { rq.result.createObjectStore(STORE); };
+          rq.onsuccess = function () { _db = rq.result; resolve(_db); };
+          rq.onerror = function () { reject(rq.error); };
+        });
+      }
+      return {
+        put: function (key, val) {
+          return open().then(function (db) { return new Promise(function (res, rej) {
+            var tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).put(val, key);
+            tx.oncomplete = function () { res(true); };
+            tx.onerror = function () { rej(tx.error); };
+          }); });
+        },
+        get: function (key) {
+          return open().then(function (db) { return new Promise(function (res, rej) {
+            var tx = db.transaction(STORE, 'readonly');
+            var rq = tx.objectStore(STORE).get(key);
+            rq.onsuccess = function () { res(rq.result); };
+            rq.onerror = function () { rej(rq.error); };
+          }); });
+        },
+        del: function (key) {
+          return open().then(function (db) { return new Promise(function (res) {
+            var tx = db.transaction(STORE, 'readwrite');
+            tx.objectStore(STORE).delete(key);
+            tx.oncomplete = function () { res(true); };
+          }); });
+        }
+      };
+    })();
+    window._IDB = IDB;   /* shared with warehouse.html (Step 6) */
+
+    var DATASET_KEY = 'dataset:v1';
+    var _hydrating = false;   /* guard: don't re-persist while restoring */
+
+    /* Persist the currently-loaded files (slim copy — drop File objects). */
+    function persistDataset() {
+      if (_hydrating || !uploadedFiles || !uploadedFiles.length) return;
+      var slim = uploadedFiles.map(function (f) {
+        return { name: f.file ? f.file.name : (f.name || 'data.csv'), headers: f.headers, data: f.data };
+      });
+      IDB.put(DATASET_KEY, { files: slim, savedAt: Date.now() })
+         .catch(function (e) { console.warn('[persist] dataset save failed:', e && e.message || e); });
+    }
+
+    /* On boot: if a dataset was persisted, rebuild uploadedFiles and run it
+       through the exact same pipeline as a fresh load. Returns a promise<bool>. */
+    function hydrateFromStore() {
+      return IDB.get(DATASET_KEY).then(function (saved) {
+        if (!saved || !saved.files || !saved.files.length) return false;
+        _hydrating = true;
+        uploadedFiles.length = 0;   /* mutate in place so the local alias stays valid */
+        saved.files.forEach(function (f) {
+          uploadedFiles.push({ file: { name: f.name, size: 0 }, headers: f.headers, rows: (f.data || []).length, data: f.data });
+        });
+        try { loadDataToViews(); } finally { _hydrating = false; }
+        var lu = document.getElementById('last-updated');
+        if (lu) lu.textContent = 'restored your last dataset';
+        return true;
+      }).catch(function (e) { console.warn('[hydrate] restore failed:', e && e.message || e); return false; });
+    }
+    window._resetDataset = function () { return IDB.del(DATASET_KEY).then(function () { location.reload(); }); };
+
     /* Read FULL file — headers + all row data (array of plain objects) */
     function parseFile(file, callback) {
       var MAX_FILE_MB = 50;
@@ -3137,6 +3212,9 @@
             '<button onclick="resetAndReload()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#6b7280;font-size:11px;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#e8eaf0\'" onmouseout="this.style.color=\'#6b7280\'">Reset auto-assignment</button>' +
           '</div>';
       }
+
+      /* Persist the loaded dataset so it auto-restores on the next visit */
+      persistDataset();
     }
 
     function resetAndReload() {
@@ -4057,8 +4135,9 @@
       renderDashboard();
     });
 
-    // Boot into replenishment
+    // Boot: hide upload view, then auto-restore the last dataset (if any).
     document.getElementById('view-upload').style.display = 'none';
+    hydrateFromStore();
   </script>
 
   <style>
