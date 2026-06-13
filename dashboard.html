@@ -3292,6 +3292,52 @@
       );
     }
 
+    /* ── Virtualized replenishment table ─────────────────────────────────────
+       Only the rows in the scroll viewport (plus a small overscan) ever touch
+       the DOM; top/bottom spacer <tr>s sized to the off-screen rows keep the
+       scrollbar honest. The DOM stays at ~40 rows regardless of dataset size,
+       so 10k+ SKUs scroll smoothly. Row height is measured from a real row, so
+       it tracks any CSS change without a hardcoded constant. */
+    var _rv = { list: [], buildRow: null, totalCols: 1, rowH: 44, measured: false, bound: false, raf: 0 };
+    var _RV_OVERSCAN = 6, _RV_MIN_VIRTUAL = 60;
+
+    function _rvBindScroll() {
+      if (_rv.bound) return;
+      var wrap = document.querySelector('#view-replenishment .table-wrap');
+      if (!wrap) return;
+      wrap.addEventListener('scroll', function () {
+        if (_rv.raf) return;
+        _rv.raf = requestAnimationFrame(function () { _rv.raf = 0; _rvRenderWindow(); });
+      });
+      _rv.bound = true;
+    }
+
+    function _rvRenderWindow() {
+      var tbody = document.getElementById('table-body');
+      var wrap  = document.querySelector('#view-replenishment .table-wrap');
+      if (!tbody || !wrap || !_rv.buildRow) return;
+      var list = _rv.list, n = list.length;
+      if (!n) return;
+
+      var rowH = _rv.rowH || 44, first, last;
+      if (n <= _RV_MIN_VIRTUAL) { first = 0; last = n; }   /* small list — render all, no spacers */
+      else {
+        first = Math.max(0, Math.floor(wrap.scrollTop / rowH) - _RV_OVERSCAN);
+        last  = Math.min(n, first + Math.ceil((wrap.clientHeight || 600) / rowH) + _RV_OVERSCAN * 2);
+      }
+      var topPad = first * rowH, botPad = (n - last) * rowH, html = '';
+      if (topPad > 0) html += '<tr class="rv-spacer" aria-hidden="true"><td colspan="' + _rv.totalCols + '" style="padding:0;border:0;height:' + topPad + 'px;"></td></tr>';
+      for (var i = first; i < last; i++) html += _rv.buildRow(list[i]);
+      if (botPad > 0) html += '<tr class="rv-spacer" aria-hidden="true"><td colspan="' + _rv.totalCols + '" style="padding:0;border:0;height:' + botPad + 'px;"></td></tr>';
+      tbody.innerHTML = html;
+
+      /* Measure a real row once, then re-render so the spacer math is exact */
+      if (!_rv.measured) {
+        var r = tbody.querySelector('tr.repl-row');
+        if (r && r.offsetHeight > 0) { _rv.rowH = r.offsetHeight; _rv.measured = true; if (n > _RV_MIN_VIRTUAL) _rvRenderWindow(); }
+      }
+    }
+
     function renderReplenishmentTable(skuArray) {
       var theadRow = document.getElementById('table-head-row');
       var tbody    = document.getElementById('table-body');
@@ -3429,15 +3475,24 @@
       }
 
       var HEALTH_ACCENT = { stockout:'#ef4444', atrisk:'#f59e0b', healthy:'#22c55e' };
-      tbody.innerHTML = skuArray.map(function(d) {
+      function buildRow(d) {
         var cells = '<td onclick="event.stopPropagation()" style="border-left:2px solid ' + (HEALTH_ACCENT[d.health] || 'transparent') + ';"><input type="checkbox" class="cb"/></td>';
         visCols.forEach(function(c) { cells += cell(c.key, d); });
         extraKeys.forEach(function(k) {
           var val = (rawBySKU[d.sku] && rawBySKU[d.sku][k] != null) ? rawBySKU[d.sku][k] : '—';
           cells += '<td style="color:#9ca3af;font-size:11px;">' + escHtml(String(val)) + '</td>';
         });
-        return '<tr class="repl-row" onclick="ForecastDashboard.openDrawer(\'' + d.sku + '\')">'               + cells + '</tr>';
-      }).join('');
+        return '<tr class="repl-row" onclick="ForecastDashboard.openDrawer(\'' + d.sku + '\')">' + cells + '</tr>';
+      }
+
+      /* Hand the list + row builder to the virtualizer and render the window. */
+      _rv.list = skuArray;
+      _rv.buildRow = buildRow;
+      _rv.totalCols = totalCols;
+      _rvBindScroll();
+      var wrapEl = document.querySelector('#view-replenishment .table-wrap');
+      if (wrapEl) wrapEl.scrollTop = 0;   /* new list (search/sort/filter) → back to top */
+      _rvRenderWindow();
 
       /* Action bar summary */
       var sumEl = document.querySelector('.action-summary');
@@ -4061,17 +4116,23 @@
        means the listener survives DOM replacements of the search element (e.g. when
        renderReplenishmentTable rebuilds the view). The old _wired flag approach
        would silently stop working if the input node was replaced. */
+    var _searchTimer = null;
     document.addEventListener('input', function(e) {
       if (!e.target || e.target.id !== 'replenishment-search') return;
       var q = e.target.value.toLowerCase();
       if (!window._loadedSKUs) return;
-      var filtered = q
-        ? window._loadedSKUs.filter(function(d) {
-            return d.sku.toLowerCase().indexOf(q) !== -1 ||
-                   d.name.toLowerCase().indexOf(q) !== -1;
-          })
-        : window._loadedSKUs;
-      renderReplenishmentTable(filtered);
+      /* Debounce: re-filter/re-render only after typing pauses (~150ms) so a
+         fast typist doesn't trigger a full re-render on every keystroke. */
+      if (_searchTimer) clearTimeout(_searchTimer);
+      _searchTimer = setTimeout(function() {
+        var filtered = q
+          ? window._loadedSKUs.filter(function(d) {
+              return d.sku.toLowerCase().indexOf(q) !== -1 ||
+                     d.name.toLowerCase().indexOf(q) !== -1;
+            })
+          : window._loadedSKUs;
+        renderReplenishmentTable(filtered);
+      }, 150);
     });
 
     /* ── Observable data store ──────────────────────────────────────────────
@@ -4122,6 +4183,8 @@
         if (navEl) navEl.classList.add('active');
         // Refresh dashboard KPIs when switching to it
         if (view === 'dashboard') renderDashboard();
+        /* Re-render the virtual window now the table has a real height */
+        if (view === 'replenishment') _rvRenderWindow();
       }
     };
 
