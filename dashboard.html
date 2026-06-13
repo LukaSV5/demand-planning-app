@@ -3423,6 +3423,24 @@
       }
     }
 
+    /* ── Tunable business thresholds — single source of truth ─────────────────
+       Centralised so the day-of-cover bands are defined once, and so the triage
+       filter and its chip counts can never drift apart. */
+    var CONFIG = {
+      coverCritical:  14,   // days of cover → stockout risk (red)
+      coverLow:       30,   // → watch (amber)
+      coverHealthy:   60,   // → healthy (green); beyond is heavy cover
+      overstockCover: 90,   // days of cover that counts as overstock in triage
+      uncertainWape:  30    // walk-forward WAPE% above which a forecast is "high uncertainty"
+    };
+    /* One predicate set shared by BOTH the triage filter and the chip counts. */
+    var TRIAGE = {
+      stockout:  function (d) { return d.health === 'stockout' || (typeof d.cover_days === 'number' && d.cover_days < CONFIG.coverCritical); },
+      overstock: function (d) { return typeof d.cover_days === 'number' && d.cover_days > CONFIG.overstockCover; },
+      blind:     function (d) { return !d.fc_model; },
+      uncertain: function (d) { return d.fc_wape != null && d.fc_wape > CONFIG.uncertainWape; }
+    };
+
     function renderReplenishmentTable(skuArray) {
       var theadRow = document.getElementById('table-head-row');
       var tbody    = document.getElementById('table-body');
@@ -3453,16 +3471,10 @@
         if (repl_table && typeof ColResizer !== 'undefined') ColResizer.reattach(repl_table);
       }
 
-      /* Apply exception triage filter */
+      /* Apply exception triage filter (predicates shared with the chip counts) */
       var tf = window._triageFilter || 'all';
-      if (tf !== 'all' && skuArray && skuArray.length) {
-        skuArray = skuArray.filter(function(d) {
-          if (tf === 'stockout')  return d.health === 'stockout' || (typeof d.cover_days === 'number' && d.cover_days < 14);
-          if (tf === 'overstock') return typeof d.cover_days === 'number' && d.cover_days > 90;
-          if (tf === 'blind')     return !d.fc_model;
-          if (tf === 'uncertain') return d.fc_wape != null && d.fc_wape > 30;
-          return true;
-        });
+      if (tf !== 'all' && TRIAGE[tf] && skuArray && skuArray.length) {
+        skuArray = skuArray.filter(TRIAGE[tf]);
       }
 
       /* EMPTY STATE */
@@ -3512,7 +3524,7 @@
             return '<td class="num-mono" style="text-align:right;font-weight:600;">' + (d.stock||0).toLocaleString() + '</td>';
           case 'cover':
             var cvr = d.cover_days === '—' ? '<span style="color:#4b5563;">—</span>' :
-              '<span class="num-mono" style="color:' + (d.cover_days<14?'#ef4444':d.cover_days<30?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
+              '<span class="num-mono" style="color:' + (d.cover_days<CONFIG.coverCritical?'#ef4444':d.cover_days<CONFIG.coverLow?'#f59e0b':'#22c55e') + ';">' + d.cover_days + 'd</span>';
             return '<td style="text-align:center;">' + cvr + '</td>';
           case 'monthly':
             var mTitle = d.fc_model
@@ -3972,9 +3984,9 @@
       var buckets = { '<14d': 0, '14–30d': 0, '30–60d': 0, '60d+': 0, 'No sales': 0 };
       skus.forEach(function(d) {
         if (d.cover_days === '—') buckets['No sales']++;
-        else if (d.cover_days < 14) buckets['<14d']++;
-        else if (d.cover_days < 30) buckets['14–30d']++;
-        else if (d.cover_days < 60) buckets['30–60d']++;
+        else if (d.cover_days < CONFIG.coverCritical) buckets['<14d']++;
+        else if (d.cover_days < CONFIG.coverLow) buckets['14–30d']++;
+        else if (d.cover_days < CONFIG.coverHealthy) buckets['30–60d']++;
         else buckets['60d+']++;
       });
       _dbChart('db-cover-chart', {
@@ -4699,10 +4711,10 @@
       /* Update triage chip counts */
       function setCount(id, n) { var el = document.getElementById(id); if (el) el.textContent = n > 0 ? n : ''; }
       setCount('tc-all',      skus.length);
-      setCount('tc-stockout', skus.filter(function(d){ return d.health==='stockout'||(typeof d.cover_days==='number'&&d.cover_days<14); }).length);
-      setCount('tc-overstock',skus.filter(function(d){ return typeof d.cover_days==='number'&&d.cover_days>90; }).length);
-      setCount('tc-blind',    skus.filter(function(d){ return !d.fc_model; }).length);
-      setCount('tc-uncertain',skus.filter(function(d){ return d.fc_wape!=null&&d.fc_wape>30; }).length);
+      setCount('tc-stockout', skus.filter(TRIAGE.stockout).length);
+      setCount('tc-overstock',skus.filter(TRIAGE.overstock).length);
+      setCount('tc-blind',    skus.filter(TRIAGE.blind).length);
+      setCount('tc-uncertain',skus.filter(TRIAGE.uncertain).length);
 
       /* Data-quality counts that depend on the joined SKU table */
       if (!_dq) _dqReset();
