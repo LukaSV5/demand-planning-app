@@ -14,9 +14,9 @@
       --surface-2: #1a1d27;
       --border:    rgba(255,255,255,0.06);
       --border-2:  rgba(255,255,255,0.1);
-      --purple:    #7c3aed;
-      --purple-lt: #a78bfa;
-      --purple-dim:rgba(124,58,237,0.15);
+      --purple:    #2dd4bf;
+      --purple-lt: #5eead4;
+      --purple-dim:rgba(45,212,191,0.15);
       --text-1:    #e8eaf0;
       --text-2:    #71717a;        /* nudged up for contrast (was #6b7280) */
       --text-3:    #4b5563;        /* nudged up for contrast (was #3a3d4a) */
@@ -121,8 +121,8 @@
     }
     .nav-link.active {
       color: var(--text-1);
-      background: rgba(124,58,237,0.15);
-      border-color: rgba(124,58,237,0.3);
+      background: rgba(45,212,191,0.15);
+      border-color: rgba(45,212,191,0.3);
     }
     .nav-cta {
       display: inline-flex;
@@ -131,17 +131,17 @@
       padding: 7px 16px;
       margin-left: 8px;
       border-radius: 10px;
-      background: var(--purple);
-      color: #fff;
+      background: linear-gradient(100deg, #2dd4bf, #38bdf8);
+      color: #042b25;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
       border: none;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s, transform 0.1s;
+      transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
     }
-    .nav-cta:hover { background: #6d28d9; transform: translateY(-1px); }
+    .nav-cta:hover { filter: brightness(1.08); box-shadow: 0 0 22px rgba(45,212,191,0.45); transform: translateY(-1px); }
     .nav-cta:active { transform: scale(0.97); }
     .nav-updated { font-size: 12px; color: var(--text-2); pointer-events: all; position: absolute; right: 32px; }
 
@@ -187,7 +187,7 @@
     .sidebar-item.active {
       background: var(--purple-dim);
       color: var(--purple-lt);
-      border-color: rgba(124,58,237,0.2);
+      border-color: rgba(45,212,191,0.2);
     }
     .sidebar-item svg { flex-shrink: 0; opacity: 0.7; }
     .sidebar-item.active svg { opacity: 1; }
@@ -196,7 +196,7 @@
       padding: 1px 7px; border-radius: 999px;
       white-space: nowrap; flex-shrink: 0;
       background: var(--purple-dim); color: var(--purple-lt);
-      border: 1px solid rgba(124,58,237,0.2);
+      border: 1px solid rgba(45,212,191,0.2);
     }
 
     .sidebar-bottom {
@@ -233,8 +233,8 @@
     .banner::after {
       content: '';
       position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 25% 50%, rgba(124,58,237,0.45) 0%, transparent 55%),
-                  radial-gradient(ellipse at 75% 50%, rgba(167,139,250,0.2) 0%, transparent 55%);
+      background: radial-gradient(ellipse at 25% 50%, rgba(45,212,191,0.45) 0%, transparent 55%),
+                  radial-gradient(ellipse at 75% 50%, rgba(94,234,212,0.2) 0%, transparent 55%);
     }
 
     /* warehouse bar */
@@ -251,7 +251,7 @@
       font-size: 12px; color: var(--text-1); font-weight: 600;
       transition: border-color 0.15s;
     }
-    .warehouse-select:hover { border-color: rgba(124,58,237,0.4); }
+    .warehouse-select:hover { border-color: rgba(45,212,191,0.4); }
     .warehouse-select svg { opacity: 0.5; }
 
     /* toolbar */
@@ -274,7 +274,7 @@
       outline: none; transition: border-color 0.15s;
     }
     .search-input::placeholder { color: var(--text-2); }
-    .search-input:focus { border-color: rgba(124,58,237,0.5); }
+    .search-input:focus { border-color: rgba(45,212,191,0.5); }
     .toolbar-btn {
       display: flex; align-items: center; gap: 6px;
       background: var(--surface-2); border: 1px solid var(--border-2);
@@ -348,14 +348,14 @@
     /* hover: wider + purple glow */
     .col-resizer:hover::before {
       width: 2px;
-      background: rgba(124,58,237,0.6);
-      box-shadow: 0 0 4px rgba(124,58,237,0.35);
+      background: rgba(45,212,191,0.6);
+      box-shadow: 0 0 4px rgba(45,212,191,0.35);
     }
     /* drag: solid purple */
     .col-resizer.col-resizing::before {
       width: 2px;
       background: var(--purple) !important;
-      box-shadow: 0 0 6px rgba(124,58,237,0.55) !important;
+      box-shadow: 0 0 6px rgba(45,212,191,0.55) !important;
     }
     /* keep ::after for the grip dots */
     .col-resizer::after {
@@ -369,7 +369,7 @@
       transition: color 0.15s;
       pointer-events: none;
     }
-    .col-resizer:hover::after { color: rgba(124,58,237,0.7); }
+    .col-resizer:hover::after { color: rgba(45,212,191,0.7); }
     .col-resizer.col-resizing::after { color: var(--purple) !important; }
 
     td {
@@ -379,7 +379,7 @@
       white-space: nowrap;
     }
     tr:hover td { background: rgba(255,255,255,0.02); }
-    tr.selected td { background: rgba(124,58,237,0.06); }
+    tr.selected td { background: rgba(45,212,191,0.06); }
 
     /* checkbox */
     .cb {
@@ -426,7 +426,7 @@
       transition:color 0.15s,background 0.15s,border-color 0.15s;
     }
     .triage-chip:hover { color:var(--text-1);border-color:rgba(255,255,255,0.18); }
-    .triage-chip.active { background:var(--purple-dim);color:var(--purple-lt);border-color:rgba(124,58,237,0.35); }
+    .triage-chip.active { background:var(--purple-dim);color:var(--purple-lt);border-color:rgba(45,212,191,0.35); }
     .triage-chip .tc-count { font-size:10px;font-weight:700;opacity:0.7; }
 
     /* Settings panel */
@@ -443,7 +443,7 @@
     .sp-section-desc  { font-size:11px;color:#4b5563;margin:0;line-height:1.5; }
     .sp-row { display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;cursor:pointer;transition:background 0.12s; }
     .sp-row:hover { background:rgba(255,255,255,0.04); }
-    .sp-cb { accent-color:#7c3aed;width:14px;height:14px;cursor:pointer;flex-shrink:0; }
+    .sp-cb { accent-color:#2dd4bf;width:14px;height:14px;cursor:pointer;flex-shrink:0; }
     .sp-row-label { flex:1;font-size:12px;color:#9ca3af; }
     .sp-row-file  { font-size:10px;color:#374151;font-style:italic; }
 
@@ -482,9 +482,9 @@
       border: 1px solid transparent; transition: all 0.15s;
     }
     .action-btn-primary {
-      background: var(--purple); color: #fff; border-color: var(--purple);
+      background: var(--purple); color: #042b25; border-color: var(--purple);
     }
-    .action-btn-primary:hover { background: #6d28d9; }
+    .action-btn-primary:hover { background: #14b8a6; }
     .action-btn-secondary {
       background: var(--surface-2); color: var(--text-1); border-color: var(--border-2);
     }
@@ -734,7 +734,7 @@
                 </div>
                 <div style="font-size:13px;color:#4b5563;font-weight:600;">No products loaded</div>
                 <div style="font-size:12px;color:#374151;margin-top:4px;">Upload a dataset or connect a data source to populate the replenishment table.</div>
-                <button onclick="loadDemoData(this)" style="margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:#7c3aed;color:#fff;font-size:12px;font-weight:600;padding:9px 20px;border-radius:9px;border:none;cursor:pointer;box-shadow:0 0 20px rgba(124,58,237,0.3);transition:background 0.15s;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='#7c3aed'">⚡ Load demo dataset</button>
+                <button onclick="loadDemoData(this)" style="margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:#2dd4bf;color:#042b25;font-size:12px;font-weight:600;padding:9px 20px;border-radius:9px;border:none;cursor:pointer;box-shadow:0 0 20px rgba(45,212,191,0.3);transition:background 0.15s;" onmouseover="this.style.background='#14b8a6'" onmouseout="this.style.background='#2dd4bf'">⚡ Load demo dataset</button>
               </td>
             </tr>
           </tbody>
@@ -840,7 +840,7 @@
              ondrop="handleDrop(event)"
              onclick="document.getElementById('file-main').click()">
           <div class="main-drop-icon">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
@@ -854,7 +854,7 @@
 
         <!-- Demo data shortcut -->
         <div style="text-align:center;margin-top:14px;">
-          <button onclick="loadDemoData(this)" style="display:inline-flex;align-items:center;gap:7px;background:rgba(124,58,237,0.1);color:#a78bfa;font-size:12px;font-weight:600;padding:8px 18px;border-radius:9px;border:1px solid rgba(124,58,237,0.3);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='rgba(124,58,237,0.2)'" onmouseout="this.style.background='rgba(124,58,237,0.1)'">⚡ No files handy? Load the demo dataset</button>
+          <button onclick="loadDemoData(this)" style="display:inline-flex;align-items:center;gap:7px;background:rgba(45,212,191,0.1);color:#5eead4;font-size:12px;font-weight:600;padding:8px 18px;border-radius:9px;border:1px solid rgba(45,212,191,0.3);cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='rgba(45,212,191,0.2)'" onmouseout="this.style.background='rgba(45,212,191,0.1)'">⚡ No files handy? Load the demo dataset</button>
         </div>
 
         <!-- ANALYSIS RESULTS (hidden until file uploaded) -->
@@ -864,7 +864,7 @@
           <div style="margin-bottom:20px;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div style="font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#3a3d4a;">Uploaded Files</div>
-              <button onclick="addMoreFiles()" style="background:rgba(124,58,237,0.12);border:1px solid rgba(124,58,237,0.25);color:#a78bfa;cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='rgba(124,58,237,0.2)'" onmouseout="this.style.background='rgba(124,58,237,0.12)'">+ Add More Files</button>
+              <button onclick="addMoreFiles()" style="background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.25);color:#5eead4;cursor:pointer;font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;transition:all 0.15s;" onmouseover="this.style.background='rgba(45,212,191,0.2)'" onmouseout="this.style.background='rgba(45,212,191,0.12)'">+ Add More Files</button>
               <input type="file" id="file-add-more" accept=".csv,.xlsx,.xls" multiple style="display:none" onchange="handleFileInput(this, true)"/>
             </div>
             <div id="files-list" style="display:flex;flex-direction:column;gap:8px;"></div>
@@ -922,7 +922,7 @@
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Items to Reorder</div>
-        <div class="kpi-value" id="db-reorder-count" style="color:#a78bfa;">—</div>
+        <div class="kpi-value" id="db-reorder-count" style="color:#5eead4;">—</div>
         <div class="kpi-sub" id="db-reorder-sub">to_order &gt; 0</div>
       </div>
       <div class="kpi-card">
@@ -1086,7 +1086,7 @@
       <!-- SKU title -->
       <div style="display:flex;flex-direction:column;gap:1px;min-width:120px;">
         <div style="font-size:9px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#4b5563;">Demand Forecast</div>
-        <div id="fc-drawer-sku" style="font-size:14px;font-weight:800;color:#c4b5fd;font-family:monospace;letter-spacing:0.02em;">—</div>
+        <div id="fc-drawer-sku" style="font-size:14px;font-weight:800;color:#99f6e4;font-family:monospace;letter-spacing:0.02em;">—</div>
       </div>
       <!-- Model pills (populated from the Models registry at drawer init) -->
       <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;flex:1;">
@@ -1142,7 +1142,7 @@
       </div>
       <div class="fc-metric-card" style="border-right:none;">
         <div class="fc-metric-label">Next Period</div>
-        <div class="fc-metric-value" id="fc-v-next" style="color:#a78bfa;">—</div>
+        <div class="fc-metric-value" id="fc-v-next" style="color:#5eead4;">—</div>
         <div class="fc-metric-sub" id="fc-v-next-label">units forecast</div>
       </div>
     </div>
@@ -1220,8 +1220,8 @@
   <style>
     /* Clickable replenishment rows */
     .repl-row { cursor: pointer; transition: background 0.12s; }
-    .repl-row:hover { background: rgba(124,58,237,0.08) !important; }
-    .repl-row:hover td:first-child { border-left: 2px solid #7c3aed; }
+    .repl-row:hover { background: rgba(45,212,191,0.08) !important; }
+    .repl-row:hover td:first-child { border-left: 2px solid #2dd4bf; }
 
     .fc-mpill {
       background: rgba(255,255,255,0.04);
@@ -1232,8 +1232,8 @@
       cursor: pointer; transition: all 0.15s;
       letter-spacing: 0.03em;
     }
-    .fc-mpill:hover { background: rgba(124,58,237,0.12); color: #e8eaf0; border-color: rgba(124,58,237,0.3); }
-    .fc-mpill.active { background: rgba(124,58,237,0.2); color: #c4b5fd; border-color: rgba(124,58,237,0.5); }
+    .fc-mpill:hover { background: rgba(45,212,191,0.12); color: #e8eaf0; border-color: rgba(45,212,191,0.3); }
+    .fc-mpill.active { background: rgba(45,212,191,0.2); color: #99f6e4; border-color: rgba(45,212,191,0.5); }
     .fc-metric-card {
       flex: 1; padding: 12px 18px;
       border-right: 1px solid rgba(255,255,255,0.06);
@@ -1249,7 +1249,7 @@
       border: 1px solid rgba(255,255,255,0.1); color: #e8eaf0;
       font-size: 12px; padding: 5px 8px; border-radius: 6px; outline: none;
     }
-    .fc-param-input:focus { border-color: rgba(124,58,237,0.5); }
+    .fc-param-input:focus { border-color: rgba(45,212,191,0.5); }
     .fc-param-input option { background: #13161e; }
     @keyframes fc-pulse {
       0%, 100% { opacity: 1; box-shadow: 0 0 5px currentColor; }
@@ -1746,11 +1746,11 @@
         {
           label: 'Forecast',
           data: forecastWithNulls,
-          borderColor: '#a78bfa',
-          backgroundColor: 'rgba(167,139,250,0.12)',
+          borderColor: '#5eead4',
+          backgroundColor: 'rgba(94,234,212,0.12)',
           borderWidth: 2.5,
           pointRadius: 4,
-          pointBackgroundColor: '#a78bfa',
+          pointBackgroundColor: '#5eead4',
           tension: 0.3,
           fill: false,
           order: 1,
@@ -1770,7 +1770,7 @@
         {
           label: bandLabel + ' — lower',
           data: lowerBand,
-          borderColor: 'rgba(167,139,250,0.2)',
+          borderColor: 'rgba(94,234,212,0.2)',
           borderWidth: 0,
           pointRadius: 0,
           fill: false,
@@ -1999,7 +1999,7 @@
         }
         return '<tr>' +
           '<td class="tbl-cell" style="font-family:monospace;font-size:11px;color:#9ca3af;">' + m + '</td>' +
-          '<td class="tbl-cell right" style="font-weight:700;color:#a78bfa;">' + Math.round(fc).toLocaleString() + '</td>' +
+          '<td class="tbl-cell right" style="font-weight:700;color:#5eead4;">' + Math.round(fc).toLocaleString() + '</td>' +
           '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + lower.toLocaleString() + '</td>' +
           '<td class="tbl-cell right" style="font-size:11px;color:#4b5563;">' + upper.toLocaleString() + '</td>' +
           '<td class="tbl-cell right" style="font-size:11px;color:' + diffColor + ';">' + diffStr + '</td>' +
@@ -2063,8 +2063,8 @@
         el = document.createElement('div');
         el.id = 'fc-routing-status';
         el.style.cssText = 'position:fixed;bottom:18px;right:18px;z-index:900;background:#13111c;' +
-          'border:1px solid rgba(124,58,237,0.45);border-radius:10px;padding:9px 14px;font-size:12px;' +
-          'color:#c4b5fd;box-shadow:0 4px 24px rgba(0,0,0,0.45);transition:opacity 0.4s;';
+          'border:1px solid rgba(45,212,191,0.45);border-radius:10px;padding:9px 14px;font-size:12px;' +
+          'color:#99f6e4;box-shadow:0 4px 24px rgba(0,0,0,0.45);transition:opacity 0.4s;';
         document.body.appendChild(el);
       }
       el.style.opacity = '1';
@@ -2193,7 +2193,7 @@
                 var meta = Models.getMeta(sel.best) || {};
                 var top  = sel.results[0] || {};
                 _onRouted({ sku: sku, sel: sel, best: sel.best, name: meta.name || sel.best,
-                            tag: meta.tag || sel.best, tagColor: meta.tagColor || '#a78bfa',
+                            tag: meta.tag || sel.best, tagColor: meta.tagColor || '#5eead4',
                             wape: top.wape, mase: top.mase, forecast: run.forecast,
                             lower: run.lower, upper: run.upper, horizon: sel.horizon || 6 }, state);
               }
@@ -2241,22 +2241,22 @@
 
   <style>
     .main-drop {
-      border: 1.5px dashed rgba(124,58,237,0.35);
+      border: 1.5px dashed rgba(45,212,191,0.35);
       border-radius: 14px;
       padding: 40px 24px;
       display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
       cursor: pointer;
       text-align: center;
       transition: border-color 0.2s, background 0.2s;
-      background: rgba(124,58,237,0.03);
+      background: rgba(45,212,191,0.03);
     }
     .main-drop:hover, .main-drop.drag-over {
-      border-color: rgba(124,58,237,0.75);
-      background: rgba(124,58,237,0.07);
+      border-color: rgba(45,212,191,0.75);
+      background: rgba(45,212,191,0.07);
     }
     .main-drop-icon {
       width: 56px; height: 56px; border-radius: 14px;
-      background: rgba(124,58,237,0.12);
+      background: rgba(45,212,191,0.12);
       display: flex; align-items: center; justify-content: center;
       margin-bottom: 4px;
     }
@@ -2297,7 +2297,7 @@
     .fc-pill:hover { color: var(--text-1); border-color: rgba(255,255,255,0.18); }
     .fc-pill.active {
       background: var(--purple-dim); color: var(--purple-lt);
-      border-color: rgba(124,58,237,0.3);
+      border-color: rgba(45,212,191,0.3);
     }
 
     /* ── FORECAST VIEW: editable number inputs ── */
@@ -2313,8 +2313,8 @@
     }
     #data-table-body input[type=number]:hover,
     #data-table-body input[type=number]:focus {
-      border-color: rgba(124,58,237,0.4);
-      background: rgba(124,58,237,0.05);
+      border-color: rgba(45,212,191,0.4);
+      background: rgba(45,212,191,0.05);
     }
     #data-table-body input[type=number]::-webkit-inner-spin-button { opacity: 0.4; }
   </style>
@@ -2324,7 +2324,7 @@
     var CATEGORIES = [
       {
         id: 'sales', name: 'Sales History', sub: 'Historical demand data',
-        color: '#a78bfa', bg: 'rgba(124,58,237,0.15)',
+        color: '#5eead4', bg: 'rgba(45,212,191,0.15)',
         icon: '<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',
         keywords: ['invoicedate','invoice date','date','invoiceno','invoice','stockcode','stock code','sku','description','product','quantity','qty','units sold','unitprice','unit price','price','revenue','sales','country','region','channel','customerid','customer'],
         matchThreshold: 3,
@@ -2647,7 +2647,7 @@
       document.getElementById('files-list').innerHTML = uploadedFiles.map(function(f, i) {
         return '<div style="display:flex;align-items:center;gap:10px;background:#13161e;' +
           'border:1px solid rgba(255,255,255,0.06);border-radius:9px;padding:10px 14px;">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' +
           '<span style="font-size:13px;font-weight:600;color:#e8eaf0;flex:1;">' + f.file.name + '</span>' +
           '<span style="font-size:11px;color:#6b7280;">' + f.rows.toLocaleString() + ' rows · ' + f.headers.length + ' cols</span>' +
           '<button onclick="removeFile(' + i + ')" title="Remove" style="background:none;border:none;color:#4b5563;cursor:pointer;font-size:13px;padding:0 4px;margin-left:6px;transition:color 0.15s;" onmouseover="this.style.color=\'#ef4444\'" onmouseout="this.style.color=\'#4b5563\'">✕</button>' +
@@ -2783,7 +2783,7 @@
     };
 
     var CAT_META = {
-      sales:     { label:'Sales History',         color:'#a78bfa' },
+      sales:     { label:'Sales History',         color:'#5eead4' },
       stock:     { label:'Stock Levels',          color:'#22c55e' },
       suppliers: { label:'Supplier & Lead Times', color:'#f59e0b' },
       po:        { label:'Open Purchase Orders',  color:'#60a5fa' }
@@ -2832,7 +2832,7 @@
     /* View definitions — mirrors the sidebar */
     var SIDEBAR_VIEWS = [
       { id: 'replenishment',   label: 'Replenishment',    icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', color: '#6366f1' },
-      { id: 'products',        label: 'Products',         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',  color: '#8b5cf6' },
+      { id: 'products',        label: 'Products',         icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',  color: '#2dd4bf' },
       { id: 'suppliers',       label: 'Suppliers',        icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z', color: '#f59e0b' },
       { id: 'purchase-orders', label: 'Purchase Orders',  icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', color: '#60a5fa' },
       { id: 'inbounds',        label: 'Inbounds',         icon: 'M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4', color: '#34d399' },
@@ -2930,7 +2930,7 @@
       /* ── Build HTML ── */
       var html = '<div style="background:#13161e;border:1px solid rgba(255,255,255,0.07);border-radius:14px;padding:22px 24px;">' +
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">' +
-          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5eead4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>' +
           '<span style="font-size:12px;font-weight:700;color:#e8eaf0;">Assign Columns to Views</span>' +
         '</div>' +
         '<p style="font-size:12px;color:#6b7280;margin-bottom:18px;padding-left:24px;">We\'ve auto-assigned columns based on their names. Drag chips between views to move them, drag back to the pool (or click ✕) to remove, and use ⊕ to duplicate into another view. Each view shows exactly the columns in its window.</p>';
@@ -2987,13 +2987,13 @@
       if (!document.getElementById('vzone-style')) {
         var st = document.createElement('style');
         st.id = 'vzone-style';
-        st.textContent = '.vzone-over { border-color: rgba(124,58,237,0.6) !important; background: rgba(124,58,237,0.06) !important; }';
+        st.textContent = '.vzone-over { border-color: rgba(45,212,191,0.6) !important; background: rgba(45,212,191,0.06) !important; }';
         document.head.appendChild(st);
       }
 
       /* Load button */
       btnWrap.innerHTML =
-        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#7c3aed;color:#fff;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(124,58,237,0.35);transition:background 0.15s;" onmouseover="this.style.background=\'#6d28d9\'" onmouseout="this.style.background=\'#7c3aed\'">' +
+        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#2dd4bf;color:#042b25;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(45,212,191,0.35);transition:background 0.15s;" onmouseover="this.style.background=\'#14b8a6\'" onmouseout="this.style.background=\'#2dd4bf\'">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>' +
         'Load to Views</button>' +
         '<p style="font-size:11px;color:#4b5563;margin-top:8px;">Assigned columns will appear as table columns in each view.</p>';
@@ -3006,7 +3006,7 @@
       /* actions shown only on view-zone chips (not unassigned pool chips) */
       var actions = fromView
         ? /* duplicate ⊕ */ '<span title="Duplicate to another view" onclick="duplicateChip(\'' + escHtml(col) + '\',' + fileIdx + ',\'' + fromView + '\')" ' +
-            'style="margin-left:3px;opacity:0;font-size:11px;cursor:pointer;line-height:1;color:#a78bfa;transition:opacity 0.12s;" ' +
+            'style="margin-left:3px;opacity:0;font-size:11px;cursor:pointer;line-height:1;color:#5eead4;transition:opacity 0.12s;" ' +
             'onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0" ' +
             'class="chip-btn-dup">&#x2295;</span>' +
           /* remove ✕ */ '<span title="Remove from this view" onclick="removeFromView(\'' + escHtml(col) + '\',' + fileIdx + ',\'' + fromView + '\',this)" ' +
@@ -3017,7 +3017,7 @@
 
       return '<span draggable="true" data-col="' + escHtml(col) + '" data-file="' + escHtml(file) + '" data-fidx="' + fileIdx + '"' + fromAttr + ' ' +
         'ondragstart="dragChip(event)" ondragend="dragChipEnd(event)" ' +
-        'onmouseenter="this.querySelectorAll(\'.chip-btn-dup,.chip-btn-rm\').forEach(function(b){b.style.opacity=1});this.style.background=\'rgba(124,58,237,0.15)\';this.style.borderColor=\'rgba(124,58,237,0.4)\';" ' +
+        'onmouseenter="this.querySelectorAll(\'.chip-btn-dup,.chip-btn-rm\').forEach(function(b){b.style.opacity=1});this.style.background=\'rgba(45,212,191,0.15)\';this.style.borderColor=\'rgba(45,212,191,0.4)\';" ' +
         'onmouseleave="this.querySelectorAll(\'.chip-btn-dup,.chip-btn-rm\').forEach(function(b){b.style.opacity=0});this.style.background=\'rgba(255,255,255,0.05)\';this.style.borderColor=\'rgba(255,255,255,0.1)\';" ' +
         'style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);font-size:11px;color:#cbd5e1;cursor:grab;user-select:none;transition:background 0.12s,border-color 0.12s;">' +
         '<svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor" stroke="none" opacity="0.4"><circle cx="9" cy="6" r="2"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="15" cy="12" r="2"/><circle cx="9" cy="18" r="2"/><circle cx="15" cy="18" r="2"/></svg>' +
@@ -3044,7 +3044,7 @@
       /* brief flash on the pool to signal where the copy went */
       var poolWrap = document.getElementById('unassigned-pool');
       if (poolWrap) {
-        poolWrap.style.borderColor = 'rgba(167,139,250,0.5)';
+        poolWrap.style.borderColor = 'rgba(94,234,212,0.5)';
         setTimeout(function(){ poolWrap.style.borderColor = 'rgba(255,255,255,0.08)'; }, 600);
       }
     }
@@ -3260,7 +3260,7 @@
           var b = nav.querySelector('.sidebar-badge');
           if (!b) { b = document.createElement('span'); b.className='sidebar-badge'; nav.appendChild(b); }
           b.textContent = rows.length + ' rows';
-          b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);';
+          b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);';
         }
       });
 
@@ -3290,10 +3290,10 @@
               '<div style="font-size:13px;font-weight:700;color:#22c55e;margin-bottom:3px;">Data loaded successfully</div>' +
               '<div style="font-size:11px;color:#4b5563;">' + totalRows.toLocaleString() + ' rows across ' + viewsPopulated + ' view' + (viewsPopulated!==1?'s':'') + '</div>' +
             '</div>' +
-            '<button onclick="app.showView(\'replenishment\')" style="flex-shrink:0;background:#7c3aed;color:#fff;font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;">View Tables &#8594;</button>' +
+            '<button onclick="app.showView(\'replenishment\')" style="flex-shrink:0;background:#2dd4bf;color:#042b25;font-size:11px;font-weight:600;padding:7px 14px;border-radius:8px;border:none;cursor:pointer;">View Tables &#8594;</button>' +
           '</div>' +
           '<div style="margin-top:10px;display:flex;gap:18px;">' +
-            '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#a78bfa;font-size:11px;font-weight:600;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#c4b5fd\'" onmouseout="this.style.color=\'#a78bfa\'">&#x21BA; Apply mapping changes</button>' +
+            '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#5eead4;font-size:11px;font-weight:600;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#99f6e4\'" onmouseout="this.style.color=\'#5eead4\'">&#x21BA; Apply mapping changes</button>' +
             '<button onclick="resetAndReload()" style="display:inline-flex;align-items:center;gap:6px;background:transparent;color:#6b7280;font-size:11px;padding:0;border:none;cursor:pointer;" onmouseover="this.style.color=\'#e8eaf0\'" onmouseout="this.style.color=\'#6b7280\'">Reset auto-assignment</button>' +
           '</div>';
       }
@@ -3307,7 +3307,7 @@
       renderColumnMapper();
       var btnWrap = document.getElementById('load-btn-wrap');
       if (btnWrap) btnWrap.innerHTML =
-        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#7c3aed;color:#fff;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(124,58,237,0.35);" onmouseover="this.style.background=\'#6d28d9\'" onmouseout="this.style.background=\'#7c3aed\'">' +
+        '<button onclick="loadDataToViews()" style="display:inline-flex;align-items:center;gap:8px;background:#2dd4bf;color:#042b25;font-size:13px;font-weight:600;padding:11px 28px;border-radius:10px;border:none;cursor:pointer;box-shadow:0 0 24px rgba(45,212,191,0.35);" onmouseover="this.style.background=\'#14b8a6\'" onmouseout="this.style.background=\'#2dd4bf\'">' +
         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>Load to Views</button>' +
         '<p style="font-size:11px;color:#4b5563;margin-top:8px;">Confirmed mappings will populate the tables.</p>';
     }
@@ -3445,7 +3445,7 @@
           thHtml += '<th class="sortable' + align + '" data-sort-key="' + c.key + '">' + c.label + ico + '<span class="col-resizer"></span></th>';
         });
         extraKeys.forEach(function(k) {
-          thHtml += '<th class="sortable" style="color:#a78bfa;font-size:11px;font-weight:700;" data-sort-key="__extra__' + escHtml(k) + '">' + escHtml(k) + '<span class="sort-icon"><span class="sa">▲</span><span class="sd">▼</span></span><span class="col-resizer"></span></th>';
+          thHtml += '<th class="sortable" style="color:#5eead4;font-size:11px;font-weight:700;" data-sort-key="__extra__' + escHtml(k) + '">' + escHtml(k) + '<span class="sort-icon"><span class="sa">▲</span><span class="sd">▼</span></span><span class="col-resizer"></span></th>';
         });
         theadRow.innerHTML = thHtml;
         /* reattach resizers */
@@ -3471,7 +3471,7 @@
           '<div class="empty-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6b7280" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg></div>' +
           '<div style="font-size:13px;color:#4b5563;font-weight:600;">No products loaded</div>' +
           '<div style="font-size:12px;color:#374151;margin-top:4px;">Upload a dataset or connect a data source to populate the replenishment table.</div>' +
-          '<button onclick="loadDemoData(this)" style="margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:#7c3aed;color:#fff;font-size:12px;font-weight:600;padding:9px 20px;border-radius:9px;border:none;cursor:pointer;box-shadow:0 0 20px rgba(124,58,237,0.3);transition:background 0.15s;" onmouseover="this.style.background=\'#6d28d9\'" onmouseout="this.style.background=\'#7c3aed\'">⚡ Load demo dataset</button>' +
+          '<button onclick="loadDemoData(this)" style="margin-top:16px;display:inline-flex;align-items:center;gap:7px;background:#2dd4bf;color:#042b25;font-size:12px;font-weight:600;padding:9px 20px;border-radius:9px;border:none;cursor:pointer;box-shadow:0 0 20px rgba(45,212,191,0.3);transition:background 0.15s;" onmouseover="this.style.background=\'#14b8a6\'" onmouseout="this.style.background=\'#2dd4bf\'">⚡ Load demo dataset</button>' +
           '</td></tr>';
         return;
       }
@@ -3488,7 +3488,7 @@
             return '<td><div class="img-placeholder"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/></svg></div></td>';
           case 'sku':
             var abcBadge = d.abc ? '<span class="abc-badge abc-' + d.abc.toLowerCase() + '">' + d.abc + '</span>' : '';
-            return '<td style="font-family:monospace;font-size:11px;color:#a78bfa;font-weight:600;white-space:nowrap;">' + escHtml(d.sku) + abcBadge + '</td>';
+            return '<td style="font-family:monospace;font-size:11px;color:#5eead4;font-weight:600;white-space:nowrap;">' + escHtml(d.sku) + abcBadge + '</td>';
           case 'name':
             return '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;" title="' + escHtml(d.name) + '">' + escHtml(d.name) + '</td>';
           case 'trend':
@@ -3507,7 +3507,7 @@
             return '<td style="text-align:center;padding:4px 10px;" title="36-month demand history">' +
               '<svg width="' + sw + '" height="' + sh + '" viewBox="0 0 ' + sw + ' ' + sh + '" style="display:block;margin:0 auto;overflow:visible;">' +
               '<polyline points="' + spts + '" fill="none" stroke="#9ca3af" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"/>' +
-              '<circle cx="' + slx + '" cy="' + sly + '" r="1.9" fill="#a78bfa"/></svg></td>';
+              '<circle cx="' + slx + '" cy="' + sly + '" r="1.9" fill="#5eead4"/></svg></td>';
           case 'stock':
             return '<td class="num-mono" style="text-align:right;font-weight:600;">' + (d.stock||0).toLocaleString() + '</td>';
           case 'cover':
@@ -3518,12 +3518,12 @@
             var mTitle = d.fc_model
               ? ' title="Forward forecast — next 3 months, ' + escHtml(d.fc_model) + '"'
               : ' title="Trailing 3-month average"';
-            var mMark = d.fc_model ? ' <span style="color:#a78bfa;font-size:9px;vertical-align:top;">▲</span>' : '';
+            var mMark = d.fc_model ? ' <span style="color:#5eead4;font-size:9px;vertical-align:top;">▲</span>' : '';
             return '<td class="num-mono" style="text-align:right;"' + mTitle + '>' +
               (d.monthly_sales>0 ? d.monthly_sales.toLocaleString() + mMark : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'model':
             if (!d.fc_model) return '<td style="text-align:center;"><span style="color:#4b5563;">—</span></td>';
-            var fcCol = d.fc_color || '#a78bfa';
+            var fcCol = d.fc_color || '#5eead4';
             return '<td style="text-align:center;" title="' + escHtml(d.fc_model) +
               (d.fc_wape != null ? ' · walk-forward WAPE ' + d.fc_wape + '%' : '') + '">' +
               '<span style="display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;' +
@@ -3549,7 +3549,7 @@
           case 'price':
             return '<td class="num-mono" style="text-align:right;">' + (d.price>0 ? '$'+d.price.toFixed(2) : '<span style="color:#4b5563;">—</span>') + '</td>';
           case 'toorder':
-            return '<td class="num-mono" style="text-align:right;">' + (d.to_order>0 ? '<span style="color:#a78bfa;font-weight:700;">'+d.to_order.toLocaleString()+'</span>' : '<span style="color:#4b5563;">0</span>') + '</td>';
+            return '<td class="num-mono" style="text-align:right;">' + (d.to_order>0 ? '<span style="color:#5eead4;font-weight:700;">'+d.to_order.toLocaleString()+'</span>' : '<span style="color:#4b5563;">0</span>') + '</td>';
           case 'health':
             var hc = HCFG[d.health] || HCFG.healthy;
             return '<td style="text-align:center;"><span class="badge ' + hc.cls + '"><span class="badge-dot"></span>' + hc.label + '</span></td>';
@@ -3944,9 +3944,9 @@
           labels: top.map(function(d){ return d.sku; }),
           datasets: [{
             data: top.map(function(d){ return d.to_order; }),
-            backgroundColor: 'rgba(124,58,237,0.55)',
-            hoverBackgroundColor: 'rgba(124,58,237,0.85)',
-            borderColor: 'rgba(167,139,250,0.8)', borderWidth: 1, borderRadius: 4
+            backgroundColor: 'rgba(45,212,191,0.55)',
+            hoverBackgroundColor: 'rgba(45,212,191,0.85)',
+            borderColor: 'rgba(94,234,212,0.8)', borderWidth: 1, borderRadius: 4
           }]
         },
         options: {
@@ -4070,7 +4070,7 @@
           '<span style="width:130px;flex-shrink:0;font-weight:' + (isTotal ? '800' : '600') + ';color:' + (isTotal ? 'var(--text-1)' : '#9ca3af') + ';overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(label) + '</span>' +
           (isTotal
             ? '<span style="flex:1;"></span>'
-            : '<span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.05);overflow:hidden;"><span style="display:block;height:100%;width:' + barPct + '%;background:rgba(167,139,250,0.55);border-radius:2px;"></span></span>') +
+            : '<span style="flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.05);overflow:hidden;"><span style="display:block;height:100%;width:' + barPct + '%;background:rgba(94,234,212,0.55);border-radius:2px;"></span></span>') +
           '<span class="num-mono" style="width:172px;text-align:right;color:var(--text-1);font-weight:' + (isTotal ? '700' : '500') + ';" title="Next 6 months, point forecast ± 80% interval (root-sum-of-squares)">' +
             Math.round(g.fc).toLocaleString() + ' <span style="color:#f59e0b;">± ' + band.toLocaleString() + '</span></span>' +
           '<span class="num-mono" style="width:64px;text-align:right;color:' + gCol + ';font-weight:600;" title="Year-over-year: next 6 months forecast vs the same 6 months last year">' + gTxt + '</span>' +
@@ -4132,10 +4132,10 @@
       tbody.innerHTML = items.map(function(d) {
         var hc = HCFG[d.health] || 'badge-neutral';
         return '<tr class="repl-row" onclick="app.showView(\'replenishment\')" style="cursor:pointer;">' +
-          '<td style="padding:9px 14px;font-family:monospace;font-size:11px;color:#a78bfa;font-weight:600;">' + escHtml(d.sku) + '</td>' +
+          '<td style="padding:9px 14px;font-family:monospace;font-size:11px;color:#5eead4;font-weight:600;">' + escHtml(d.sku) + '</td>' +
           '<td style="padding:9px 14px;font-size:12px;color:#9ca3af;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(d.name) + '</td>' +
           '<td style="padding:9px 14px;text-align:right;font-weight:600;font-size:12px;">' + (d.stock||0).toLocaleString() + '</td>' +
-          '<td style="padding:9px 14px;text-align:right;font-weight:800;font-size:12px;color:#a78bfa;">' + (d.to_order||0).toLocaleString() + '</td>' +
+          '<td style="padding:9px 14px;text-align:right;font-weight:800;font-size:12px;color:#5eead4;">' + (d.to_order||0).toLocaleString() + '</td>' +
           '<td style="padding:9px 14px;text-align:center;"><span class="badge ' + hc + '"><span class="badge-dot"></span>' + (d.health==='atrisk'?'At Risk':d.health.charAt(0).toUpperCase()+d.health.slice(1)) + '</span></td>' +
           '<td style="padding:9px 14px;text-align:center;font-size:11px;color:#6b7280;">' + (d.replenish_date||'—') + '</td>' +
         '</tr>';
@@ -4316,14 +4316,14 @@
       color: #e8eaf0;
     }
     .warehouse-dropdown-item.selected {
-      background: rgba(124,58,237,0.14);
-      color: #a78bfa;
+      background: rgba(45,212,191,0.14);
+      color: #5eead4;
     }
     .warehouse-dropdown-item .wd-dot {
       width: 7px; height: 7px; border-radius: 50%;
       background: currentColor; flex-shrink: 0; opacity: 0.7;
     }
-    .warehouse-select.open { border-color: rgba(124,58,237,0.45); }
+    .warehouse-select.open { border-color: rgba(45,212,191,0.45); }
     .warehouse-select.open svg:last-child {
       transform: rotate(180deg);
       transition: transform 0.15s;
@@ -4920,7 +4920,7 @@
         var b = nav.querySelector('.sidebar-badge');
         if (!b) { b = document.createElement('span'); b.className = 'sidebar-badge'; nav.appendChild(b); }
         b.textContent = data.length + ' rows';
-        b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,0.12);color:#818cf8;border:1px solid rgba(99,102,241,0.25);';
+        b.style.cssText = 'margin-left:auto;font-size:10px;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(56,189,248,0.12);color:#38bdf8;border:1px solid rgba(56,189,248,0.25);';
       }
     }
 
@@ -5143,7 +5143,7 @@
          visible set is driven by the chips in the Purchase Orders window. */
       var PO_COLS = [
         { label:'PO Number', cls:'', hints:['ponumber','purchaseorder','po'],
-          cell:function(r){ return '<td style="font-weight:700;color:#a78bfa;">' + (col(r,['PONumber','PurchaseOrder']) || '—') + '</td>'; } },
+          cell:function(r){ return '<td style="font-weight:700;color:#5eead4;">' + (col(r,['PONumber','PurchaseOrder']) || '—') + '</td>'; } },
         { label:'SKU', cls:'', hints:['sku','stockcode'],
           cell:function(r){ return '<td style="font-family:monospace;font-size:11px;color:#9ca3af;">' + (col(r,['SKU','StockCode']) || '—') + '</td>'; } },
         { label:'Description', cls:'', hints:['description'],
