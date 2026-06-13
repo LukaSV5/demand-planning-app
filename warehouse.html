@@ -224,9 +224,19 @@
     /* Strict threshold palette: good (green) → caution (amber) → trouble (red). Spot trouble without reading numbers. */
     function thr(v, warnAt, badAt) { return v >= badAt ? '#ef4444' : v >= warnAt ? '#f59e0b' : '#22c55e'; }
 
-    var WH_HEX = { 'Warehouse A': '#5eead4', 'Warehouse B': '#60a5fa', 'Warehouse C': '#34d399' };
-    var CAT_COLORS = { 'Electronics': '#60a5fa', 'Beauty & Health': '#f472b6', 'Fitness': '#34d399', 'Garden': '#a3e635', 'Home & Kitchen': '#fbbf24', 'Office Supplies': '#5eead4', 'Toys & Games': '#fb923c' };
-    function catColor(c) { return CAT_COLORS[c] || '#6b7280'; }
+    /* Dynamic colour scales — assigned from the data's actual sites/categories,
+       so any dataset (different site names, different categories) is coloured
+       distinctly. Curated on-theme palette first, hash-to-hue for any overflow. */
+    var PALETTE = ['#2dd4bf','#38bdf8','#34d399','#a3e635','#fbbf24','#fb923c','#f472b6','#c084fc','#60a5fa','#5eead4','#facc15','#4ade80','#22d3ee','#e879f9'];
+    function hashHue(s) { var h = 0; s = String(s); for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h % 360; }
+    function buildPalette(keys) {
+      var map = {}, sorted = keys.slice().sort();
+      sorted.forEach(function (k, i) { map[k] = i < PALETTE.length ? PALETTE[i] : 'hsl(' + hashHue(k) + ' 70% 62%)'; });
+      return map;
+    }
+    var WH_HEX = {};      /* warehouse → colour, built per-dataset in build() */
+    var CAT_COLORS = {};  /* category  → colour, built per-dataset in build() */
+    function catColor(c) { return CAT_COLORS[c] || ('hsl(' + hashHue(c) + ' 70% 62%)'); }
 
     /* Cover buckets (days of supply at recent velocity) */
     var COVER_BUCKETS = [
@@ -373,11 +383,18 @@
         };
       }).filter(function (p) { return p.sku; });
 
+      /* Colour scales from the data's actual sites + categories */
+      var catSet = {}; DATA.forEach(function (d) { catSet[d.category] = 1; });
+      WH_HEX = buildPalette(warehouses());
+      CAT_COLORS = buildPalette(Object.keys(catSet));
+
       renderFilter(); render();
     }
 
-    /* Monthly sales velocity per SKU over the trailing 12 months — from row objects.
-       Resolves the column keys once, then indexes directly (fast on large files). */
+    /* Monthly sales velocity per SKU over the trailing ~12 months — from row objects.
+       Resolves the column keys once, then indexes directly (fast on large files).
+       Divides by the number of months ACTUALLY observed in the window (capped at
+       12), so a dataset with only a few months of history isn't understated. */
     function aggregateVelocity(rows) {
       var vel = {};
       if (!rows || !rows.length) return vel;
@@ -390,14 +407,17 @@
       var maxDate = '';
       if (kDate) for (var i = 0; i < rows.length; i++) { var dt = '' + (rows[i][kDate] || ''); if (dt > maxDate) maxDate = dt; }
       var cutoff = maxDate ? (parseInt(maxDate.slice(0, 4), 10) - 1) + maxDate.slice(4) : '';
+      var months = {};
       for (var j = 0; j < rows.length; j++) {
-        var r = rows[j];
-        if (cutoff && kDate && ('' + (r[kDate] || '')) < cutoff) continue;
+        var r = rows[j], dv = '' + (r[kDate] || '');
+        if (cutoff && kDate && dv < cutoff) continue;
         var code = ('' + (r[kCode] || '')).toUpperCase();
         if (!code) continue;
         vel[code] = (vel[code] || 0) + (parseFloat(r[kQty]) || 0);
+        if (kDate && dv) months[dv.slice(0, 7)] = 1;   /* distinct YYYY-MM in window */
       }
-      Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / 12; });
+      var nMonths = Math.min(12, Math.max(1, Object.keys(months).length || 12));
+      Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / nMonths; });
       return vel;
     }
 
