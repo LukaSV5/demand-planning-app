@@ -3996,6 +3996,32 @@
       renderReplenishmentTable(filtered);
     });
 
+    /* ── Observable data store ──────────────────────────────────────────────
+       Single notification bus for data-SOURCE changes. Ingestion calls
+       Store.set({...}); every downstream module subscribes once and re-renders
+       from current state. This replaces the old hand-wired render cascade —
+       new modules (or pages) auto-update on upload without editing the writers.
+       View-only interactions (search/sort/triage filter) stay direct calls;
+       the Store is strictly for "the underlying data changed". */
+    window.Store = (function () {
+      var state = { skus: null, salesBySKU: null, routing: null, suppliers: null, rev: 0 };
+      var subs = [];
+      return {
+        get: function (k) { return k ? state[k] : state; },
+        set: function (patch) {
+          Object.assign(state, patch || {});
+          state.rev++;
+          subs.forEach(function (fn) {
+            try { fn(state); } catch (e) { console.error('[Store] subscriber failed:', e); }
+          });
+        },
+        subscribe: function (fn) {
+          subs.push(fn);
+          return function () { var i = subs.indexOf(fn); if (i >= 0) subs.splice(i, 1); };
+        }
+      };
+    })();
+
     var ALL_VIEWS = ['replenishment','upload','dashboard','products','suppliers','purchase-orders','shipping-orders','inbounds','outbounds','settings','integrations'];
 
     const app = {
@@ -4020,6 +4046,16 @@
         if (view === 'dashboard') renderDashboard();
       }
     };
+
+    /* Downstream modules subscribe once. Any Store.set() re-renders them all —
+       this is what makes "new upload → everything updates" automatic. */
+    Store.subscribe(function () {
+      if (window._loadedSKUs) {
+        renderReplenishmentTable(window._loadedSKUs);
+        updateSidebarBadges(window._loadedSKUs.length, 0, 0);
+      }
+      renderDashboard();
+    });
 
     // Boot into replenishment
     document.getElementById('view-upload').style.display = 'none';
@@ -4441,10 +4477,9 @@
       setCount('tc-blind',    skus.filter(function(d){ return !d.fc_model; }).length);
       setCount('tc-uncertain',skus.filter(function(d){ return d.fc_wape!=null&&d.fc_wape>30; }).length);
 
-      /* Push the enriched data back into the UI */
-      renderReplenishmentTable(skus);
-      updateSidebarBadges(skus.length, 0, 0);
-      renderDashboard();
+      /* Publish to the store — the subscriber re-renders the replenishment
+         table, sidebar badges, and dashboard from current state. */
+      Store.set({ skus: skus, salesBySKU: window._monthlySalesBySKU, routing: window._skuRouting, suppliers: window._suppliersBySKU });
     }
     /* Exposed so the forecast auto-router (separate script scope) can
        re-enrich the table once per-SKU best models are known. */
@@ -4733,7 +4768,9 @@
       if (typeof ForecastDashboard !== 'undefined' && ForecastDashboard.startAutoRouting) {
         setTimeout(function(){ ForecastDashboard.startAutoRouting(); }, 400);
       }
-      renderDashboard();
+      /* Publish sales to the store — subscriber refreshes the dashboard (and the
+         replenishment table once stock has loaded). */
+      Store.set({ salesBySKU: result });
       /* update nav status indicator */
       var lu = document.getElementById('last-updated');
       if (lu) { var now = new Date(); lu.textContent = now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) + ' — data loaded'; }
