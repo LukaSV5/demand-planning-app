@@ -3,19 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Abazadze Forecasting Lab | Demand Portfolio</title>
+  <title>Luka Abazadze · Supply Chain Strategy × Technical Execution</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #0c0c0e;
-      --purple:   #7c3aed;
-      --purple-lt:#a78bfa;
-      --text-1:   #f4f4f5;
-      --text-2:   #71717a;
-      --border:   rgba(255,255,255,0.07);
-      --surface:  rgba(255,255,255,0.04);
-      --text-3:   #3a3d4a;
+      --bg:        #0a0b0d;        /* matte black / deep charcoal */
+      --bg-2:      #0e1014;
+      --charcoal:  #14171c;
+      --accent:    #2dd4bf;        /* glowing turquoise */
+      --accent-2:  #38bdf8;        /* electric blue (gradient partner) */
+      --accent-lt: #5eead4;
+      --accent-glow: rgba(45,212,191,0.45);
+      --text-1:    #f3f6f8;
+      --text-2:    #8b94a3;        /* cool gray */
+      --text-3:    #434b57;
+      --border:    rgba(255,255,255,0.07);
+      --surface:   rgba(255,255,255,0.035);
+      --display:   'Oswald', 'Inter', 'Segoe UI', sans-serif;
+      /* Legacy aliases remapped to the new accent so the rest of the page recolors */
+      --purple:    #2dd4bf;
+      --purple-lt: #5eead4;
     }
 
     html, body {
@@ -104,8 +115,8 @@
     }
     .nav-link.active {
       color: var(--text-1);
-      background: rgba(124,58,237,0.15);
-      border-color: rgba(124,58,237,0.3);
+      background: rgba(45,212,191,0.13);
+      border-color: rgba(45,212,191,0.32);
     }
     .nav-cta {
       display: inline-flex;
@@ -114,58 +125,73 @@
       padding: 7px 16px;
       margin-left: 8px;
       border-radius: 10px;
-      background: var(--purple);
-      color: #fff;
+      background: linear-gradient(100deg, var(--accent), var(--accent-2));
+      color: #042b25;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       text-decoration: none;
       border: none;
       cursor: pointer;
       flex-shrink: 0;
-      transition: background 0.15s, transform 0.1s;
+      transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
     }
-    .nav-cta:hover { background: #6d28d9; transform: translateY(-1px); }
+    .nav-cta:hover { filter: brightness(1.08); box-shadow: 0 0 22px rgba(45,212,191,0.45); transform: translateY(-1px); }
     .nav-cta:active { transform: scale(0.97); }
-    /* push hero down to clear fixed nav */
-    .hero { padding-top: 120px; }
-
-    /* ── HERO ── */
+    /* ── HERO — cinematic full-bleed stage ── */
     .hero {
+      position: relative;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 100px 24px 60px;
-      position: relative;
+      padding: 140px 24px 90px;
       overflow: hidden;
     }
 
-    /* Purple radial glow — like Abacum */
+    /* 3D network/globe canvas lives here, full-bleed behind the content */
+    .hero-canvas {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+    .hero-canvas canvas { display: block; width: 100%; height: 100%; }
+
+    /* CSS fallback glow — visible immediately, and if WebGL is unavailable */
     .hero::before {
       content: '';
       position: absolute;
-      width: 900px; height: 500px;
-      bottom: 0; left: 50%;
-      transform: translateX(-50%);
-      background: radial-gradient(ellipse at center bottom,
-        rgba(124,58,237,0.35) 0%,
-        rgba(124,58,237,0.12) 40%,
-        transparent 70%);
+      width: 1100px; height: 1100px;
+      top: 42%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: radial-gradient(circle at center,
+        rgba(45,212,191,0.16) 0%,
+        rgba(56,189,248,0.08) 32%,
+        transparent 62%);
       pointer-events: none;
+      z-index: 0;
     }
 
-    /* Subtle grid overlay */
+    /* Fine grid, faded at the edges — adds depth without noise */
     .hero::after {
       content: '';
       position: absolute;
       inset: 0;
+      z-index: 0;
       background-image:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 80% 70% at center, black 10%, transparent 78%);
       pointer-events: none;
+    }
+    /* top/bottom cinematic vignette so content reads over the viz */
+    .hero-vignette {
+      position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 55% at 50% 46%, transparent 40%, rgba(10,11,13,0.55) 100%),
+        linear-gradient(to bottom, rgba(10,11,13,0.4) 0%, transparent 22%, transparent 72%, var(--bg) 100%);
     }
 
     .hero-content {
@@ -175,98 +201,195 @@
       flex-direction: column;
       align-items: center;
       text-align: center;
-      gap: 0;
     }
 
     .hero-badge {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 6px 16px;
+      gap: 9px;
+      padding: 7px 16px;
       border-radius: 999px;
-      border: 1px solid rgba(167,139,250,0.25);
-      background: rgba(124,58,237,0.08);
-      font-size: 13px;
-      color: var(--purple-lt);
+      border: 1px solid rgba(45,212,191,0.28);
+      background: rgba(45,212,191,0.06);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: var(--accent-lt);
       font-weight: 500;
-      margin-bottom: 32px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .hero-badge .pulse {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 0 var(--accent-glow);
+      animation: badgePulse 2.4s ease-out infinite;
+    }
+    @keyframes badgePulse {
+      0%   { box-shadow: 0 0 0 0 rgba(45,212,191,0.5); }
+      70%  { box-shadow: 0 0 0 8px rgba(45,212,191,0); }
+      100% { box-shadow: 0 0 0 0 rgba(45,212,191,0); }
     }
 
     h1 {
-      font-size: clamp(40px, 6vw, 72px);
-      font-weight: 800;
-      line-height: 1.08;
-      letter-spacing: -0.03em;
+      font-family: var(--display);
+      font-size: clamp(38px, 6.4vw, 82px);
+      font-weight: 600;
+      line-height: 1.02;
+      letter-spacing: -0.015em;
+      text-transform: uppercase;
       color: var(--text-1);
-      max-width: 780px;
-      margin-bottom: 24px;
+      max-width: 16ch;
+      margin-bottom: 26px;
     }
     h1 em {
-      font-style: italic;
-      color: var(--purple-lt);
+      font-style: normal;
+      background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .hero-sub {
-      font-size: 18px;
+      font-size: clamp(16px, 1.4vw, 19px);
       color: var(--text-2);
-      line-height: 1.6;
-      max-width: 620px;
-      margin-bottom: 44px;
+      line-height: 1.65;
+      max-width: 600px;
+      margin-bottom: 38px;
       font-weight: 400;
     }
+    .hero-sub b { color: var(--text-1); font-weight: 600; }
 
     .hero-actions {
       display: flex;
-      gap: 12px;
+      gap: 14px;
       align-items: center;
       flex-wrap: wrap;
       justify-content: center;
-      margin-bottom: 72px;
     }
 
     .btn-primary {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      background: var(--purple);
-      color: #fff;
+      gap: 9px;
+      background: linear-gradient(100deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #042b25;
       font-size: 14px;
-      font-weight: 600;
-      padding: 12px 28px;
-      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      padding: 13px 26px;
+      border-radius: 11px;
       border: none;
       cursor: pointer;
       text-decoration: none;
-      transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
-      box-shadow: 0 0 0 0 rgba(124,58,237,0);
+      transition: transform 0.12s, box-shadow 0.2s, filter 0.2s;
+      box-shadow: 0 0 28px rgba(45,212,191,0.28), 0 1px 0 rgba(255,255,255,0.25) inset;
     }
     .btn-primary:hover {
-      background: #6d28d9;
-      box-shadow: 0 0 32px rgba(124,58,237,0.4);
-      transform: translateY(-1px);
+      filter: brightness(1.08);
+      box-shadow: 0 0 44px rgba(45,212,191,0.5);
+      transform: translateY(-2px);
     }
-    .btn-primary:active { transform: scale(0.97); }
+    .btn-primary:active { transform: scale(0.98); }
 
     .btn-ghost {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: transparent;
-      color: var(--text-2);
+      background: rgba(255,255,255,0.02);
+      color: var(--text-1);
       font-size: 14px;
-      font-weight: 500;
-      padding: 12px 24px;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      font-weight: 600;
+      padding: 13px 24px;
+      border-radius: 11px;
+      border: 1px solid rgba(255,255,255,0.12);
       cursor: pointer;
       text-decoration: none;
       transition: color 0.15s, border-color 0.15s, background 0.15s;
     }
     .btn-ghost:hover {
-      color: var(--text-1);
-      border-color: rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.04);
+      color: var(--accent-lt);
+      border-color: rgba(45,212,191,0.45);
+      background: rgba(45,212,191,0.05);
     }
+
+    /* scroll cue */
+    .scroll-cue {
+      position: absolute;
+      bottom: 26px; left: 50%; transform: translateX(-50%);
+      z-index: 2;
+      font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--text-3); font-weight: 600;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .scroll-cue .line { width: 1px; height: 26px; background: linear-gradient(var(--accent), transparent); animation: cueDrop 1.8s ease-in-out infinite; }
+    @keyframes cueDrop { 0%,100% { opacity: 0.3; transform: scaleY(0.6); } 50% { opacity: 1; transform: scaleY(1); } }
+
+    /* Old hero "Honest Chart" — superseded by the 3D centerpiece; hidden for now */
+    .hx-wrap { display: none; }
+
+    /* ── BUILT FROM EXPERIENCE ── */
+    .bfe {
+      position: relative;
+      z-index: 2;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 30px 24px 96px;
+    }
+    .bfe-eyebrow {
+      text-align: center;
+      font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 36px;
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+    }
+    .bfe-eyebrow::before, .bfe-eyebrow::after {
+      content: ''; height: 1px; width: 48px;
+      background: linear-gradient(90deg, transparent, rgba(45,212,191,0.5));
+    }
+    .bfe-eyebrow::after { background: linear-gradient(90deg, rgba(45,212,191,0.5), transparent); }
+    .bfe-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+    .bfe-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 26px 24px 28px;
+      overflow: hidden;
+      transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+    .bfe-card::before {
+      content: ''; position: absolute; inset: 0 0 auto 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(45,212,191,0.6), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .bfe-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(45,212,191,0.3);
+      box-shadow: 0 18px 50px rgba(0,0,0,0.45), 0 0 0 1px rgba(45,212,191,0.12);
+    }
+    .bfe-card:hover::before { opacity: 1; }
+    .bfe-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.22);
+      color: var(--accent-lt); margin-bottom: 18px;
+    }
+    .bfe-card h3 {
+      font-family: var(--display); font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.01em; font-size: 19px; color: var(--text-1); margin-bottom: 10px;
+    }
+    .bfe-card p { font-size: 13.5px; line-height: 1.6; color: var(--text-2); }
+    .bfe-card .tag {
+      display: inline-block; margin-top: 14px; font-family: var(--mono);
+      font-size: 10.5px; color: var(--accent); letter-spacing: 0.03em;
+      padding: 3px 9px; border-radius: 6px; background: rgba(45,212,191,0.07);
+      border: 1px solid rgba(45,212,191,0.18);
+    }
+    @media (max-width: 820px) { .bfe-grid { grid-template-columns: 1fr; } }
 
     /* ── FLOATING PREVIEW (multi-card) ── */
     .preview-wrap {
@@ -909,35 +1032,31 @@
 
   <!-- HERO -->
   <section class="hero">
+    <div class="hero-canvas" id="hero-canvas"></div>
+    <div class="hero-vignette"></div>
     <div class="hero-content">
 
-      <div class="hero-badge">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 3v18M5 7l7-4 7 4M4 13c0 1.7 1.3 3 3 3s3-1.3 3-3L7 7zM14 13c0 1.7 1.3 3 3 3s3-1.3 3-3l-3-6z"/>
-        </svg>
-        Every number on this page is checkable in your browser
-      </div>
+      <div class="hero-badge"><span class="pulse"></span> Luka Abazadze · Supply Chain Analyst</div>
 
-      <h1>Most forecasting tools show you their best fit. <em>This one shows you its mistakes.</em></h1>
+      <h1>Bridging Supply Chain Strategy with <em>Technical Execution</em></h1>
 
       <p class="hero-sub">
-        Seven statistical models, audited by walk-forward validation on <em style="color:var(--purple-lt);">your</em> data — honest WAPE and MASE scores, 80% prediction intervals on every forecast, and replenishment quantities you can defend in a Monday meeting. Built end-to-end by Luka Abazadze, supply chain analyst. The whole engine runs in your browser; nothing hides behind a server.
+        Welcome to the <b>LA Forecasting Lab</b> — an interactive engine that digitizes the exact inventory challenges I've solved in my career: forecasting demand, aligning stock across sites, and turning it into decisions a planner can act on Monday morning.
       </p>
 
       <div class="hero-actions">
         <a class="btn-primary" href="dashboard.html">
-          Open the Live Workspace — no signup →
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+          Explore the Dashboard
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </a>
-        <a class="btn-ghost" href="#backtest">
-          Watch a model get audited ↓
+        <a class="btn-ghost" href="https://www.linkedin.com/in/luka-abazadze" target="_blank" rel="noopener">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+          View Resume / LinkedIn
         </a>
       </div>
-      <p class="hero-microcopy">Free · no signup · one click loads a 140-SKU demo portfolio</p>
 
       <!-- THE HONEST CHART — a hero that admits error -->
       <div class="hx-wrap">
@@ -1017,6 +1136,42 @@
         </div>
 
       </div>
+    </div><!-- /.hero-content -->
+
+    <a class="scroll-cue" href="#bfe-anchor">Built from experience<span class="line"></span></a>
+  </section>
+
+  <!-- ── BUILT FROM EXPERIENCE ── -->
+  <section class="bfe" id="bfe-anchor">
+    <div class="bfe-eyebrow">Built from experience</div>
+    <div class="bfe-grid">
+
+      <article class="bfe-card">
+        <div class="bfe-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg>
+        </div>
+        <h3>Data-Driven Forecasting</h3>
+        <p>Seven statistical models — from seasonal naive to a global gradient-boosted learner — each backtested by walk-forward validation and routed to its proven winner per SKU. No best-fit theatre; honest out-of-sample error.</p>
+        <span class="tag">WAPE · MASE · 80% intervals</span>
+      </article>
+
+      <article class="bfe-card">
+        <div class="bfe-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+        </div>
+        <h3>Physical &amp; Temporal Alignment</h3>
+        <p>Stock lives somewhere and demand happens over time. The Lab aligns both — working capital and excess across three sites, demand across the calendar — so the right units sit in the right place before they're needed.</p>
+        <span class="tag">Working capital · ATP · cover</span>
+      </article>
+
+      <article class="bfe-card">
+        <div class="bfe-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <h3>Actionable Metrics</h3>
+        <p>Every figure ties to a decision a planner can defend: what to reorder and when, what to clear, what's at risk of stocking out. Strategy expressed as numbers — not dashboards for their own sake.</p>
+        <span class="tag">Reorder · safety stock · ATP/MASE</span>
+      </article>
 
     </div>
   </section>
