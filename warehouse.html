@@ -239,72 +239,65 @@
 
     var DATA = [], POS = [], selected = 'all';
 
+    /* ── Data source: prefer a dataset the dashboard persisted to IndexedDB,
+       fall back to the bundled demo CSVs. This is what makes the warehouse
+       reflect whatever was last uploaded — it reads the same `dataset:v1`
+       key the dashboard writes. ─────────────────────────────────────────── */
+    var DATASET_KEY = 'dataset:v1';
+    function norm(s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+    var IDB = (function () {
+      function open() {
+        return new Promise(function (res, rej) {
+          if (!('indexedDB' in window)) return rej(new Error('no indexeddb'));
+          var rq = indexedDB.open('la-forecasting', 1);
+          rq.onupgradeneeded = function () { try { rq.result.createObjectStore('kv'); } catch (e) {} };
+          rq.onsuccess = function () { res(rq.result); };
+          rq.onerror = function () { rej(rq.error); };
+        });
+      }
+      return { get: function (k) { return open().then(function (db) { return new Promise(function (res, rej) {
+        try { var tx = db.transaction('kv', 'readonly'); var r = tx.objectStore('kv').get(k);
+          r.onsuccess = function () { res(r.result); }; r.onerror = function () { rej(r.error); }; }
+        catch (e) { rej(e); }
+      }); }); } };
+    })();
+
+    /* Identify each persisted file by its COLUMNS (not filename) so custom
+       uploads with different names still route correctly. */
+    function classify(file) {
+      var hs = (file.headers || []).map(norm);
+      function has() { for (var i = 0; i < arguments.length; i++) if (hs.indexOf(norm(arguments[i])) >= 0) return true; return false; }
+      if (has('PONumber', 'PurchaseOrder')) return 'po';
+      if (has('Quantity', 'Qty', 'UnitsSold') && has('InvoiceDate', 'OrderDate', 'SaleDate', 'Date')) return 'sales';
+      if (has('LeadTime', 'PurchasePrice', 'MOQ', 'MinimumOrder')) return 'suppliers';
+      if (has('Warehouse') || has('Stock', 'OnHand', 'ReorderPoint', 'SafetyStock')) return 'stock';
+      return null;
+    }
+
     function load() {
+      IDB.get(DATASET_KEY).then(function (saved) {
+        if (saved && saved.files && saved.files.length) {
+          var by = { stock: null, suppliers: [], sales: [], po: [] };
+          saved.files.forEach(function (f) { var t = classify(f); if (t) by[t] = (f.data || []); });
+          if (by.stock && by.stock.length) {
+            build(by.stock, by.suppliers, by.sales, by.po);
+            markRestored();
+            return;
+          }
+        }
+        loadDemo();   /* nothing usable stored → bundled demo */
+      }).catch(function () { loadDemo(); });
+    }
+
+    function loadDemo() {
       Promise.all([
         fetch('stock_levels.csv').then(function (r) { if (!r.ok) throw new Error('stock_levels.csv'); return r.text(); }),
         fetch('suppliers.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
         fetch('sales_history.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
         fetch('purchase_orders.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })
       ]).then(function (res) {
-        var stock = parseCSV(res[0]).rows;
-        var sup = res[1] ? parseCSV(res[1]).rows : [];
-        var priceBySKU = {}, leadBySKU = {};
-        sup.forEach(function (r) {
-          var sku = (col(r, ['SKU', 'StockCode']) || '').toUpperCase();
-          if (sku) { priceBySKU[sku] = num(col(r, ['PurchasePrice', 'CostPrice', 'Price'])); leadBySKU[sku] = num(col(r, ['LeadTime', 'Lead'])) || 14; }
-        });
-
-        /* Sales velocity — aggregate quantity per SKU over the last 12 months of the dataset */
-        var velMonthly = aggregateVelocity(res[2]);
-
-        DATA = stock.map(function (r) {
-          var sku = col(r, ['SKU', 'StockCode']);
-          var key = (sku || '').toUpperCase();
-          var stk = num(col(r, ['Stock']));
-          var onhand = num(col(r, ['OnHand', 'Stock']));
-          var reserved = num(col(r, ['Reserved']));
-          var availRaw = col(r, ['Available']);
-          var avail = availRaw !== '' ? num(availRaw) : Math.max(0, onhand - reserved);
-          var safety = num(col(r, ['SafetyStock', 'Safety']));
-          var reorder = num(col(r, ['ReorderPoint', 'Reorder']));
-          var price = priceBySKU[key] || 0;
-          var lead = leadBySKU[key] || 14;
-          var monthly = velMonthly[key] || 0;
-          var daily = monthly / 30;
-          var cover = daily > 0 ? stk / daily : (stk > 0 ? Infinity : 0);
-          var targetUnits = daily * EXCESS_COVER_DAYS;
-          var excessUnits = Math.max(0, stk - targetUnits);
-          var isDead = monthly === 0 && stk > 0;
-          var excessVal = (isDead ? stk : excessUnits) * price; /* dead stock = all capital trapped */
-          var health = avail <= 0 ? 'stockout' : avail <= reorder ? 'atrisk' : 'healthy';
-          var bucket = isDead ? 'excess' : coverBucket(cover);
-          return {
-            sku: sku, name: col(r, ['Description', 'Product', 'Name']), category: col(r, ['Category']) || 'Uncategorised',
-            warehouse: col(r, ['Warehouse']) || 'Unassigned',
-            stock: stk, onhand: onhand, reserved: reserved, available: avail, safety: safety, reorder: reorder,
-            price: price, lead: lead, value: stk * price, monthly: monthly, cover: cover,
-            excessUnits: isDead ? stk : excessUnits, excessVal: excessVal, isDead: isDead,
-            health: health, bucket: bucket, belowReorder: avail <= reorder,
-            resRatio: onhand > 0 ? reserved / onhand : 0
-          };
-        }).filter(function (d) { return d.sku; });
-
-        /* Open POs joined to each SKU's warehouse + shortage flag */
-        var whBySKU = {}; DATA.forEach(function (d) { whBySKU[d.sku.toUpperCase()] = d; });
-        var poRows = res[3] ? parseCSV(res[3]).rows : [];
-        POS = poRows.map(function (r) {
-          var sku = col(r, ['SKU', 'StockCode']);
-          var d = whBySKU[(sku || '').toUpperCase()];
-          return {
-            po: col(r, ['PONumber', 'PurchaseOrder']), sku: sku, name: col(r, ['Description']) || (d ? d.name : ''),
-            qty: num(col(r, ['OrderedQty', 'OrderedQuantity', 'Qty'])), eta: col(r, ['ExpectedDelivery', 'DeliveryDate']),
-            status: col(r, ['Status']) || '—', value: num(col(r, ['TotalValue'])),
-            warehouse: d ? d.warehouse : 'Unassigned',
-            covers: d ? (d.belowReorder ? 'shortage' : (d.excessUnits > 0 ? 'excess' : 'healthy')) : 'unknown'
-          };
-        }).filter(function (p) { return p.sku; });
-
-        renderFilter(); render();
+        build(parseCSV(res[0]).rows, res[1] ? parseCSV(res[1]).rows : [], res[2] ? parseCSV(res[2]).rows : [], res[3] ? parseCSV(res[3]).rows : []);
       }).catch(function (err) {
         document.getElementById('content').innerHTML =
           '<div class="state">Could not load <code>stock_levels.csv</code> (' + esc(err.message || String(err)) + ').<br>' +
@@ -313,39 +306,98 @@
       });
     }
 
-    /* Sum quantity per SKU within the last 12 months of the sales file; return monthly average */
-    function aggregateVelocity(text) {
+    function markRestored() {
+      var head = document.querySelector('.page-head');
+      if (!head || document.getElementById('wh-source')) return;
+      var el = document.createElement('div');
+      el.id = 'wh-source';
+      el.style.cssText = 'margin-top:9px;display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:600;color:var(--purple-lt);background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.25);border-radius:999px;padding:4px 11px;';
+      el.innerHTML = '<span style="width:6px;height:6px;border-radius:50%;background:var(--purple);"></span>Showing your uploaded dataset · <a href="dashboard.html" style="color:var(--purple-lt);text-decoration:none;">manage in dashboard ↗</a>';
+      (head.firstElementChild || head).appendChild(el);
+    }
+
+    /* Build every panel from row arrays (objects) — one path for both sources. */
+    function build(stockRows, supRows, salesRows, poRows) {
+      stockRows = stockRows || []; supRows = supRows || []; salesRows = salesRows || []; poRows = poRows || [];
+      var priceBySKU = {}, leadBySKU = {};
+      supRows.forEach(function (r) {
+        var sku = (col(r, ['SKU', 'StockCode']) || '').toUpperCase();
+        if (sku) { priceBySKU[sku] = num(col(r, ['PurchasePrice', 'CostPrice', 'Price'])); leadBySKU[sku] = num(col(r, ['LeadTime', 'Lead'])) || 14; }
+      });
+
+      var velMonthly = aggregateVelocity(salesRows);
+
+      DATA = stockRows.map(function (r) {
+        var sku = col(r, ['SKU', 'StockCode']);
+        var key = (sku || '').toUpperCase();
+        var stk = num(col(r, ['Stock']));
+        var onhand = num(col(r, ['OnHand', 'Stock']));
+        var reserved = num(col(r, ['Reserved']));
+        var availRaw = col(r, ['Available']);
+        var avail = availRaw !== '' ? num(availRaw) : Math.max(0, onhand - reserved);
+        var safety = num(col(r, ['SafetyStock', 'Safety']));
+        var reorder = num(col(r, ['ReorderPoint', 'Reorder']));
+        var price = priceBySKU[key] || 0;
+        var lead = leadBySKU[key] || 14;
+        var monthly = velMonthly[key] || 0;
+        var daily = monthly / 30;
+        var cover = daily > 0 ? stk / daily : (stk > 0 ? Infinity : 0);
+        var targetUnits = daily * EXCESS_COVER_DAYS;
+        var excessUnits = Math.max(0, stk - targetUnits);
+        var isDead = monthly === 0 && stk > 0;
+        var excessVal = (isDead ? stk : excessUnits) * price; /* dead stock = all capital trapped */
+        var health = avail <= 0 ? 'stockout' : avail <= reorder ? 'atrisk' : 'healthy';
+        var bucket = isDead ? 'excess' : coverBucket(cover);
+        return {
+          sku: sku, name: col(r, ['Description', 'Product', 'Name']), category: col(r, ['Category']) || 'Uncategorised',
+          warehouse: col(r, ['Warehouse']) || 'Unassigned',
+          stock: stk, onhand: onhand, reserved: reserved, available: avail, safety: safety, reorder: reorder,
+          price: price, lead: lead, value: stk * price, monthly: monthly, cover: cover,
+          excessUnits: isDead ? stk : excessUnits, excessVal: excessVal, isDead: isDead,
+          health: health, bucket: bucket, belowReorder: avail <= reorder,
+          resRatio: onhand > 0 ? reserved / onhand : 0
+        };
+      }).filter(function (d) { return d.sku; });
+
+      /* Open POs joined to each SKU's warehouse + shortage flag */
+      var whBySKU = {}; DATA.forEach(function (d) { whBySKU[d.sku.toUpperCase()] = d; });
+      POS = poRows.map(function (r) {
+        var sku = col(r, ['SKU', 'StockCode']);
+        var d = whBySKU[(sku || '').toUpperCase()];
+        return {
+          po: col(r, ['PONumber', 'PurchaseOrder']), sku: sku, name: col(r, ['Description']) || (d ? d.name : ''),
+          qty: num(col(r, ['OrderedQty', 'OrderedQuantity', 'Qty'])), eta: col(r, ['ExpectedDelivery', 'DeliveryDate']),
+          status: col(r, ['Status']) || '—', value: num(col(r, ['TotalValue'])),
+          warehouse: d ? d.warehouse : 'Unassigned',
+          covers: d ? (d.belowReorder ? 'shortage' : (d.excessUnits > 0 ? 'excess' : 'healthy')) : 'unknown'
+        };
+      }).filter(function (p) { return p.sku; });
+
+      renderFilter(); render();
+    }
+
+    /* Monthly sales velocity per SKU over the trailing 12 months — from row objects.
+       Resolves the column keys once, then indexes directly (fast on large files). */
+    function aggregateVelocity(rows) {
       var vel = {};
-      if (!text) return vel;
-      var lines = text.split('\n');
-      if (lines.length < 2) return vel;
-      var delim = lines[0].includes('\t') ? '\t' : ',';
-      var hdr = parseLine(lines[0], delim).map(function (h) { return h.toLowerCase().replace(/[^a-z0-9]/g, ''); });
-      var iCode = hdr.indexOf('stockcode'); if (iCode < 0) iCode = hdr.indexOf('sku');
-      var iQty = hdr.indexOf('quantity'); if (iQty < 0) iQty = hdr.indexOf('qty');
-      var iDate = hdr.indexOf('invoicedate'); if (iDate < 0) iDate = hdr.indexOf('date');
-      if (iCode < 0 || iQty < 0) return vel;
-
-      /* find max date (YYYY-MM-DD sorts lexically) to anchor the trailing-12-month window */
+      if (!rows || !rows.length) return vel;
+      var keys = Object.keys(rows[0]);
+      function findKey(cands) { for (var i = 0; i < cands.length; i++) { var w = norm(cands[i]); for (var k = 0; k < keys.length; k++) if (norm(keys[k]) === w) return keys[k]; } return null; }
+      var kCode = findKey(['StockCode', 'SKU', 'ProductCode', 'ItemCode', 'Code']);
+      var kQty  = findKey(['Quantity', 'Qty', 'Units', 'UnitsSold', 'Sales']);
+      var kDate = findKey(['InvoiceDate', 'OrderDate', 'SaleDate', 'Date']);
+      if (!kCode || !kQty) return vel;
       var maxDate = '';
-      for (var i = 1; i < lines.length; i++) {
-        if (!lines[i]) continue;
-        var c = parseLine(lines[i], delim);
-        var dt = iDate >= 0 ? (c[iDate] || '') : '';
-        if (dt > maxDate) maxDate = dt;
-      }
+      if (kDate) for (var i = 0; i < rows.length; i++) { var dt = '' + (rows[i][kDate] || ''); if (dt > maxDate) maxDate = dt; }
       var cutoff = maxDate ? (parseInt(maxDate.slice(0, 4), 10) - 1) + maxDate.slice(4) : '';
-
-      for (var j = 1; j < lines.length; j++) {
-        if (!lines[j]) continue;
-        var cells = parseLine(lines[j], delim);
-        var dt2 = iDate >= 0 ? (cells[iDate] || '') : '';
-        if (cutoff && dt2 < cutoff) continue;
-        var code = (cells[iCode] || '').toUpperCase();
+      for (var j = 0; j < rows.length; j++) {
+        var r = rows[j];
+        if (cutoff && kDate && ('' + (r[kDate] || '')) < cutoff) continue;
+        var code = ('' + (r[kCode] || '')).toUpperCase();
         if (!code) continue;
-        vel[code] = (vel[code] || 0) + (parseFloat(cells[iQty]) || 0);
+        vel[code] = (vel[code] || 0) + (parseFloat(r[kQty]) || 0);
       }
-      Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / 12; }); /* monthly average over the window */
+      Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / 12; });
       return vel;
     }
 
