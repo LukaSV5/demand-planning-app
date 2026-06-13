@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About · Luka Abazadze — Supply Chain &amp; Procurement</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0b0d;
+      --bg-2:      #0e1014;
+      --charcoal:  #14171c;
+      --accent:    #2dd4bf;
+      --accent-2:  #38bdf8;
+      --accent-lt: #5eead4;
+      --accent-glow: rgba(45,212,191,0.45);
+      --text-1:    #f3f6f8;
+      --text-2:    #8b94a3;
+      --text-3:    #434b57;
+      --border:    rgba(255,255,255,0.07);
+      --surface:   rgba(255,255,255,0.035);
+      --display:   'Oswald', 'Inter', 'Segoe UI', sans-serif;
+      --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    html, body {
+      background: var(--bg);
+      color: var(--text-1);
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV (shared with the rest of the lab) ── */
+    .nav-wrapper {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      padding: 14px 32px; pointer-events: none;
+    }
+    .nav-logo-outer { pointer-events: all; position: absolute; left: 32px; display: flex; align-items: center; }
+    nav {
+      pointer-events: all;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      height: 52px; padding: 0 10px;
+      background: rgba(18,18,22,0.85);
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.09); border-radius: 16px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-1); text-decoration: none; flex-shrink: 0; }
+    .nav-logo-mark { width: 28px; height: 28px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .nav-links { display: flex; align-items: center; gap: 2px; flex: 1; justify-content: center; }
+    .nav-link {
+      padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      color: #9ca3af; text-decoration: none; border: 1px solid transparent;
+      transition: color 0.15s, background 0.15s, border-color 0.15s; white-space: nowrap; cursor: pointer; background: none;
+    }
+    .nav-link:hover { color: var(--text-1); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); }
+    .nav-link.active { color: var(--text-1); background: rgba(45,212,191,0.13); border-color: rgba(45,212,191,0.32); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; margin-left: 8px;
+      border-radius: 10px; background: linear-gradient(100deg, var(--accent), var(--accent-2));
+      color: #042b25; font-size: 13px; font-weight: 700; text-decoration: none; border: none; cursor: pointer; flex-shrink: 0;
+      transition: filter 0.15s, transform 0.1s, box-shadow 0.2s;
+    }
+    .nav-cta:hover { filter: brightness(1.08); box-shadow: 0 0 22px rgba(45,212,191,0.45); transform: translateY(-1px); }
+    .nav-cta:active { transform: scale(0.97); }
+
+    /* ── PAGE SHELL ── */
+    .wrap { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+
+    /* ── PROFILE HERO ── */
+    .profile {
+      position: relative; overflow: hidden;
+      padding: 150px 24px 70px;
+    }
+    .profile::before {
+      content: ''; position: absolute; width: 1000px; height: 1000px;
+      top: -380px; left: 50%; transform: translateX(-50%);
+      background: radial-gradient(circle at center, rgba(45,212,191,0.16) 0%, rgba(56,189,248,0.07) 34%, transparent 64%);
+      pointer-events: none; z-index: 0;
+    }
+    .profile::after {
+      content: ''; position: absolute; inset: 0; z-index: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 64px 64px;
+      mask-image: radial-gradient(ellipse 75% 70% at 50% 0%, black 6%, transparent 72%);
+      pointer-events: none;
+    }
+    .profile-inner {
+      position: relative; z-index: 2; max-width: 1060px; margin: 0 auto;
+      display: flex; gap: 38px; align-items: center; flex-wrap: wrap;
+    }
+    .monogram {
+      width: 124px; height: 124px; border-radius: 26px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--display); font-weight: 700; font-size: 46px; letter-spacing: 0.02em;
+      color: #042b25; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 44px rgba(45,212,191,0.4), 0 1px 0 rgba(255,255,255,0.3) inset;
+    }
+    .profile-text { flex: 1; min-width: 300px; }
+    .p-badge {
+      display: inline-flex; align-items: center; gap: 9px; padding: 6px 14px; border-radius: 999px;
+      border: 1px solid rgba(45,212,191,0.28); background: rgba(45,212,191,0.06);
+      font-size: 12px; letter-spacing: 0.03em; color: var(--accent-lt); font-weight: 500; margin-bottom: 18px;
+    }
+    .p-badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+    .profile h1 {
+      font-family: var(--display); font-weight: 600; text-transform: uppercase;
+      font-size: clamp(34px, 5.2vw, 58px); line-height: 1.02; letter-spacing: -0.015em; margin-bottom: 12px;
+    }
+    .profile h1 em { font-style: normal; background: linear-gradient(100deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .profile-role { font-size: clamp(15px, 1.6vw, 18px); color: var(--text-1); font-weight: 600; margin-bottom: 14px; }
+    .profile-role span { color: var(--text-2); font-weight: 400; }
+    .profile-sum { font-size: 14.5px; line-height: 1.7; color: var(--text-2); max-width: 640px; margin-bottom: 24px; }
+    .profile-sum b { color: var(--text-1); font-weight: 600; }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 9px;
+      background: linear-gradient(100deg, var(--accent), var(--accent-2)); color: #042b25;
+      font-size: 13.5px; font-weight: 700; padding: 12px 22px; border-radius: 11px; border: none; cursor: pointer; text-decoration: none;
+      transition: transform 0.12s, box-shadow 0.2s, filter 0.2s; box-shadow: 0 0 24px rgba(45,212,191,0.26);
+    }
+    .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 0 40px rgba(45,212,191,0.5); transform: translateY(-2px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.02); color: var(--text-1);
+      font-size: 13.5px; font-weight: 600; padding: 12px 20px; border-radius: 11px; border: 1px solid rgba(255,255,255,0.12);
+      cursor: pointer; text-decoration: none; transition: color 0.15s, border-color 0.15s, background 0.15s;
+    }
+    .btn-ghost:hover { color: var(--accent-lt); border-color: rgba(45,212,191,0.45); background: rgba(45,212,191,0.05); }
+
+    /* ── IMPACT STRIP ── */
+    .impact {
+      position: relative; z-index: 2;
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 34px 24px;
+    }
+    .impact-grid { max-width: 1060px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+    .impact-cell { text-align: center; }
+    .impact-num { font-family: var(--mono); font-size: clamp(22px, 2.6vw, 30px); font-weight: 700; color: var(--text-1); letter-spacing: -0.01em; margin-bottom: 7px; white-space: nowrap; }
+    .impact-num .v { color: var(--accent-lt); }
+    .impact-cap { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+    @media (max-width: 760px) { .impact-grid { grid-template-columns: repeat(2, 1fr); gap: 26px 18px; } }
+
+    /* ── SECTION FRAME ── */
+    section.block { padding: 64px 24px; }
+    .eyebrow {
+      font-size: 11px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent);
+      display: flex; align-items: center; gap: 14px; margin-bottom: 8px;
+    }
+    .eyebrow::after { content: ''; height: 1px; flex: 1; background: linear-gradient(90deg, rgba(45,212,191,0.45), transparent); }
+    .block h2 { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: -0.01em; font-size: clamp(24px, 3.4vw, 34px); color: var(--text-1); margin-bottom: 30px; }
+
+    /* ── TIMELINE ── */
+    .timeline { position: relative; }
+    .tl-item { position: relative; padding: 0 0 30px 34px; border-left: 1px solid var(--border); }
+    .tl-item:last-child { padding-bottom: 0; border-left-color: transparent; }
+    .tl-item::before {
+      content: ''; position: absolute; left: -7px; top: 4px; width: 13px; height: 13px; border-radius: 50%;
+      background: var(--bg); border: 2px solid var(--accent); box-shadow: 0 0 10px var(--accent-glow);
+    }
+    .tl-item.now::before { background: var(--accent); }
+    .tl-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01));
+      border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px;
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    }
+    .tl-card:hover { border-color: rgba(45,212,191,0.28); transform: translateY(-2px); box-shadow: 0 14px 40px rgba(0,0,0,0.35); }
+    .tl-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+    .tl-role { font-size: 17px; font-weight: 700; color: var(--text-1); letter-spacing: -0.01em; }
+    .tl-dates { font-family: var(--mono); font-size: 11.5px; color: var(--text-3); white-space: nowrap; }
+    .tl-co { font-size: 13.5px; font-weight: 600; color: var(--accent-lt); margin-bottom: 14px; }
+    .tl-co span { color: var(--text-2); font-weight: 400; }
+    .tl-list { list-style: none; display: flex; flex-direction: column; gap: 9px; }
+    .tl-list li { position: relative; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: var(--text-2); }
+    .tl-list li::before { content: ''; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(45,212,191,0.55); }
+    .tl-list li b { color: var(--text-1); font-weight: 600; }
+    .tl-tags { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 14px; }
+    .tag {
+      font-family: var(--mono); font-size: 10.5px; color: var(--accent); letter-spacing: 0.02em;
+      padding: 3px 9px; border-radius: 6px; background: rgba(45,212,191,0.07); border: 1px solid rgba(45,212,191,0.18);
+    }
+
+    /* ── TWO-UP (toolbox + education) ── */
+    .two-up { display: grid; grid-template-columns: 1.4fr 1fr; gap: 22px; }
+    @media (max-width: 820px) { .two-up { grid-template-columns: 1fr; } }
+    .panel {
+      background: rgba(255,255,255,0.025); border: 1px solid var(--border); border-radius: 18px; padding: 26px 26px 28px;
+    }
+    .panel h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-2); margin-bottom: 18px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 9px; }
+    .chip {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 14px; border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03);
+      font-size: 13px; color: var(--text-1); font-weight: 500;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .chip:hover { border-color: rgba(45,212,191,0.35); color: var(--accent-lt); }
+    .chip .lvl { font-size: 10.5px; color: var(--text-3); font-weight: 600; }
+    .lang-row { display: flex; flex-direction: column; gap: 14px; }
+    .lang { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .lang .name { font-size: 14px; color: var(--text-1); font-weight: 600; }
+    .lang .meter { display: flex; gap: 4px; }
+    .lang .pip { width: 9px; height: 9px; border-radius: 2px; background: rgba(255,255,255,0.1); }
+    .lang .pip.on { background: var(--accent); box-shadow: 0 0 7px rgba(45,212,191,0.5); }
+    .edu-item { padding: 14px 0; border-bottom: 1px solid var(--border); }
+    .edu-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .edu-deg { font-size: 14.5px; font-weight: 600; color: var(--text-1); margin-bottom: 4px; }
+    .edu-meta { font-size: 12.5px; color: var(--text-2); }
+
+    /* ── WHY THIS LAB ── */
+    .why {
+      position: relative; overflow: hidden;
+      border: 1px solid rgba(45,212,191,0.22); border-radius: 22px;
+      background: linear-gradient(180deg, rgba(45,212,191,0.06), rgba(255,255,255,0.012));
+      padding: 40px 38px;
+      box-shadow: 0 0 0 1px rgba(45,212,191,0.08), 0 20px 60px rgba(0,0,0,0.4);
+    }
+    .why h2 { margin-bottom: 14px; }
+    .why p { font-size: 15px; line-height: 1.75; color: var(--text-2); max-width: 760px; margin-bottom: 22px; }
+    .why p b { color: var(--text-1); font-weight: 600; }
+
+    /* ── CONTACT ── */
+    .contact { text-align: center; padding: 70px 24px 30px; }
+    .contact .eyebrow { justify-content: center; }
+    .contact .eyebrow::after, .contact .eyebrow::before { content: ''; height: 1px; width: 46px; background: linear-gradient(90deg, transparent, rgba(45,212,191,0.5)); }
+    .contact .eyebrow::after { background: linear-gradient(90deg, rgba(45,212,191,0.5), transparent); }
+    .contact h2 { font-family: var(--display); font-weight: 600; text-transform: uppercase; font-size: clamp(24px, 3.6vw, 38px); margin-bottom: 14px; }
+    .contact p { font-size: 14.5px; color: var(--text-2); max-width: 520px; margin: 0 auto 28px; line-height: 1.7; }
+    .contact .actions { justify-content: center; }
+    .contact-mail { display: block; margin-top: 22px; font-family: var(--mono); font-size: 12.5px; color: var(--accent-lt); text-decoration: none; }
+    .contact-mail:hover { text-decoration: underline; }
+
+    footer { text-align: center; padding: 26px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-2); }
+
+    @media (prefers-reduced-motion: reduce) { * { transition-duration: 0.01ms !important; } }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <div class="nav-wrapper">
+    <a class="nav-logo nav-logo-outer" href="index.html">
+      <div class="nav-logo-mark">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+      </div>
+      <span style="font-weight:800;color:#f4f4f5;">LA</span><span style="font-weight:500;color:#6b7280;">&nbsp;Forecasting Lab</span>
+    </a>
+    <nav>
+      <div class="nav-links">
+        <a class="nav-link" href="index.html">Home</a>
+        <a class="nav-link" href="dashboard.html">Demand Forecasting</a>
+        <a class="nav-link" href="warehouse.html">Warehouse Overview</a>
+        <a class="nav-link" href="#">Procurement Operations</a>
+        <a class="nav-link active" href="about.html">About Me</a>
+      </div>
+      <a class="nav-cta" href="mailto:abazadzeluka@outlook.com">Contact Me</a>
+    </nav>
+  </div>
+
+  <!-- PROFILE -->
+  <header class="profile">
+    <div class="profile-inner">
+      <div class="monogram">LA</div>
+      <div class="profile-text">
+        <div class="p-badge"><span class="dot"></span> Tbilisi, Georgia · Open to opportunities</div>
+        <h1>Luka <em>Abazadze</em></h1>
+        <div class="profile-role">Supply Chain &amp; Procurement Specialist <span>· 6+ years</span></div>
+        <p class="profile-sum">
+          I plan demand, optimise inventory and run procurement so the right stock sits in the right place at the right cost. Six years across <b>e-commerce demand planning</b> and <b>strategic procurement</b> — most recently driving six-figure savings at <b>Tipalti</b>. This lab is where I turned that work into a working forecasting engine you can interrogate.
+        </p>
+        <div class="actions">
+          <a class="btn-primary" href="Luka-Abazadze-CV.pdf" target="_blank" rel="noopener">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+            Download Résumé
+          </a>
+          <a class="btn-ghost" href="https://www.linkedin.com/in/labazadze/" target="_blank" rel="noopener">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M20.45 20.45h-3.55v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.66H9.35V9h3.41v1.56h.05c.47-.9 1.63-1.85 3.36-1.85 3.6 0 4.27 2.37 4.27 5.45v6.29zM5.34 7.43a2.06 2.06 0 110-4.12 2.06 2.06 0 010 4.12zM7.12 20.45H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.73v20.54C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.73V1.73C24 .77 23.2 0 22.22 0z"/></svg>
+            LinkedIn
+          </a>
+          <a class="btn-ghost" href="mailto:abazadzeluka@outlook.com">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>
+            Email
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- IMPACT -->
+  <div class="impact">
+    <div class="impact-grid">
+      <div class="impact-cell">
+        <div class="impact-num"><span class="v">$119,447</span></div>
+        <div class="impact-cap">direct savings at Tipalti<br/>in the first 180 days</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num"><span class="v">$215,930</span></div>
+        <div class="impact-cap">cost avoidance over<br/>the same period</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num">43<span class="v">+</span></div>
+        <div class="impact-cap">SaaS vendors &amp; renewals<br/>managed end-to-end</div>
+      </div>
+      <div class="impact-cell">
+        <div class="impact-num">6<span class="v">+</span> <span style="font-size:0.6em;color:var(--text-2);">yrs</span></div>
+        <div class="impact-cap">across planning &amp;<br/>procurement</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPERIENCE -->
+  <section class="block wrap">
+    <div class="eyebrow">Experience</div>
+    <h2>Where I've done the work</h2>
+
+    <div class="timeline">
+
+      <div class="tl-item now">
+        <div class="tl-card">
+          <div class="tl-head">
+            <span class="tl-role">Purchasing Specialist</span>
+            <span class="tl-dates">JUL 2025 — PRESENT</span>
+          </div>
+          <div class="tl-co">Tipalti Inc <span>· Global SaaS / FinTech</span></div>
+          <ul class="tl-list">
+            <li>Own SaaS renewals and purchasing for <b>43+ vendors</b>, running the full cycle through <b>Oracle NetSuite</b> and <b>Monday.com</b>.</li>
+            <li>Delivered <b>$119,447 in direct savings</b> plus <b>$215,930 in cost avoidance</b> within the first 180 days through renegotiation, consolidation and renewal timing.</li>
+            <li>Turned scattered vendor terms into a tracked, auditable pipeline — visibility on spend, dates and leverage.</li>
+          </ul>
+          <div class="tl-tags"><span class="tag">Oracle NetSuite</span><span class="tag">Monday.com</span><span class="tag">Vendor negotiation</span><span class="tag">SaaS renewals</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head">
+            <span class="tl-role">Supply Chain Planning Specialist</span>
+            <span class="tl-dates">NOV 2023 — JUL 2025</span>
+          </div>
+          <div class="tl-co">Triple A Internetshops GmbH <span>· E-commerce</span></div>
+          <ul class="tl-list">
+            <li>Ran <b>demand forecasting</b> and <b>inventory-target optimisation</b> across a multi-SKU e-commerce catalogue.</li>
+            <li>Balanced the two failure modes that matter: minimising <b>stockouts</b> without drifting into <b>overstock</b> and trapped working capital.</li>
+            <li>This is the role this lab is modelled on — the forecasting, safety-stock and replenishment logic here is the work, digitised.</li>
+          </ul>
+          <div class="tl-tags"><span class="tag">Demand forecasting</span><span class="tag">Inventory targets</span><span class="tag">Safety stock</span><span class="tag">Replenishment</span></div>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-card">
+          <div class="tl-head">
+            <span class="tl-role">Procurement Manager / Specialist</span>
+            <span class="tl-dates">2019 — 2023</span>
+          </div>
+          <div class="tl-co">Meama LLC · TBC Pay LLC · Archi LLC · BMC Georgia <span>· Georgian enterprises</span></div>
+          <ul class="tl-list">
+            <li>Four years building procurement foundations across consumer, fintech and construction businesses.</li>
+            <li>Supplier sourcing and management, purchase-order operations, and cost control on recurring and project spend.</li>
+            <li>Where the procurement instincts — terms, lead times, supplier reliability — were formed.</li>
+          </ul>
+          <div class="tl-tags"><span class="tag">Sourcing</span><span class="tag">PO operations</span><span class="tag">Cost control</span><span class="tag">Supplier management</span></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- TOOLBOX + EDUCATION -->
+  <section class="block wrap">
+    <div class="two-up">
+
+      <div class="panel">
+        <h3>Toolbox</h3>
+        <div class="chips">
+          <span class="chip">Excel <span class="lvl">ADVANCED</span></span>
+          <span class="chip">Power BI</span>
+          <span class="chip">Oracle NetSuite</span>
+          <span class="chip">SAP Business One</span>
+          <span class="chip">QuickBooks</span>
+          <span class="chip">1C ERP</span>
+          <span class="chip">Monday.com</span>
+        </div>
+        <h3 style="margin-top:26px;">Languages</h3>
+        <div class="lang-row">
+          <div class="lang">
+            <span class="name">Georgian <span style="color:var(--text-3);font-weight:400;font-size:12px;">· Native</span></span>
+            <span class="meter"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i></span>
+          </div>
+          <div class="lang">
+            <span class="name">English <span style="color:var(--text-3);font-weight:400;font-size:12px;">· Advanced</span></span>
+            <span class="meter"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span>
+          </div>
+          <div class="lang">
+            <span class="name">Russian <span style="color:var(--text-3);font-weight:400;font-size:12px;">· Professional</span></span>
+            <span class="meter"><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip on"></i><i class="pip"></i></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Education</h3>
+        <div class="edu-item">
+          <div class="edu-deg">BBA, Finance</div>
+          <div class="edu-meta">Caucasus University · 2017 — 2021</div>
+        </div>
+        <div class="edu-item">
+          <div class="edu-deg">Focus areas</div>
+          <div class="edu-meta">Demand planning · inventory optimisation · strategic sourcing · spend analysis</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- WHY THIS LAB -->
+  <section class="block wrap">
+    <div class="why">
+      <div class="eyebrow">Why this lab exists</div>
+      <h2>I'd rather show the work than describe it</h2>
+      <p>
+        Most supply-chain CVs claim "data-driven forecasting." This site <b>is</b> the claim — a real forecasting engine that backtests seven models per SKU, scores them only on data they never saw, and turns the winner into a defensible order quantity. <b>No servers, no black box</b> — open the source, press play on the backtest, and check the numbers yourself.
+      </p>
+      <div class="actions">
+        <a class="btn-primary" href="dashboard.html">Open the Forecasting Workspace →</a>
+        <a class="btn-ghost" href="warehouse.html">See the Warehouse view</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact">
+    <div class="eyebrow">Get in touch</div>
+    <h2>Let's talk supply chain</h2>
+    <p>Open to demand-planning, inventory and procurement roles. The fastest way to understand how I think is to click through the lab — then reach out.</p>
+    <div class="actions">
+      <a class="btn-primary" href="mailto:abazadzeluka@outlook.com">Email Me</a>
+      <a class="btn-ghost" href="https://www.linkedin.com/in/labazadze/" target="_blank" rel="noopener">Connect on LinkedIn</a>
+    </div>
+    <a class="contact-mail" href="mailto:abazadzeluka@outlook.com">abazadzeluka@outlook.com</a>
+  </section>
+
+  <footer>
+    Demand Planning Lab · Built by Luka Abazadze · Tbilisi, Georgia
+  </footer>
+
+</body>
+</html>
