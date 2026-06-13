@@ -406,117 +406,6 @@
     }
     @media (max-width: 820px) { .bfe-grid { grid-template-columns: 1fr; } }
 
-    /* ── FLOATING PREVIEW (multi-card) ── */
-    .preview-wrap {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      max-width: 980px;
-      height: 268px;
-      overflow: visible;
-    }
-
-    /* Shared glass base */
-    .flt-query, .flt-chart, .flt-stat, .flt-assump {
-      position: absolute;
-      background: rgba(16,16,24,0.86);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.55);
-    }
-
-    /* Query card (left, slightly rotated) */
-    .flt-query {
-      left: 0; top: 88px;
-      width: 224px;
-      padding: 18px 18px 14px;
-      z-index: 3;
-      transform: rotate(-2deg);
-      border-color: rgba(255,255,255,0.11);
-    }
-    .flt-query-text {
-      font-size: 15px; font-weight: 700;
-      color: #e8eaf0; line-height: 1.45;
-      font-style: italic; margin-bottom: 14px;
-    }
-    .flt-query-row {
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .flt-query-tag {
-      font-size: 11px; color: #6b7280;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 6px; padding: 3px 8px;
-    }
-    .flt-query-btn {
-      width: 28px; height: 28px; border-radius: 8px;
-      background: var(--purple);
-      display: flex; align-items: center; justify-content: center;
-    }
-
-    /* Main chart card (center, perspective tilt) */
-    .flt-chart {
-      left: 140px; right: 140px;
-      top: 0;
-      padding: 18px 18px 12px;
-      z-index: 2;
-      overflow: hidden;
-      transform: perspective(1400px) rotateX(7deg) rotateY(-3deg);
-      transform-origin: center bottom;
-      border-color: rgba(45,212,191,0.22);
-      box-shadow:
-        0 0 0 1px rgba(45,212,191,0.15),
-        0 20px 60px rgba(0,0,0,0.6),
-        0 0 55px rgba(45,212,191,0.28),
-        0 0 110px rgba(45,212,191,0.15);
-    }
-    .flt-chart-header {
-      display: flex; align-items: center;
-      justify-content: space-between; margin-bottom: 10px;
-    }
-    .flt-chart-title { font-size: 10.5px; color: #6b7280; font-weight: 500; }
-    .flt-chart-legend {
-      display: flex; gap: 10px;
-      font-size: 9.5px; color: #4b5563; font-weight: 500;
-    }
-    .flt-dot {
-      display: inline-block; width: 6px; height: 6px;
-      border-radius: 50%; margin-right: 3px; vertical-align: middle;
-    }
-
-    /* Forecast stat card (top right) */
-    .flt-stat {
-      right: 0; top: 8px;
-      width: 184px; padding: 16px 18px;
-      z-index: 3;
-      background: rgba(45,212,191,0.08);
-      border-color: rgba(45,212,191,0.28);
-    }
-    .flt-stat-label  { font-size: 11px; font-weight: 700; color: #5eead4; margin-bottom: 2px; }
-    .flt-stat-period { font-size: 10px; color: #4b5563; margin-bottom: 10px; }
-    .flt-stat-value  { font-size: 26px; font-weight: 800; color: #e8eaf0; letter-spacing: -0.02em; margin-bottom: 4px; }
-    .flt-stat-up     { font-size: 12px; font-weight: 700; color: #5eead4; background: rgba(45,212,191,0.18); padding: 2px 7px; border-radius: 6px; }
-    .flt-stat-sub    { font-size: 10px; color: #4b5563; }
-
-    /* Assumptions card (bottom right) */
-    .flt-assump {
-      right: 0; top: 148px;
-      width: 184px; padding: 14px 16px; z-index: 3;
-    }
-    .flt-assump-title {
-      font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: #3a3d4a; margin-bottom: 10px;
-    }
-    .flt-assump-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 7px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-      font-size: 11px; color: #9ca3af;
-    }
-    .flt-assump-row:last-child { border-bottom: none; }
-    .flt-assump-val { font-size: 10px; color: #6b7280; }
-
     /* ── TICKER ── */
     .ticker-wrapper {
       position: relative;
@@ -595,83 +484,6 @@
     html { scroll-behavior: smooth; }
     .mono { font-family: var(--mono); }
 
-    /* ── Hero: Honest Chart ── */
-    .hero-microcopy {
-      font-family: var(--mono);
-      font-size: 11px;
-      color: var(--text-2);
-      margin-top: -62px;      /* tuck under the actions row */
-      margin-bottom: 62px;
-    }
-    .hx-wrap {
-      position: relative; z-index: 2;
-      width: 100%; max-width: 980px;
-    }
-    .hx-card {
-      background: rgba(16,16,24,0.86);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(45,212,191,0.22);
-      border-radius: 16px;
-      padding: 20px 22px 14px;
-      margin: 0 110px;
-      transform: perspective(1400px) rotateX(7deg) rotateY(-3deg);
-      transform-origin: center bottom;
-      transition: transform 0.45s ease-out;
-      box-shadow:
-        0 0 0 1px rgba(45,212,191,0.15),
-        0 20px 60px rgba(0,0,0,0.6),
-        0 0 55px rgba(45,212,191,0.28),
-        0 0 110px rgba(45,212,191,0.15);
-    }
-    .hx-card:hover { transform: perspective(1400px) rotateX(0deg) rotateY(0deg); }
-    .hx-head {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 8px;
-    }
-    .hx-title { font-size: 10.5px; color: #6b7280; font-weight: 500; }
-    .hx-legend { display: flex; gap: 12px; font-size: 9.5px; color: #4b5563; font-weight: 500; }
-    .hx-caption {
-      font-size: 11px; color: var(--text-2); line-height: 1.6;
-      margin-top: 8px; text-align: center;
-    }
-    .hx-caption b { font-family: var(--mono); color: var(--verify); font-weight: 700; }
-    /* forecast line draws itself on load */
-    #hx-fc-line {
-      stroke-dasharray: 340;
-      stroke-dashoffset: 340;
-      animation: hx-draw 1.6s ease-out 0.4s forwards;
-    }
-    @keyframes hx-draw { to { stroke-dashoffset: 0; } }
-    /* whisker hover: thicken + reveal signed error */
-    .hx-miss { cursor: help; }
-    .hx-miss line { transition: stroke-width 0.15s; }
-    .hx-miss text { opacity: 0; transition: opacity 0.15s; }
-    .hx-miss:hover line { stroke-width: 2.5; }
-    .hx-miss:hover text { opacity: 1; }
-    .hx-mini {
-      position: absolute; z-index: 3;
-      width: 196px; padding: 14px 16px;
-      background: rgba(16,16,24,0.86);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.55);
-    }
-    .hx-mini--left  { left: 0;  top: 54%; transform: rotate(-2deg); }
-    .hx-mini--right { right: 0; top: 16%; border-color: rgba(34,197,94,0.28); background: rgba(34,197,94,0.05); }
-    .hx-mini-label {
-      font-size: 9.5px; font-weight: 700; letter-spacing: 0.07em;
-      text-transform: uppercase; color: #6b7280; margin-bottom: 8px;
-    }
-    .hx-mini-val { font-family: var(--mono); font-size: 21px; font-weight: 700; letter-spacing: -0.01em; }
-    .hx-mini-sub { font-size: 10.5px; color: var(--text-2); margin-top: 5px; line-height: 1.45; }
-    @media (max-width: 900px) {
-      .hx-card { margin: 0; }
-      .hx-mini { display: none; }
-    }
-
     /* ── Proof Ledger ── */
     .ledger {
       position: relative; z-index: 2;
@@ -729,122 +541,14 @@
     }
     .storm-body b { color: var(--caution); }
 
-    /* ── Evidence Bento ── */
-    .bento-section {
-      padding: 84px 24px 72px;
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .bento-h2, .trail-h2, .bt-h2, .cta-h2 {
+    .bt-h2, .cta-h2 {
       font-size: clamp(26px, 4vw, 42px);
       font-weight: 800; line-height: 1.15; letter-spacing: -0.025em;
       color: var(--text-1); text-align: center; margin-bottom: 16px;
     }
-    .bento-sub, .trail-sub, .bt-sub {
+    .bt-sub {
       font-size: 15px; color: var(--text-2); text-align: center;
       max-width: 620px; line-height: 1.7; margin-bottom: 48px;
-    }
-    .bento-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      grid-auto-rows: minmax(150px, auto);
-      gap: 16px; width: 100%; max-width: 1060px;
-    }
-    .bento-cell {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 24px 24px 18px;
-      display: flex; flex-direction: column;
-      transition: transform 0.2s, border-color 0.2s, background 0.2s;
-    }
-    .bento-cell:hover {
-      transform: translateY(-2px);
-      border-color: rgba(45,212,191,0.3);
-      background: rgba(255,255,255,0.035);
-    }
-    .bento-2x2 { grid-column: span 2; grid-row: span 2; }
-    .bento-2x1 { grid-column: span 2; }
-    @media (max-width: 1000px) {
-      .bento-grid { grid-template-columns: repeat(2, 1fr); }
-      .bento-2x2 { grid-column: span 2; grid-row: auto; }
-    }
-    @media (max-width: 640px) {
-      .bento-grid { grid-template-columns: 1fr; }
-      .bento-2x2, .bento-2x1 { grid-column: auto; }
-    }
-    .bento-tag {
-      font-size: 9.5px; font-weight: 700; letter-spacing: 0.09em;
-      text-transform: uppercase; color: var(--purple-lt); margin-bottom: 12px;
-    }
-    .bento-cell h3 {
-      font-size: 18px; font-weight: 700; letter-spacing: -0.015em;
-      color: var(--text-1); line-height: 1.35; margin-bottom: 10px;
-    }
-    .bento-2x2 h3 { font-size: 22px; }
-    .bento-body {
-      font-size: 13px; color: var(--text-2); line-height: 1.7;
-      margin-bottom: 16px; flex: 1;
-    }
-    .bento-proof {
-      font-family: var(--mono);
-      font-size: 10.5px; color: #8b8fa8; line-height: 1.6;
-      border: 1px solid var(--border); border-radius: 8px;
-      background: rgba(0,0,0,0.25);
-      padding: 9px 12px;
-      overflow: hidden;
-    }
-    @media (hover: hover) {
-      .bento-proof { max-height: 0; opacity: 0; padding-top: 0; padding-bottom: 0; border-width: 0; transition: max-height 0.25s ease-out, opacity 0.25s, padding 0.25s, border-width 0.25s; }
-      .bento-cell:hover .bento-proof { max-height: 90px; opacity: 1; padding-top: 9px; padding-bottom: 9px; border-width: 1px; }
-    }
-    .bento-proof .ok  { color: var(--verify); }
-    .bento-proof .bad { color: #f43f5e; }
-
-    /* ── Audit Trail ── */
-    .trail-section {
-      padding: 72px 24px 84px;
-      border-top: 1px solid var(--border);
-      display: flex; flex-direction: column; align-items: center;
-    }
-    .trail-grid {
-      display: grid; grid-template-columns: repeat(4, 1fr);
-      gap: 18px; width: 100%; max-width: 1100px;
-      position: relative; margin-bottom: 44px;
-    }
-    .trail-line {
-      position: absolute; top: -26px; left: 6%; right: 6%; height: 2px;
-      display: flex; pointer-events: none;
-    }
-    .trail-line .seg-gray  { flex: 1.9; background: #3a3d4a; }
-    .trail-line .seg-green { flex: 2; background: repeating-linear-gradient(90deg, var(--verify) 0 7px, transparent 7px 13px); opacity: 0.7; }
-    .trail-line .seg-arrow {
-      width: 0; height: 0; align-self: center;
-      border-left: 8px solid var(--purple);
-      border-top: 5px solid transparent;
-      border-bottom: 5px solid transparent;
-    }
-    @media (max-width: 900px) {
-      .trail-grid { grid-template-columns: 1fr; max-width: 460px; }
-      .trail-line { display: none; }
-    }
-    .trail-card {
-      background: rgba(16,16,24,0.6);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px 22px;
-    }
-    .trail-num {
-      font-family: var(--mono); font-size: 10px; font-weight: 700;
-      letter-spacing: 0.09em; color: var(--purple-lt); margin-bottom: 12px;
-    }
-    .trail-card h3 { font-size: 16.5px; font-weight: 700; color: var(--text-1); margin-bottom: 10px; letter-spacing: -0.01em; }
-    .trail-card p { font-size: 12.5px; color: var(--text-2); line-height: 1.7; }
-    .trail-card p b { color: var(--text-1); font-weight: 600; }
-    .trail-footnote {
-      font-size: 12.5px; color: var(--text-2); text-align: center;
-      border: 1px solid var(--border); border-radius: 999px;
-      padding: 10px 26px; background: rgba(255,255,255,0.02);
-      max-width: 860px; line-height: 1.6;
     }
 
     /* ── Backtest Theater ── */
@@ -1281,93 +985,6 @@
     </div>
   </div>
 
-  <!-- ── THE EVIDENCE BENTO ── -->
-  <section class="bento-section">
-    <h2 class="bento-h2">Features are claims.<br/>Here's the evidence for ours.</h2>
-    <p class="bento-sub">Everything below is shipped and running in the workspace one click away — nothing on a roadmap, nothing "coming soon." Hover any card to open its evidence drawer.</p>
-
-    <div class="bento-grid">
-
-      <div class="bento-cell bento-2x2">
-        <div class="bento-tag">Honest accuracy</div>
-        <h3>Re-fit from scratch. Score blind. Repeat.</h3>
-        <p class="bento-body">Every model is re-trained — grid searches, auto-tuning, everything — on expanding windows of your history, then graded only on months it never saw. Errors are pooled across origins and horizons into one WAPE and MASE you can actually plan against.<br/><br/>In-sample fit is shown too, but labeled what it is: optimistic by construction.</p>
-        <div class="bento-proof">validation: { wape, mase, origins × horizon } — pooled, zero future leakage</div>
-      </div>
-
-      <div class="bento-cell bento-2x1">
-        <div class="bento-tag">7 models, 1 winner per SKU</div>
-        <h3>Your slow movers and your bestsellers don't deserve the same model.</h3>
-        <p class="bento-body">A background worker backtests all seven models — Seasonal Naive to Global XGBoost — on every SKU and routes each one to its proven winner. A progress chip counts SKUs as they're routed; a ranked leaderboard shows exactly why the winner won.</p>
-        <div class="bento-proof">★ Best Fit · 140/140 SKUs routed · click any leaderboard row to override</div>
-      </div>
-
-      <div class="bento-cell bento-2x1">
-        <div class="bento-tag">Uncertainty, quantified</div>
-        <h3>A forecast without a range is a guess with good posture.</h3>
-        <p class="bento-body">Every forecast ships with an 80% band built from real walk-forward residuals at each step — drawn on the chart and printed as Lower/Upper columns, so safety-stock conversations start from honest risk, not vibes.</p>
-        <div class="bento-proof">lower ≥ 0 · lower ≤ forecast ≤ upper, always · empirical 10th/90th percentiles</div>
-      </div>
-
-      <div class="bento-cell">
-        <div class="bento-tag">Portfolio learning</div>
-        <h3>Sparse SKUs borrow strength.</h3>
-        <p class="bento-body">One gradient-boosted model per forecast step, trained on features pooled across your whole catalog — irregular movers learn from portfolio-wide patterns.</p>
-        <div class="bento-proof">scale-normalized per SKU · amber tag in the leaderboard</div>
-      </div>
-
-      <div class="bento-cell">
-        <div class="bento-tag">The bar to clear</div>
-        <h3>Beat the naive forecast, or say so.</h3>
-        <p class="bento-body">MASE compares every model to seasonal-naive. Green means it earned its complexity. Red means copy-paste-last-year would've done better — and the app says that to your face.</p>
-        <div class="bento-proof"><span class="ok">MASE 0.71 ✓</span> &nbsp;·&nbsp; <span class="bad">MASE 1.18 ✗</span></div>
-      </div>
-
-      <div class="bento-cell bento-2x1">
-        <div class="bento-tag">From prediction to purchase order</div>
-        <h3>The forecast isn't the deliverable. The order quantity is.</h3>
-        <p class="bento-body">Once a SKU is routed, its replenishment math runs on the winning model's next-3-month forecast — not a trailing average. Reorder point = safety stock + lead-time demand; To-Order rounds up to supplier MOQ; every row shows cover days, health status, and a projected replenish date.</p>
-        <div class="bento-proof">SKU-1061 · FOAM ROLLER 60CM · To Order rounded to MOQ · cover days live</div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ── HOW IT WORKS — THE AUDIT TRAIL ── -->
-  <section class="trail-section">
-    <h2 class="trail-h2">From CSV to defensible order quantity<br/>in four steps.</h2>
-    <p class="trail-sub">No onboarding call. No implementation project. The demo dataset loads in one click if you'd rather not bring your own.</p>
-
-    <div class="trail-grid" style="margin-top:34px;">
-      <div class="trail-line" aria-hidden="true">
-        <span class="seg-gray"></span><span class="seg-green"></span><span class="seg-arrow"></span>
-      </div>
-      <div class="trail-card">
-        <div class="trail-num">01 · CONNECT</div>
-        <h3>Drop in your CSVs.</h3>
-        <p>Sales history, stock levels, suppliers, purchase orders — columns are auto-mapped, every assignment re-mappable, multi-file add supported. Or press <b>Load demo dataset</b> and skip straight to step 2.</p>
-      </div>
-      <div class="trail-card">
-        <div class="trail-num">02 · AUDIT</div>
-        <h3>Watch every SKU get backtested.</h3>
-        <p>A Web Worker walk-forward-validates all seven models on every SKU in the background while you browse. A progress chip streams results, and each winner is cached so its drawer opens instantly.</p>
-      </div>
-      <div class="trail-card">
-        <div class="trail-num">03 · DECIDE</div>
-        <h3>Open the drawer. Interrogate the forecast.</h3>
-        <p>The routed model is pre-selected: switch between all 7, click any leaderboard row to override, read the 80% band, stretch the history horizon, export the PNG for your S&amp;OP deck.</p>
-      </div>
-      <div class="trail-card">
-        <div class="trail-num">04 · REPLENISH</div>
-        <h3>Turn the forecast into a PO.</h3>
-        <p>The replenishment workspace prices every row off the winning forecast: To-Order at MOQ, reorder points, cover days, health status, projected replenish dates — Create PO and Export a click away.</p>
-      </div>
-    </div>
-
-    <p class="trail-footnote" id="methodology">
-      Headline metrics throughout: <span style="color:var(--text-1);font-weight:600;">WAPE</span> and <span style="color:var(--text-1);font-weight:600;">MASE</span> under walk-forward (rolling-origin) validation — re-fit per origin, errors pooled across origins × horizon, MASE benchmarked against seasonal naive. MAE and RMSE reported alongside. In-sample fit is displayed but explicitly demoted.
-    </p>
-  </section>
 
   <!-- ── MODELS SECTION ── -->
   <section class="models-section">
@@ -1437,6 +1054,43 @@
         </div>
       </details>
 
+      <details class="uth">
+        <summary>
+          <span class="uth-q">Evidence for every claim</span>
+          <span class="uth-meta">Accuracy · Intervals · Routing · Replenishment</span>
+          <svg class="uth-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="uth-body">
+          <p>Everything below is live in the workspace — nothing on a roadmap, nothing "coming soon."</p>
+          <ul class="uth-grid">
+            <li><b>Honest accuracy</b> — Every model is re-trained from scratch on an expanding window, then scored only on months it never saw. WAPE and MASE are pooled across all origins and horizons with zero future leakage. In-sample fit is shown alongside but explicitly demoted.</li>
+            <li><b>7 models, 1 winner per SKU</b> — A Web Worker backtests Seasonal Naive through Global XGBoost on every SKU and routes each to its proven winner. A progress chip counts SKUs as they complete; a leaderboard shows exactly why the winner won.</li>
+            <li><b>Uncertainty quantified</b> — Every forecast ships with an 80% band built from real walk-forward residuals — empirical 10th/90th percentiles, lower always ≥ 0 and ≤ forecast ≤ upper. Not a decorative cone.</li>
+            <li><b>Portfolio learning</b> — One gradient-boosted model per horizon, trained across your whole catalog. Sparse SKUs borrow strength from portfolio-wide patterns; scale-normalized per SKU.</li>
+            <li><b>Beat the naive forecast, or say so</b> — MASE &lt; 1 means it earned its complexity. MASE ≥ 1 shows up red — the app says that to your face, and Best Fit routes around it.</li>
+            <li><b>From prediction to purchase order</b> — Reorder point = safety stock + lead-time demand. To-Order rounds to MOQ. Cover days, health status, and projected replenish date on every row.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="uth">
+        <summary>
+          <span class="uth-q">From CSV to defensible order quantity</span>
+          <span class="uth-meta">01 Connect → 02 Audit → 03 Decide → 04 Replenish</span>
+          <svg class="uth-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+        </summary>
+        <div class="uth-body">
+          <p>No onboarding call. No implementation project. The demo dataset loads in one click if you'd rather not bring your own.</p>
+          <ul class="uth-grid">
+            <li><b>01 · Connect</b> — Drop in your CSVs: sales history, stock levels, suppliers, purchase orders. Columns are auto-mapped and every assignment is re-mappable. Or press <strong>Load demo dataset</strong> and skip straight to step 2.</li>
+            <li><b>02 · Audit</b> — A Web Worker walk-forward-validates all seven models on every SKU in the background while you browse. A progress chip streams results; winners are cached so drawers open instantly on reload.</li>
+            <li><b>03 · Decide</b> — The routed model is pre-selected. Switch between all 7, override via the leaderboard, read the 80% band, stretch the history horizon, export PNG for your S&amp;OP deck.</li>
+            <li><b>04 · Replenish</b> — The replenishment workspace prices every row off the winning model's next-3-month forecast: To-Order at MOQ, reorder points, cover days, health status, projected replenish dates.</li>
+          </ul>
+          <p>Headline metrics: <strong>WAPE</strong> and <strong>MASE</strong> under walk-forward (rolling-origin) validation — re-fit per origin, errors pooled across origins × horizon, MASE benchmarked against seasonal naive.</p>
+        </div>
+      </details>
+
     </div>
 
     <style>
@@ -1470,174 +1124,6 @@
     </style>
 
   </section>
-
-  <style>
-    /* ── MODELS SECTION ── */
-    .models-section {
-      position: relative;
-      padding: 48px 24px 64px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border-top: 1px solid var(--border);
-    }
-
-    .models-header {
-      text-align: center;
-      max-width: 760px;
-      margin-bottom: 40px;
-    }
-
-    .models-headline {
-      font-size: clamp(26px, 4vw, 42px);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.025em;
-      color: var(--text-1);
-      margin-bottom: 24px;
-    }
-
-    .models-sub {
-      font-size: 16px;
-      color: var(--text-2);
-      line-height: 1.75;
-      font-weight: 400;
-    }
-
-    .models-sub mark {
-      background: none;
-      color: var(--purple-lt);
-      font-weight: 600;
-    }
-
-    .models-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 20px;
-      width: 100%;
-      max-width: 1060px;
-      margin-bottom: 48px;
-    }
-
-    @media (max-width: 860px) {
-      .models-grid { grid-template-columns: 1fr; max-width: 480px; }
-    }
-
-    .model-card {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 28px 26px;
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .model-card:hover {
-      background: rgba(255,255,255,0.04);
-      border-color: rgba(255,255,255,0.1);
-    }
-
-    .model-card--featured {
-      border-color: rgba(34,197,94,0.2);
-      background: rgba(34,197,94,0.03);
-    }
-
-    .model-card--featured:hover {
-      border-color: rgba(34,197,94,0.35);
-      background: rgba(34,197,94,0.05);
-    }
-
-    .model-icon {
-      width: 48px; height: 48px;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 16px;
-    }
-
-    .model-tag {
-      display: inline-flex;
-      align-items: center;
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--purple-lt);
-      border: 1px solid rgba(94,234,212,0.25);
-      background: rgba(45,212,191,0.06);
-      border-radius: 999px;
-      padding: 3px 10px;
-      width: fit-content;
-      margin-bottom: 14px;
-    }
-
-    .model-name {
-      font-size: 22px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      color: var(--text-1);
-      margin-bottom: 6px;
-    }
-
-    .model-tagline {
-      font-size: 13px;
-      color: var(--text-2);
-      font-weight: 500;
-      margin-bottom: 14px;
-      font-style: italic;
-    }
-
-    .model-body {
-      font-size: 13px;
-      color: var(--text-2);
-      line-height: 1.7;
-      margin-bottom: 24px;
-    }
-
-    .model-strengths {
-      margin-top: auto;
-      border-top: 1px solid var(--border);
-      padding-top: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 9px;
-    }
-
-    .strength-label {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-3);
-      margin-bottom: 4px;
-    }
-
-    .strength-item {
-      display: flex;
-      align-items: center;
-      gap: 9px;
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-1);
-    }
-
-    .strength-dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .models-footnote {
-      font-size: 13px;
-      color: var(--text-2);
-      text-align: center;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 10px 24px;
-      background: rgba(255,255,255,0.02);
-    }
-  </style>
 
   <!-- ── THE BACKTEST THEATER ── -->
   <section class="bt-section" id="backtest">
