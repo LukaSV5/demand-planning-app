@@ -117,6 +117,17 @@
     .atp-bar-res { height: 100%; background: var(--amber); }
     .atp-bar-avail { height: 100%; background: rgba(34,197,94,0.35); }
 
+    /* Sharp hover tooltip — shows the math behind a flagged SKU */
+    .tip-row { cursor: help; }
+    .tip-row:hover td { background: rgba(124,58,237,0.06) !important; }
+    #wh-tip { position: fixed; z-index: 200; pointer-events: none; background: #0d0f14; border: 1px solid var(--border-2); border-radius: 10px; padding: 11px 13px; font-size: 11.5px; line-height: 1.5; color: var(--text-1); box-shadow: 0 10px 34px rgba(0,0,0,0.6); max-width: 290px; opacity: 0; transition: opacity 0.12s; }
+    #wh-tip.show { opacity: 1; }
+    #wh-tip .tt-h { font-weight: 700; font-size: 12px; margin-bottom: 7px; }
+    #wh-tip .tt-row { display: flex; justify-content: space-between; gap: 18px; }
+    #wh-tip .tt-row span:first-child { color: var(--text-2); }
+    #wh-tip .tt-row span:last-child { font-family: var(--mono); }
+    #wh-tip .tt-calc { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--purple-lt); }
+
     .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-2); }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-sw { width: 11px; height: 11px; border-radius: 3px; }
@@ -210,6 +221,8 @@
     function num(v) { var n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
     function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
     function fmtMoney(v) { if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M'; if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'k'; return '$' + Math.round(v); }
+    /* Strict threshold palette: good (green) → caution (amber) → trouble (red). Spot trouble without reading numbers. */
+    function thr(v, warnAt, badAt) { return v >= badAt ? '#ef4444' : v >= warnAt ? '#f59e0b' : '#22c55e'; }
 
     var WH_HEX = { 'Warehouse A': '#a78bfa', 'Warehouse B': '#60a5fa', 'Warehouse C': '#34d399' };
     var CAT_COLORS = { 'Electronics': '#60a5fa', 'Beauty & Health': '#f472b6', 'Fitness': '#34d399', 'Garden': '#a3e635', 'Home & Kitchen': '#fbbf24', 'Office Supplies': '#a78bfa', 'Toys & Games': '#fb923c' };
@@ -368,10 +381,12 @@
       var atrisk = ds.filter(function (d) { return d.belowReorder; }).length;
       var openPOval = posRows().reduce(function (s, p) { return s + p.value; }, 0);
       var scope = selected === 'all' ? 'network' : selected;
+      var excessPct = totalVal > 0 ? excessVal / totalVal * 100 : 0;
+      var belowPct = ds.length ? atrisk / ds.length * 100 : 0;
       return '<div class="netbar">' +
         card('Working capital', fmtMoney(totalVal), ds.length + ' SKUs · ' + scope) +
-        card('Trapped in excess', fmtMoney(excessVal), (totalVal > 0 ? Math.round(excessVal / totalVal * 100) : 0) + '% of capital', excessVal > 0 ? '#f59e0b' : '#22c55e') +
-        card('Below reorder', atrisk + '', 'SKUs needing attention', atrisk > 0 ? '#ef4444' : '#22c55e') +
+        card('Trapped in excess', fmtMoney(excessVal), Math.round(excessPct) + '% of capital', thr(excessPct, 5, 15)) +
+        card('Below reorder', atrisk + '', 'SKUs needing attention', thr(belowPct, 10, 25)) +
         card('Inbound on order', fmtMoney(openPOval), posRows().length + ' open POs') +
       '</div>';
       function card(lbl, val, sub, color) {
@@ -405,8 +420,8 @@
             '<span style="width:' + ePct.toFixed(1) + '%;background:#f59e0b"></span>' +
           '</div><div class="cap-legend"><span style="color:#22c55e">' + fmtMoney(healthyVal) + ' productive</span><span style="color:#f59e0b">' + fmtMoney(excessVal) + ' excess</span></div></div>' +
           '<div class="score-stats">' +
-            '<div><div class="score-stat-label">Below reorder</div><div class="score-stat-val" style="color:' + (below > 0 ? '#f59e0b' : '#22c55e') + '">' + below + '</div></div>' +
-            '<div><div class="score-stat-label">Excess share</div><div class="score-stat-val" style="color:' + (ePct > 20 ? '#f59e0b' : 'var(--text-1)') + '">' + ePct.toFixed(0) + '%</div></div>' +
+            '<div><div class="score-stat-label">Below reorder</div><div class="score-stat-val" style="color:' + thr(ds.length ? below / ds.length * 100 : 0, 10, 25) + '">' + below + '</div></div>' +
+            '<div><div class="score-stat-label">Excess share</div><div class="score-stat-val" style="color:' + thr(ePct, 5, 15) + '">' + ePct.toFixed(0) + '%</div></div>' +
           '</div>' +
           '<div class="mix-bar">' + mix + '</div>' +
           '<div class="mix-legend">' + cats.length + ' categories by value · click to focus this site</div>' +
@@ -451,6 +466,27 @@
         '</div></div>';
     }
 
+    /* Tooltip math: shows WHY a SKU is flagged excess/dead (velocity → target → trapped capital).
+       The physical-footprint analog ([cube]×[qty]) isn't computable — the CSVs carry no SKU
+       dimensions — so this shows the capital that's trapped instead, with the same "show the math" intent. */
+    function excessTip(d) {
+      var daily = d.monthly / 30;
+      if (d.isDead) {
+        return '<div class="tt-h">' + d.sku + ' — dead stock</div>' +
+          '<div class="tt-row"><span>30-day velocity</span><span>0 units</span></div>' +
+          '<div class="tt-row"><span>On hand</span><span>' + d.stock.toLocaleString() + ' u</span></div>' +
+          '<div class="tt-row"><span>Purchase price</span><span>$' + d.price.toFixed(2) + '</span></div>' +
+          '<div class="tt-calc">' + d.stock.toLocaleString() + ' u × $' + d.price.toFixed(2) + ' = ' + fmtMoney(d.excessVal) + ' dead capital</div>';
+      }
+      var target = Math.round(daily * EXCESS_COVER_DAYS);
+      return '<div class="tt-h">' + d.sku + ' — why it&#39;s excess</div>' +
+        '<div class="tt-row"><span>30-day velocity</span><span>' + Math.round(d.monthly).toLocaleString() + ' u/mo (' + daily.toFixed(1) + '/day)</span></div>' +
+        '<div class="tt-row"><span>' + EXCESS_COVER_DAYS + '-day target</span><span>' + target.toLocaleString() + ' u</span></div>' +
+        '<div class="tt-row"><span>On hand</span><span>' + d.stock.toLocaleString() + ' u</span></div>' +
+        '<div class="tt-row"><span>Purchase price</span><span>$' + d.price.toFixed(2) + '</span></div>' +
+        '<div class="tt-calc">(' + d.stock.toLocaleString() + ' − ' + target.toLocaleString() + ') × $' + d.price.toFixed(2) + ' = ' + fmtMoney(d.excessVal) + ' trapped</div>';
+    }
+
     /* ── PANEL 3 — Excess & dead stock ── */
     function excessPanel() {
       var ds = rows().filter(function (d) { return d.excessVal > 0; }).sort(function (a, b) { return b.excessVal - a.excessVal; });
@@ -460,7 +496,7 @@
 
       var body = top.length ? top.map(function (d) {
         var coverTxt = d.isDead ? '<span style="color:#ef4444">no recent sales</span>' : (d.cover === Infinity ? '∞' : Math.round(d.cover) + 'd');
-        return '<tr>' +
+        return '<tr class="tip-row" data-tip="' + esc(excessTip(d)) + '">' +
           '<td><span class="t-sku">' + d.sku + '</span></td>' +
           '<td class="t-name">' + esc(d.name) + '</td>' +
           '<td><span class="badge-sm" style="background:' + (WH_HEX[d.warehouse] || '#6b7280') + '22;color:' + (WH_HEX[d.warehouse] || '#9ca3af') + '">' + d.warehouse.replace('Warehouse ', 'WH ') + '</span></td>' +
@@ -537,7 +573,27 @@
         '<table class="tbl"><thead><tr><th>SKU</th><th>Item</th><th>Committed vs available</th><th class="r">Units</th><th>ATP</th></tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
+    /* Floating tooltip — one shared element, follows the cursor over any [data-tip] element */
+    function initTip() {
+      var tip = document.createElement('div');
+      tip.id = 'wh-tip';
+      document.body.appendChild(tip);
+      document.addEventListener('mousemove', function (e) {
+        var host = e.target.closest ? e.target.closest('[data-tip]') : null;
+        if (!host) { tip.classList.remove('show'); return; }
+        tip.innerHTML = host.getAttribute('data-tip');
+        tip.classList.add('show');
+        var r = tip.getBoundingClientRect();
+        var x = e.clientX + 16, y = e.clientY + 16;
+        if (x + r.width > window.innerWidth - 10) x = e.clientX - r.width - 16;
+        if (y + r.height > window.innerHeight - 10) y = e.clientY - r.height - 16;
+        tip.style.left = Math.max(8, x) + 'px';
+        tip.style.top = Math.max(8, y) + 'px';
+      });
+    }
+
     window.WH = { select: function (w) { selected = w; renderFilter(); render(); } };
+    initTip();
     load();
   })();
   </script>
