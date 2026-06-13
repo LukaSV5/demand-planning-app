@@ -2096,23 +2096,97 @@
       if (typeof window.enrichLoadedSKUs === 'function') window.enrichLoadedSKUs();
     }
 
+    /* ── Routing cache + scheduling ──────────────────────────────────────────
+       (1) Persist routed results to IndexedDB keyed by a dataset signature, so
+           a reload seeds instantly instead of re-running the walk-forward sweep.
+       (2) Route in table order (what the user sees first), so the visible rows
+           upgrade to forecast-driven numbers before the long tail.
+       (3) Pre-filter trivial series (near-zero / flat) straight to seasonal
+           naive — the 6-model sweep can't beat it, so don't spend the compute. */
+    var _ROUTING_KEY = 'routing:v1';
+
+    function _routingSig(bySKU) {
+      var keys = Object.keys(bySKU).sort(), pts = 0, checksum = 0;
+      for (var i = 0; i < keys.length; i++) {
+        var v = bySKU[keys[i]].values;
+        pts += v.length; checksum += (v[v.length - 1] || 0) + (v[0] || 0);
+      }
+      return keys.length + ':' + pts + ':' + Math.round(checksum);
+    }
+    function _persistRouting(sig) {
+      if (!window._IDB) return;
+      window._IDB.put(_ROUTING_KEY, { sig: sig, routing: window._skuRouting, savedAt: Date.now() })
+        .catch(function (e) { console.warn('[persist] routing save failed:', e && e.message || e); });
+    }
+    function _seedRoutingCache(routing) {
+      Object.keys(routing).forEach(function (sku) {
+        var msg = routing[sku];
+        window._skuRouting[sku] = msg;
+        var series = window._monthlySalesBySKU[sku];
+        if (series && msg.sel) _bestFitCache[sku + '|0|' + series.values.length] = msg.sel;
+      });
+    }
+    /* Trivial = averages < 1 unit/period, or essentially flat (CV < 3%). */
+    function _isTrivialSeries(v) {
+      var sum = 0; for (var i = 0; i < v.length; i++) sum += v[i];
+      if (sum < v.length) return true;
+      var mean = sum / v.length, sd = 0;
+      for (var j = 0; j < v.length; j++) sd += (v[j] - mean) * (v[j] - mean);
+      sd = Math.sqrt(sd / v.length);
+      return mean > 0 && (sd / mean) < 0.03;
+    }
+    function _routeTrivial(sku, series) {
+      try {
+        var run = Models.run('snaive', series.values, {}, 6);
+        var meta = Models.getMeta('snaive') || {};
+        var sel = { best: 'snaive', horizon: 6, results: [{ wape: null, mase: null }] };
+        window._skuRouting[sku] = { sku: sku, sel: sel, best: 'snaive',
+          name: meta.name || 'Seasonal naive', tag: meta.tag || 'snaive', tagColor: meta.tagColor || '#9ca3af',
+          wape: null, mase: null, forecast: run.forecast, lower: run.lower, upper: run.upper, horizon: 6 };
+        _bestFitCache[sku + '|0|' + series.values.length] = sel;
+      } catch (e) { /* leave unrouted */ }
+    }
+
     function startAutoRouting() {
       var bySKU = window._monthlySalesBySKU;
       if (!bySKU || typeof Models === 'undefined') return;
-      var skus = Object.keys(bySKU).sort();
-      if (!skus.length) return;
-      var state = { doneCount: 0, total: skus.length };
-      window._skuRouting = {};
-      _routingChip('⚡ Auto-routing forecasts… 0/' + state.total);
+      var allSkus = Object.keys(bySKU);
+      if (!allSkus.length) return;
+      var sig = _routingSig(bySKU);
 
-      function mainThreadFallback() {
-        var i = 0;
-        (function next() {
-          if (i >= skus.length) { _onRoutingFinished(state); return; }
-          var sku = skus[i++];
-          try {
-            var series = bySKU[sku];
-            if (series && series.values.length >= 12) {
+      function proceed(cachedRouting) {
+        window._skuRouting = {};
+        if (cachedRouting) _seedRoutingCache(cachedRouting);
+
+        /* Viewport-first: route in table order, then any leftover SKUs. */
+        var ordered = (window._loadedSKUs && window._loadedSKUs.length)
+          ? window._loadedSKUs.map(function (d) { return d.sku; }).filter(function (s) { return bySKU[s]; })
+          : allSkus.slice();
+        allSkus.forEach(function (s) { if (ordered.indexOf(s) === -1) ordered.push(s); });
+
+        /* Drop cached + route trivial series cheaply; the rest go to the worker. */
+        var toRoute = [];
+        ordered.forEach(function (sku) {
+          if (window._skuRouting[sku]) return;
+          var series = bySKU[sku];
+          if (!series || series.values.length < 12) return;
+          if (_isTrivialSeries(series.values)) { _routeTrivial(sku, series); return; }
+          toRoute.push(sku);
+        });
+
+        var state = { doneCount: Object.keys(window._skuRouting).length, total: allSkus.length };
+        function finish() { _onRoutingFinished(state); _persistRouting(sig); }
+
+        if (!toRoute.length) { finish(); return; }   /* fully cached/trivial — instant */
+        _routingChip('⚡ Auto-routing forecasts… ' + state.doneCount + '/' + state.total);
+
+        function mainThreadFallback() {
+          var i = 0;
+          (function next() {
+            if (i >= toRoute.length) { finish(); return; }
+            var sku = toRoute[i++];
+            try {
+              var series = bySKU[sku];
               var sel = Models.autoSelect(series.values);
               if (sel && sel.best) {
                 var run  = Models.run(sel.best, series.values, {}, sel.horizon || 6);
@@ -2123,30 +2197,39 @@
                             wape: top.wape, mase: top.mase, forecast: run.forecast,
                             lower: run.lower, upper: run.upper, horizon: sel.horizon || 6 }, state);
               }
-            }
-          } catch (e) { /* skip SKU */ }
-          setTimeout(next, 30);   /* yield so the UI stays responsive */
-        })();
+            } catch (e) { /* skip SKU */ }
+            setTimeout(next, 30);
+          })();
+        }
+
+        try {
+          if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
+          _routingWorker = new Worker('js/forecast-worker.js');
+          _routingWorker.onmessage = function(e) {
+            var msg = e.data || {};
+            if (msg.type === 'ready')  _routingWorker.postMessage({ type: 'route', skus: toRoute });
+            if (msg.type === 'routed') _onRouted(msg, state);
+            if (msg.type === 'done')   { finish(); _routingWorker.terminate(); _routingWorker = null; }
+          };
+          _routingWorker.onerror = function(err) {
+            console.warn('Routing worker failed (' + (err.message || 'unknown') + ') — falling back to main thread.');
+            if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
+            mainThreadFallback();
+          };
+          _routingWorker.postMessage({ type: 'init', bySKU: bySKU });
+        } catch (e) {
+          console.warn('Web Worker unavailable — routing on main thread.', e);
+          mainThreadFallback();
+        }
       }
 
-      try {
-        if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
-        _routingWorker = new Worker('js/forecast-worker.js');
-        _routingWorker.onmessage = function(e) {
-          var msg = e.data || {};
-          if (msg.type === 'ready')  _routingWorker.postMessage({ type: 'route', skus: skus });
-          if (msg.type === 'routed') _onRouted(msg, state);
-          if (msg.type === 'done')   { _onRoutingFinished(state); _routingWorker.terminate(); _routingWorker = null; }
-        };
-        _routingWorker.onerror = function(err) {
-          console.warn('Routing worker failed (' + (err.message || 'unknown') + ') — falling back to main thread.');
-          if (_routingWorker) { _routingWorker.terminate(); _routingWorker = null; }
-          mainThreadFallback();
-        };
-        _routingWorker.postMessage({ type: 'init', bySKU: bySKU });
-      } catch (e) {
-        console.warn('Web Worker unavailable — routing on main thread.', e);
-        mainThreadFallback();
+      /* Seed from the persisted cache when the dataset signature matches. */
+      if (window._IDB) {
+        window._IDB.get(_ROUTING_KEY)
+          .then(function (cached) { proceed(cached && cached.sig === sig ? cached.routing : null); })
+          .catch(function () { proceed(null); });
+      } else {
+        proceed(null);
       }
     }
 
@@ -2382,7 +2465,9 @@
         return true;
       }).catch(function (e) { console.warn('[hydrate] restore failed:', e && e.message || e); return false; });
     }
-    window._resetDataset = function () { return IDB.del(DATASET_KEY).then(function () { location.reload(); }); };
+    window._resetDataset = function () {
+      return Promise.all([IDB.del(DATASET_KEY), IDB.del('routing:v1')]).then(function () { location.reload(); });
+    };
 
     /* Read FULL file — headers + all row data (array of plain objects) */
     function parseFile(file, callback) {
