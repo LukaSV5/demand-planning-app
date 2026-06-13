@@ -19,159 +19,116 @@
       --text-1:    #e8eaf0;
       --text-2:    #71717a;
       --text-3:    #4b5563;
-      /* Semantic legend — mirrors the rest of the Glass Box app */
-      --verify:    #22c55e;   /* healthy / validated */
-      --caution:   #f59e0b;   /* watch / uncertainty */
-      --red:       #ef4444;   /* critical */
+      --verify:    #22c55e;
+      --caution:   #f59e0b;
+      --red:       #ef4444;
       --green:     #22c55e;
       --amber:     #f59e0b;
-      /* Warehouse identity hues (distinct from health semantics) */
       --wh-a:      #a78bfa;
       --wh-b:      #60a5fa;
       --wh-c:      #34d399;
       --mono: ui-monospace, 'Cascadia Code', 'SF Mono', Consolas, monospace;
     }
 
-    html, body {
-      background: var(--bg);
-      color: var(--text-1);
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-      font-variant-numeric: tabular-nums;
-      min-height: 100%;
-    }
+    html, body { background: var(--bg); color: var(--text-1); font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; font-variant-numeric: tabular-nums; min-height: 100%; }
     body { padding-bottom: 80px; }
     .num-mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
 
     /* ── NAV (shared with dashboard.html) ── */
-    .nav-wrapper {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      display: flex; align-items: center; justify-content: center;
-      padding: 14px 32px; pointer-events: none;
-    }
+    .nav-wrapper { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 14px 32px; pointer-events: none; }
     .nav-logo-outer { pointer-events: all; position: absolute; left: 32px; display: flex; align-items: center; }
-    nav {
-      pointer-events: all; display: flex; align-items: center; justify-content: space-between;
-      gap: 8px; height: 52px; padding: 0 10px;
-      background: rgba(18,18,22,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.09); border-radius: 16px;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset;
-    }
+    nav { pointer-events: all; display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 52px; padding: 0 10px; background: rgba(18,18,22,0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.09); border-radius: 16px; box-shadow: 0 4px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.03) inset; }
     .nav-logo { display: flex; align-items: center; gap: 9px; font-size: 14px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-1); text-decoration: none; flex-shrink: 0; }
     .nav-logo-mark { width: 28px; height: 28px; background: var(--purple); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .nav-links { display: flex; align-items: center; gap: 2px; }
-    .nav-link {
-      padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 500;
-      color: #9ca3af; text-decoration: none; border: 1px solid transparent;
-      transition: color 0.15s, background 0.15s, border-color 0.15s; white-space: nowrap; cursor: pointer;
-    }
+    .nav-link { padding: 7px 16px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #9ca3af; text-decoration: none; border: 1px solid transparent; transition: color 0.15s, background 0.15s, border-color 0.15s; white-space: nowrap; cursor: pointer; }
     .nav-link:hover { color: var(--text-1); background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.07); }
     .nav-link.active { color: var(--text-1); background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.3); }
-    .nav-cta {
-      display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; margin-left: 8px;
-      border-radius: 10px; background: var(--purple); color: #fff; font-size: 13px; font-weight: 600;
-      text-decoration: none; border: none; cursor: pointer; flex-shrink: 0; transition: background 0.15s, transform 0.1s;
-    }
+    .nav-cta { display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; margin-left: 8px; border-radius: 10px; background: var(--purple); color: #fff; font-size: 13px; font-weight: 600; text-decoration: none; border: none; cursor: pointer; flex-shrink: 0; transition: background 0.15s, transform 0.1s; }
     .nav-cta:hover { background: #6d28d9; transform: translateY(-1px); }
 
     /* ── PAGE LAYOUT ── */
     .page { max-width: 1280px; margin: 0 auto; padding: 104px 32px 0; }
-    .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+    .page-head { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
     .page-title { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
-    .page-sub { font-size: 13px; color: var(--text-2); margin-top: 5px; max-width: 620px; line-height: 1.5; }
+    .page-sub { font-size: 13px; color: var(--text-2); margin-top: 5px; max-width: 640px; line-height: 1.5; }
 
-    /* Warehouse filter pills */
-    .wh-filter { display: flex; align-items: center; gap: 6px; }
-    .wh-pill {
-      display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px;
-      font-size: 12.5px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border-2);
-      color: var(--text-2); cursor: pointer; transition: color 0.15s, background 0.15s, border-color 0.15s;
-    }
+    .wh-filter { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .wh-pill { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 600; background: var(--surface-2); border: 1px solid var(--border-2); color: var(--text-2); cursor: pointer; transition: color 0.15s, background 0.15s, border-color 0.15s; }
     .wh-pill:hover { color: var(--text-1); border-color: rgba(255,255,255,0.18); }
     .wh-pill.active { background: var(--purple-dim); color: var(--purple-lt); border-color: rgba(124,58,237,0.35); }
     .wh-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
-    /* Panel shell */
+    /* Network summary strip */
+    .netbar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+    .netcard { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; }
+    .netcard .lbl { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .netcard .val { font-family: var(--mono); font-size: 24px; font-weight: 800; margin-top: 6px; letter-spacing: -0.01em; }
+    .netcard .sub { font-size: 11px; color: var(--text-2); margin-top: 3px; }
+
     .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; margin-bottom: 20px; }
     .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
     .panel-title { font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-2); }
     .panel-note { font-size: 11px; color: var(--text-3); }
 
-    /* ── PANEL 1 — Scorecard ── */
+    /* ── Working capital cards ── */
     .score-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-    .score-card {
-      background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 18px;
-      cursor: pointer; transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s; position: relative; overflow: hidden;
-    }
+    .score-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: 14px; padding: 18px; cursor: pointer; transition: border-color 0.15s, transform 0.1s, box-shadow 0.15s; position: relative; overflow: hidden; }
     .score-card:hover { transform: translateY(-2px); border-color: var(--border-2); }
     .score-card.active { border-color: rgba(124,58,237,0.5); box-shadow: 0 0 0 1px rgba(124,58,237,0.3), 0 8px 28px rgba(124,58,237,0.12); }
     .score-card-accent { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
     .score-card-name { font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
     .score-value { font-family: var(--mono); font-size: 26px; font-weight: 800; margin: 10px 0 2px; letter-spacing: -0.01em; }
     .score-value-sub { font-size: 11px; color: var(--text-3); }
-    .score-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 16px 0 14px; }
+    .cap-split { margin: 16px 0 6px; }
+    .cap-bar { display: flex; height: 9px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.04); }
+    .cap-bar span { height: 100%; }
+    .cap-legend { display: flex; justify-content: space-between; font-size: 10.5px; margin-top: 7px; }
+    .score-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; margin: 14px 0 12px; }
     .score-stat-label { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
     .score-stat-val { font-family: var(--mono); font-size: 15px; font-weight: 700; margin-top: 1px; }
     .mix-bar { display: flex; height: 7px; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.04); }
     .mix-bar span { height: 100%; }
     .mix-legend { font-size: 10.5px; color: var(--text-2); margin-top: 8px; }
 
-    /* ── PANEL 2 — Heatmap ── */
-    .seg { display: inline-flex; background: var(--surface-2); border: 1px solid var(--border-2); border-radius: 9px; padding: 2px; gap: 2px; }
-    .seg button {
-      background: none; border: none; color: var(--text-2); font-size: 11px; font-weight: 600; font-family: inherit;
-      padding: 4px 11px; border-radius: 7px; cursor: pointer; transition: color 0.15s, background 0.15s;
-    }
-    .seg button.active { background: var(--purple-dim); color: var(--purple-lt); }
-    .floor { margin-bottom: 22px; }
-    .floor:last-child { margin-bottom: 0; }
-    .floor-label { font-size: 12px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
-    .floor-meta { font-size: 11px; color: var(--text-3); font-weight: 500; }
-    .grid-scroll { overflow-x: auto; padding-bottom: 6px; }
-    .aisle-row { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
-    .aisle-tag { width: 16px; font-size: 10px; font-weight: 700; color: var(--text-3); flex-shrink: 0; text-align: center; }
-    .bin {
-      width: 19px; height: 19px; border-radius: 4px; flex-shrink: 0;
-      border: 1px solid rgba(255,255,255,0.04); background: rgba(255,255,255,0.018);
-      transition: transform 0.1s; cursor: default;
-    }
-    .bin.occ { cursor: pointer; border-color: rgba(0,0,0,0.3); }
-    .bin.occ:hover { transform: scale(1.35); z-index: 5; position: relative; }
-    .axis-row { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-    .axis-num { width: 19px; font-size: 8px; color: var(--text-3); text-align: center; flex-shrink: 0; }
+    /* ── Health & cover ── */
+    .hc-row { display: grid; grid-template-columns: 150px auto 1fr; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .hc-row:last-child { border-bottom: none; }
+    .hc-name { font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+    .hc-health { display: flex; gap: 6px; }
+    .hc-chip { font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px; font-family: var(--mono); }
+    .cover-bar { display: flex; height: 22px; border-radius: 6px; overflow: hidden; background: rgba(255,255,255,0.04); }
+    .cover-bar span { height: 100%; display: flex; align-items: center; justify-content: center; font-size: 9.5px; font-weight: 700; color: rgba(0,0,0,0.55); }
+
+    /* ── Tables (excess / inbound / atp) ── */
+    .tbl { width: 100%; border-collapse: collapse; }
+    .tbl th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-3); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .tbl th.r, .tbl td.r { text-align: right; }
+    .tbl td { padding: 9px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
+    .tbl tr:last-child td { border-bottom: none; }
+    .tbl tr:hover td { background: rgba(255,255,255,0.015); }
+    .t-sku { font-family: var(--mono); font-size: 11px; color: var(--purple-lt); font-weight: 600; }
+    .t-name { color: var(--text-2); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .t-mono { font-family: var(--mono); }
+    .badge-sm { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 700; white-space: nowrap; }
+
+    /* ATP bars */
+    .atp-bar { height: 16px; border-radius: 5px; background: rgba(255,255,255,0.04); overflow: hidden; display: flex; min-width: 90px; }
+    .atp-bar-res { height: 100%; background: var(--amber); }
+    .atp-bar-avail { height: 100%; background: rgba(34,197,94,0.35); }
+
     .legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 11px; color: var(--text-2); }
     .legend-item { display: flex; align-items: center; gap: 6px; }
     .legend-sw { width: 11px; height: 11px; border-radius: 3px; }
 
-    /* ── PANEL 3 — Slotting ── */
-    .slot-layout { display: grid; grid-template-columns: 1.25fr 1fr; gap: 24px; align-items: start; }
-    .misslot-col h4 { font-size: 11px; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
-    .misslot {
-      display: flex; align-items: center; gap: 10px; padding: 9px 11px; border-radius: 9px;
-      background: var(--surface-2); border: 1px solid var(--border); margin-bottom: 7px;
-    }
-    .misslot-sku { font-family: var(--mono); font-size: 11px; color: var(--purple-lt); font-weight: 600; }
-    .misslot-name { font-size: 11px; color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .misslot-bin { font-family: var(--mono); font-size: 11px; font-weight: 700; margin-left: auto; flex-shrink: 0; }
-    .slot-empty { font-size: 12px; color: var(--text-3); padding: 14px; text-align: center; }
-
-    /* ── PANEL 4 — Reserved pressure ── */
-    .atp-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .atp-row:last-child { border-bottom: none; }
-    .atp-sku { font-family: var(--mono); font-size: 11px; color: var(--purple-lt); font-weight: 600; width: 78px; flex-shrink: 0; }
-    .atp-name { font-size: 11px; color: var(--text-2); width: 150px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .atp-bar { flex: 1; height: 16px; border-radius: 5px; background: rgba(255,255,255,0.04); overflow: hidden; display: flex; min-width: 80px; }
-    .atp-bar-res { height: 100%; background: var(--amber); }
-    .atp-bar-avail { height: 100%; background: rgba(34,197,94,0.35); }
-    .atp-nums { font-family: var(--mono); font-size: 11px; width: 168px; flex-shrink: 0; text-align: right; color: var(--text-2); }
-    .atp-flag { font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: 4px; flex-shrink: 0; }
-
     .state { text-align: center; padding: 80px 20px; color: var(--text-2); }
     .state button { margin-top: 16px; background: var(--purple); color: #fff; font-size: 13px; font-weight: 600; padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer; }
-    .badge-sm { display: inline-block; padding: 1px 5px; border-radius: 4px; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; }
+    .empty { font-size: 12px; color: var(--text-3); padding: 18px; text-align: center; }
 
     @media (max-width: 920px) {
       .score-grid { grid-template-columns: 1fr; }
-      .slot-layout { grid-template-columns: 1fr; }
+      .netbar { grid-template-columns: 1fr 1fr; }
+      .hc-row { grid-template-columns: 1fr; gap: 8px; }
     }
   </style>
 </head>
@@ -201,13 +158,13 @@
     <div class="page-head">
       <div>
         <div class="page-title">Warehouse Overview</div>
-        <div class="page-sub">Where stock physically sits across the three sites — health, bin utilisation, slotting quality, and committed-stock pressure. The demand <em>timing</em> question lives on <a href="dashboard.html" style="color:var(--purple-lt);">Demand Forecasting</a>.</div>
+        <div class="page-sub">How healthy and how expensive your stock is across the three sites — working capital, dead/excess inventory, the inbound pipeline, and committed-stock pressure. The demand <em>timing</em> question lives on <a href="dashboard.html" style="color:var(--purple-lt);">Demand Forecasting</a>.</div>
       </div>
       <div class="wh-filter" id="wh-filter"></div>
     </div>
 
     <div id="content">
-      <div class="state" id="loading">Loading warehouse data…</div>
+      <div class="state" id="loading">Loading inventory, sales velocity &amp; open POs…</div>
     </div>
   </div>
 
@@ -215,7 +172,6 @@
   (function () {
     'use strict';
 
-    /* ── Parse one CSV line respecting quoted fields ── */
     function parseLine(line, delim) {
       var out = [], cur = '', inQ = false;
       for (var i = 0; i < line.length; i++) {
@@ -227,10 +183,9 @@
       out.push(cur.trim());
       return out;
     }
-
     function parseCSV(text) {
       var lines = text.split('\n').filter(function (l) { return l.trim(); });
-      if (!lines.length) return [];
+      if (!lines.length) return { headers: [], rows: [] };
       var delim = lines[0].includes('\t') ? '\t' : ',';
       var headers = parseLine(lines[0], delim);
       var rows = [];
@@ -240,10 +195,8 @@
         headers.forEach(function (h, j) { row[h] = cells[j] != null ? cells[j] : ''; });
         rows.push(row);
       }
-      return rows;
+      return { headers: headers, rows: rows };
     }
-
-    /* Case-insensitive column getter */
     function col(row, names) {
       var keys = Object.keys(row);
       for (var n = 0; n < names.length; n++) {
@@ -255,44 +208,45 @@
       return '';
     }
     function num(v) { var n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
+    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    function fmtMoney(v) { if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M'; if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'k'; return '$' + Math.round(v); }
 
-    /* ── Identity + palette ── */
-    var WH_COLORS = { 'Warehouse A': 'var(--wh-a)', 'Warehouse B': 'var(--wh-b)', 'Warehouse C': 'var(--wh-c)' };
-    var WH_HEX    = { 'Warehouse A': '#a78bfa', 'Warehouse B': '#60a5fa', 'Warehouse C': '#34d399' };
-    var CAT_COLORS = {
-      'Electronics': '#60a5fa', 'Beauty & Health': '#f472b6', 'Fitness': '#34d399',
-      'Garden': '#a3e635', 'Home & Kitchen': '#fbbf24', 'Office Supplies': '#a78bfa', 'Toys & Games': '#fb923c'
-    };
-    var HEALTH_HEX = { critical: '#ef4444', watch: '#f59e0b', healthy: '#22c55e' };
-    var ABC_HEX    = { A: '#22c55e', B: '#f59e0b', C: '#6b7280' };
+    var WH_HEX = { 'Warehouse A': '#a78bfa', 'Warehouse B': '#60a5fa', 'Warehouse C': '#34d399' };
+    var CAT_COLORS = { 'Electronics': '#60a5fa', 'Beauty & Health': '#f472b6', 'Fitness': '#34d399', 'Garden': '#a3e635', 'Home & Kitchen': '#fbbf24', 'Office Supplies': '#a78bfa', 'Toys & Games': '#fb923c' };
     function catColor(c) { return CAT_COLORS[c] || '#6b7280'; }
 
-    var MAX_POS = 25; /* aisle positions 1..25; 1 = nearest the dock */
-    var PRIME_MAX = 8, FAR_MIN = 17;
+    /* Cover buckets (days of supply at recent velocity) */
+    var COVER_BUCKETS = [
+      { key: 'critical', label: '<14d',    max: 14,       hex: '#ef4444' },
+      { key: 'low',      label: '14–30d',  max: 30,       hex: '#f59e0b' },
+      { key: 'healthy',  label: '30–60d',  max: 60,       hex: '#22c55e' },
+      { key: 'excess',   label: '60d+',    max: Infinity, hex: '#a78bfa' }
+    ];
+    var EXCESS_COVER_DAYS = 60; /* stock covering more than this many days = excess capital (matches the 60d+ cover bucket) */
 
-    var DATA = [];          /* enriched SKU rows */
-    var selected = 'all';   /* warehouse filter */
-    var heatMode = 'health';/* health | abc */
+    var DATA = [], POS = [], selected = 'all';
 
-    /* ── Load + enrich ── */
     function load() {
       Promise.all([
         fetch('stock_levels.csv').then(function (r) { if (!r.ok) throw new Error('stock_levels.csv'); return r.text(); }),
-        fetch('suppliers.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })
+        fetch('suppliers.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
+        fetch('sales_history.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
+        fetch('purchase_orders.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })
       ]).then(function (res) {
-        var stock = parseCSV(res[0]);
-        var supRows = res[1] ? parseCSV(res[1]) : [];
-        var priceBySKU = {};
-        supRows.forEach(function (r) {
-          var sku = col(r, ['SKU', 'StockCode']);
-          var p = num(col(r, ['PurchasePrice', 'CostPrice', 'Price']));
-          if (sku) priceBySKU[sku.toUpperCase()] = p;
+        var stock = parseCSV(res[0]).rows;
+        var sup = res[1] ? parseCSV(res[1]).rows : [];
+        var priceBySKU = {}, leadBySKU = {};
+        sup.forEach(function (r) {
+          var sku = (col(r, ['SKU', 'StockCode']) || '').toUpperCase();
+          if (sku) { priceBySKU[sku] = num(col(r, ['PurchasePrice', 'CostPrice', 'Price'])); leadBySKU[sku] = num(col(r, ['LeadTime', 'Lead'])) || 14; }
         });
+
+        /* Sales velocity — aggregate quantity per SKU over the last 12 months of the dataset */
+        var velMonthly = aggregateVelocity(res[2]);
 
         DATA = stock.map(function (r) {
           var sku = col(r, ['SKU', 'StockCode']);
-          var loc = col(r, ['Location', 'Bin']);
-          var m = /^([A-Za-z]+)\s*(\d+)\s*[-_]?\s*(\d+)?/.exec(loc) || [];
+          var key = (sku || '').toUpperCase();
           var stk = num(col(r, ['Stock']));
           var onhand = num(col(r, ['OnHand', 'Stock']));
           var reserved = num(col(r, ['Reserved']));
@@ -300,61 +254,102 @@
           var avail = availRaw !== '' ? num(availRaw) : Math.max(0, onhand - reserved);
           var safety = num(col(r, ['SafetyStock', 'Safety']));
           var reorder = num(col(r, ['ReorderPoint', 'Reorder']));
-          var price = priceBySKU[(sku || '').toUpperCase()] || 0;
-          var health = avail <= safety ? 'critical' : avail <= reorder ? 'watch' : 'healthy';
+          var price = priceBySKU[key] || 0;
+          var lead = leadBySKU[key] || 14;
+          var monthly = velMonthly[key] || 0;
+          var daily = monthly / 30;
+          var cover = daily > 0 ? stk / daily : (stk > 0 ? Infinity : 0);
+          var targetUnits = daily * EXCESS_COVER_DAYS;
+          var excessUnits = Math.max(0, stk - targetUnits);
+          var isDead = monthly === 0 && stk > 0;
+          var excessVal = (isDead ? stk : excessUnits) * price; /* dead stock = all capital trapped */
+          var health = avail <= 0 ? 'stockout' : avail <= reorder ? 'atrisk' : 'healthy';
+          var bucket = isDead ? 'excess' : coverBucket(cover);
           return {
-            sku: sku, name: col(r, ['Description', 'Product', 'Name']),
-            category: col(r, ['Category']) || 'Uncategorised',
-            stock: stk, onhand: onhand, reserved: reserved, available: avail,
-            safety: safety, reorder: reorder,
+            sku: sku, name: col(r, ['Description', 'Product', 'Name']), category: col(r, ['Category']) || 'Uncategorised',
             warehouse: col(r, ['Warehouse']) || 'Unassigned',
-            location: loc, aisle: (m[1] || '?').toUpperCase(), pos: m[2] ? parseInt(m[2], 10) : 0,
-            price: price, value: stk * price, health: health,
-            belowReorder: avail <= reorder,
+            stock: stk, onhand: onhand, reserved: reserved, available: avail, safety: safety, reorder: reorder,
+            price: price, lead: lead, value: stk * price, monthly: monthly, cover: cover,
+            excessUnits: isDead ? stk : excessUnits, excessVal: excessVal, isDead: isDead,
+            health: health, bucket: bucket, belowReorder: avail <= reorder,
             resRatio: onhand > 0 ? reserved / onhand : 0
           };
         }).filter(function (d) { return d.sku; });
 
-        /* ABC by inventory value (capital tied up) — across the whole network */
-        var ranked = DATA.slice().sort(function (a, b) { return b.value - a.value; });
-        var total = ranked.reduce(function (s, d) { return s + d.value; }, 0) || 1;
-        var cum = 0;
-        ranked.forEach(function (d) {
-          cum += d.value;
-          var pct = cum / total;
-          d.abc = pct <= 0.80 ? 'A' : pct <= 0.95 ? 'B' : 'C';
-        });
+        /* Open POs joined to each SKU's warehouse + shortage flag */
+        var whBySKU = {}; DATA.forEach(function (d) { whBySKU[d.sku.toUpperCase()] = d; });
+        var poRows = res[3] ? parseCSV(res[3]).rows : [];
+        POS = poRows.map(function (r) {
+          var sku = col(r, ['SKU', 'StockCode']);
+          var d = whBySKU[(sku || '').toUpperCase()];
+          return {
+            po: col(r, ['PONumber', 'PurchaseOrder']), sku: sku, name: col(r, ['Description']) || (d ? d.name : ''),
+            qty: num(col(r, ['OrderedQty', 'OrderedQuantity', 'Qty'])), eta: col(r, ['ExpectedDelivery', 'DeliveryDate']),
+            status: col(r, ['Status']) || '—', value: num(col(r, ['TotalValue'])),
+            warehouse: d ? d.warehouse : 'Unassigned',
+            covers: d ? (d.belowReorder ? 'shortage' : (d.excessUnits > 0 ? 'excess' : 'healthy')) : 'unknown'
+          };
+        }).filter(function (p) { return p.sku; });
 
-        renderFilter();
-        render();
+        renderFilter(); render();
       }).catch(function (err) {
         document.getElementById('content').innerHTML =
-          '<div class="state">Could not load <code>stock_levels.csv</code> (' + (err.message || err) + ').<br>' +
-          'Run the site from the local server or GitHub Pages so the CSVs are reachable.' +
-          '<br><button onclick="location.reload()">Retry</button></div>';
+          '<div class="state">Could not load <code>stock_levels.csv</code> (' + esc(err.message || String(err)) + ').<br>' +
+          'Run the site from the local server or GitHub Pages so the CSVs are reachable.<br>' +
+          '<button onclick="location.reload()">Retry</button></div>';
       });
     }
 
-    function warehouses() {
-      var seen = {};
-      DATA.forEach(function (d) { seen[d.warehouse] = true; });
-      return Object.keys(seen).sort();
+    /* Sum quantity per SKU within the last 12 months of the sales file; return monthly average */
+    function aggregateVelocity(text) {
+      var vel = {};
+      if (!text) return vel;
+      var lines = text.split('\n');
+      if (lines.length < 2) return vel;
+      var delim = lines[0].includes('\t') ? '\t' : ',';
+      var hdr = parseLine(lines[0], delim).map(function (h) { return h.toLowerCase().replace(/[^a-z0-9]/g, ''); });
+      var iCode = hdr.indexOf('stockcode'); if (iCode < 0) iCode = hdr.indexOf('sku');
+      var iQty = hdr.indexOf('quantity'); if (iQty < 0) iQty = hdr.indexOf('qty');
+      var iDate = hdr.indexOf('invoicedate'); if (iDate < 0) iDate = hdr.indexOf('date');
+      if (iCode < 0 || iQty < 0) return vel;
+
+      /* find max date (YYYY-MM-DD sorts lexically) to anchor the trailing-12-month window */
+      var maxDate = '';
+      for (var i = 1; i < lines.length; i++) {
+        if (!lines[i]) continue;
+        var c = parseLine(lines[i], delim);
+        var dt = iDate >= 0 ? (c[iDate] || '') : '';
+        if (dt > maxDate) maxDate = dt;
+      }
+      var cutoff = maxDate ? (parseInt(maxDate.slice(0, 4), 10) - 1) + maxDate.slice(4) : '';
+
+      for (var j = 1; j < lines.length; j++) {
+        if (!lines[j]) continue;
+        var cells = parseLine(lines[j], delim);
+        var dt2 = iDate >= 0 ? (cells[iDate] || '') : '';
+        if (cutoff && dt2 < cutoff) continue;
+        var code = (cells[iCode] || '').toUpperCase();
+        if (!code) continue;
+        vel[code] = (vel[code] || 0) + (parseFloat(cells[iQty]) || 0);
+      }
+      Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / 12; }); /* monthly average over the window */
+      return vel;
     }
+
+    function coverBucket(cover) {
+      for (var i = 0; i < COVER_BUCKETS.length; i++) if (cover <= COVER_BUCKETS[i].max) return COVER_BUCKETS[i].key;
+      return 'excess';
+    }
+    function warehouses() { var s = {}; DATA.forEach(function (d) { s[d.warehouse] = 1; }); return Object.keys(s).sort(); }
     function rows() { return selected === 'all' ? DATA : DATA.filter(function (d) { return d.warehouse === selected; }); }
+    function posRows() { return selected === 'all' ? POS : POS.filter(function (p) { return p.warehouse === selected; }); }
 
-    function fmtMoney(v) {
-      if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M';
-      if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'k';
-      return '$' + Math.round(v);
-    }
-
-    /* ── Warehouse filter pills ── */
     function renderFilter() {
       var el = document.getElementById('wh-filter');
       var pills = ['<button class="wh-pill ' + (selected === 'all' ? 'active' : '') + '" onclick="WH.select(\'all\')">All warehouses</button>'];
       warehouses().forEach(function (w) {
         pills.push('<button class="wh-pill ' + (selected === w ? 'active' : '') + '" onclick="WH.select(\'' + w + '\')">' +
-          '<span class="wh-dot" style="background:' + (WH_COLORS[w] || '#6b7280') + '"></span>' + w + '</button>');
+          '<span class="wh-dot" style="background:' + (WH_HEX[w] || '#6b7280') + '"></span>' + w + '</button>');
       });
       el.innerHTML = pills.join('');
     }
@@ -362,216 +357,187 @@
     function render() {
       var c = document.getElementById('content');
       if (!DATA.length) { c.innerHTML = '<div class="state">No stock rows found.</div>'; return; }
-      c.innerHTML = scorecard() + heatmap() + slotting() + reservedPressure();
+      c.innerHTML = netbar() + capitalCards() + healthCover() + excessPanel() + inboundPanel() + atpPanel();
     }
 
-    /* ── PANEL 1 — Scorecard (always all warehouses) ── */
-    function scorecard() {
+    /* ── Network summary strip (respects filter) ── */
+    function netbar() {
+      var ds = rows();
+      var totalVal = ds.reduce(function (s, d) { return s + d.value; }, 0);
+      var excessVal = ds.reduce(function (s, d) { return s + d.excessVal; }, 0);
+      var atrisk = ds.filter(function (d) { return d.belowReorder; }).length;
+      var openPOval = posRows().reduce(function (s, p) { return s + p.value; }, 0);
+      var scope = selected === 'all' ? 'network' : selected;
+      return '<div class="netbar">' +
+        card('Working capital', fmtMoney(totalVal), ds.length + ' SKUs · ' + scope) +
+        card('Trapped in excess', fmtMoney(excessVal), (totalVal > 0 ? Math.round(excessVal / totalVal * 100) : 0) + '% of capital', excessVal > 0 ? '#f59e0b' : '#22c55e') +
+        card('Below reorder', atrisk + '', 'SKUs needing attention', atrisk > 0 ? '#ef4444' : '#22c55e') +
+        card('Inbound on order', fmtMoney(openPOval), posRows().length + ' open POs') +
+      '</div>';
+      function card(lbl, val, sub, color) {
+        return '<div class="netcard"><div class="lbl">' + lbl + '</div><div class="val"' + (color ? ' style="color:' + color + '"' : '') + '>' + val + '</div><div class="sub">' + sub + '</div></div>';
+      }
+    }
+
+    /* ── PANEL 1 — Working capital by site ── */
+    function capitalCards() {
       var cards = warehouses().map(function (w) {
         var ds = DATA.filter(function (d) { return d.warehouse === w; });
         var units = ds.reduce(function (s, d) { return s + d.stock; }, 0);
         var value = ds.reduce(function (s, d) { return s + d.value; }, 0);
+        var excessVal = ds.reduce(function (s, d) { return s + d.excessVal; }, 0);
+        var healthyVal = Math.max(0, value - excessVal);
         var below = ds.filter(function (d) { return d.belowReorder; }).length;
-        var onhandSum = ds.reduce(function (s, d) { return s + d.onhand; }, 0);
-        var resSum = ds.reduce(function (s, d) { return s + d.reserved; }, 0);
-        var resRatio = onhandSum > 0 ? Math.round(resSum / onhandSum * 100) : 0;
+        var ePct = value > 0 ? (excessVal / value * 100) : 0;
 
-        /* category mix by units */
-        var byCat = {};
-        ds.forEach(function (d) { byCat[d.category] = (byCat[d.category] || 0) + d.stock; });
+        var byCat = {}; ds.forEach(function (d) { byCat[d.category] = (byCat[d.category] || 0) + d.value; });
         var cats = Object.keys(byCat).sort(function (a, b) { return byCat[b] - byCat[a]; });
-        var mix = cats.map(function (cat) {
-          return '<span style="width:' + (byCat[cat] / units * 100).toFixed(1) + '%;background:' + catColor(cat) + '" title="' + cat + ': ' + byCat[cat].toLocaleString() + 'u"></span>';
-        }).join('');
-        var topCat = cats[0];
-
+        var mix = cats.map(function (cat) { return '<span style="width:' + (byCat[cat] / value * 100).toFixed(1) + '%;background:' + catColor(cat) + '" title="' + esc(cat) + ': ' + fmtMoney(byCat[cat]) + '"></span>'; }).join('');
         var hex = WH_HEX[w] || '#6b7280';
+
         return '<div class="score-card ' + (selected === w ? 'active' : '') + '" onclick="WH.select(\'' + w + '\')">' +
           '<div class="score-card-accent" style="background:' + hex + '"></div>' +
           '<div class="score-card-name"><span class="wh-dot" style="background:' + hex + '"></span>' + w + '</div>' +
           '<div class="score-value">' + fmtMoney(value) + '</div>' +
-          '<div class="score-value-sub">inventory value · ' + ds.length + ' SKUs · ' + units.toLocaleString() + ' units</div>' +
+          '<div class="score-value-sub">working capital · ' + ds.length + ' SKUs · ' + units.toLocaleString() + ' units</div>' +
+          '<div class="cap-split"><div class="cap-bar">' +
+            '<span style="width:' + (100 - ePct).toFixed(1) + '%;background:#22c55e"></span>' +
+            '<span style="width:' + ePct.toFixed(1) + '%;background:#f59e0b"></span>' +
+          '</div><div class="cap-legend"><span style="color:#22c55e">' + fmtMoney(healthyVal) + ' productive</span><span style="color:#f59e0b">' + fmtMoney(excessVal) + ' excess</span></div></div>' +
           '<div class="score-stats">' +
             '<div><div class="score-stat-label">Below reorder</div><div class="score-stat-val" style="color:' + (below > 0 ? '#f59e0b' : '#22c55e') + '">' + below + '</div></div>' +
-            '<div><div class="score-stat-label">Reserved ratio</div><div class="score-stat-val" style="color:' + (resRatio > 25 ? '#f59e0b' : 'var(--text-1)') + '">' + resRatio + '%</div></div>' +
-            '<div><div class="score-stat-label">Aisles used</div><div class="score-stat-val">' + uniqAisles(ds) + ' / 5</div></div>' +
-            '<div><div class="score-stat-label">Top category</div><div class="score-stat-val" style="font-size:12px;color:' + catColor(topCat) + '">' + topCat + '</div></div>' +
+            '<div><div class="score-stat-label">Excess share</div><div class="score-stat-val" style="color:' + (ePct > 20 ? '#f59e0b' : 'var(--text-1)') + '">' + ePct.toFixed(0) + '%</div></div>' +
           '</div>' +
           '<div class="mix-bar">' + mix + '</div>' +
-          '<div class="mix-legend">' + cats.length + ' categories · click to focus this site</div>' +
+          '<div class="mix-legend">' + cats.length + ' categories by value · click to focus this site</div>' +
         '</div>';
       }).join('');
 
-      return '<div class="panel"><div class="panel-head">' +
-        '<div class="panel-title">Warehouse scorecard</div>' +
-        '<div class="panel-note">inventory value = stock × purchase price · click a card to filter the panels below</div>' +
-        '</div><div class="score-grid">' + cards + '</div></div>';
+      return '<div class="panel"><div class="panel-head"><div class="panel-title">Working capital by site</div>' +
+        '<div class="panel-note">value = stock × purchase price · productive vs excess (stock beyond ' + EXCESS_COVER_DAYS + ' days of cover)</div></div>' +
+        '<div class="score-grid">' + cards + '</div></div>';
     }
-    function uniqAisles(ds) { var s = {}; ds.forEach(function (d) { if (d.aisle !== '?') s[d.aisle] = 1; }); return Object.keys(s).length; }
 
-    /* ── PANEL 2 — Bin utilisation heatmap ── */
-    function heatmap() {
+    /* ── PANEL 2 — Stock health & days-of-cover ── */
+    function healthCover() {
       var whs = selected === 'all' ? warehouses() : [selected];
-      var floors = whs.map(function (w) { return floorGrid(w); }).join('');
-      var legend = heatMode === 'health'
-        ? legendItems([['#22c55e', 'Healthy'], ['#f59e0b', 'Watch (≤ reorder)'], ['#ef4444', 'Critical (≤ safety)'], ['rgba(255,255,255,0.05)', 'Empty bin']])
-        : legendItems([['#22c55e', 'A item'], ['#f59e0b', 'B item'], ['#6b7280', 'C item'], ['rgba(255,255,255,0.05)', 'Empty bin']]);
-
-      return '<div class="panel"><div class="panel-head">' +
-        '<div class="panel-title">Bin utilisation — floor map</div>' +
-        '<div class="seg">' +
-          '<button class="' + (heatMode === 'health' ? 'active' : '') + '" onclick="WH.heat(\'health\')">By health</button>' +
-          '<button class="' + (heatMode === 'abc' ? 'active' : '') + '" onclick="WH.heat(\'abc\')">By ABC value</button>' +
-        '</div></div>' +
-        '<div class="panel-note" style="margin:-6px 0 16px">Aisles A–E down the side, positions 1–25 across (position 1 = nearest the dock). Hover an occupied bin for its SKU.</div>' +
-        floors +
-        '<div class="legend" style="margin-top:14px">' + legend + '</div></div>';
-    }
-    function legendItems(items) {
-      return items.map(function (it) { return '<div class="legend-item"><span class="legend-sw" style="background:' + it[0] + '"></span>' + it[1] + '</div>'; }).join('');
-    }
-    function floorGrid(w) {
-      var ds = DATA.filter(function (d) { return d.warehouse === w; });
-      var bySlot = {}; /* aisle -> pos -> row */
-      ds.forEach(function (d) { if (d.aisle !== '?' && d.pos) { (bySlot[d.aisle] = bySlot[d.aisle] || {})[d.pos] = d; } });
-      var aisles = Object.keys(bySlot).sort();
-      if (!aisles.length) aisles = ['A', 'B', 'C', 'D', 'E'];
-
-      var occ = ds.filter(function (d) { return d.aisle !== '?' && d.pos; }).length;
-      var hex = WH_HEX[w] || '#6b7280';
-
-      var grid = aisles.map(function (a) {
-        var cells = '';
-        for (var p = 1; p <= MAX_POS; p++) {
-          var d = bySlot[a] && bySlot[a][p];
-          if (d) {
-            var fill = heatMode === 'health' ? HEALTH_HEX[d.health] : ABC_HEX[d.abc];
-            var tip = d.sku + ' · ' + d.name + ' · ' + d.stock.toLocaleString() + 'u · ' + d.location +
-              ' · ' + (heatMode === 'health' ? d.health : 'ABC ' + d.abc + ' (' + fmtMoney(d.value) + ')');
-            cells += '<div class="bin occ" style="background:' + fill + '" title="' + esc(tip) + '"></div>';
-          } else {
-            cells += '<div class="bin"></div>';
-          }
-        }
-        return '<div class="aisle-row"><span class="aisle-tag">' + a + '</span>' + cells + '</div>';
-      }).join('');
-
-      /* position axis */
-      var axis = '<span class="aisle-tag"></span>';
-      for (var p = 1; p <= MAX_POS; p++) axis += '<span class="axis-num">' + (p % 5 === 0 || p === 1 ? p : '') + '</span>';
-
-      return '<div class="floor">' +
-        '<div class="floor-label"><span class="wh-dot" style="background:' + hex + '"></span>' + w +
-        '<span class="floor-meta">' + occ + ' bins occupied · ' + aisles.length + ' aisles · dock at position 1 →</span></div>' +
-        '<div class="grid-scroll"><div>' + grid + '<div class="axis-row">' + axis + '</div></div></div></div>';
-    }
-
-    /* ── PANEL 3 — ABC × slotting quality ── */
-    function slotting() {
-      var ds = rows().filter(function (d) { return d.pos > 0; });
-      var aItems = ds.filter(function (d) { return d.abc === 'A'; });
-      var aInPrime = aItems.filter(function (d) { return d.pos <= PRIME_MAX; }).length;
-      var slotHealth = aItems.length ? Math.round(aInPrime / aItems.length * 100) : 0;
-
-      /* mis-slots: A-items parked far, C-items hogging prime */
-      var aFar = aItems.filter(function (d) { return d.pos >= FAR_MIN; }).sort(function (a, b) { return b.value - a.value; }).slice(0, 6);
-      var cPrime = ds.filter(function (d) { return d.abc === 'C' && d.pos <= PRIME_MAX; }).sort(function (a, b) { return a.value - b.value; }).slice(0, 6);
-
-      /* scatter */
-      var W = 560, H = 240, padL = 46, padB = 26, padT = 10, padR = 10;
-      var maxVal = Math.max.apply(null, ds.map(function (d) { return d.value; }).concat([1]));
-      function sx(pos) { return padL + (pos - 1) / (MAX_POS - 1) * (W - padL - padR); }
-      function sy(val) { return H - padB - Math.sqrt(val / maxVal) * (H - padB - padT); }
-
-      var primeShade = '<rect x="' + sx(1) + '" y="' + padT + '" width="' + (sx(PRIME_MAX) - sx(1)) + '" height="' + (H - padB - padT) + '" fill="rgba(34,197,94,0.06)"/>' +
-        '<text x="' + (sx(1) + 4) + '" y="' + (padT + 12) + '" fill="#22c55e" font-size="9" font-weight="700">PRIME ZONE (near dock)</text>';
-      var farShade = '<rect x="' + sx(FAR_MIN) + '" y="' + padT + '" width="' + (W - padR - sx(FAR_MIN)) + '" height="' + (H - padB - padT) + '" fill="rgba(239,68,68,0.05)"/>';
-
-      var dots = ds.map(function (d) {
-        var bad = (d.abc === 'A' && d.pos >= FAR_MIN) || (d.abc === 'C' && d.pos <= PRIME_MAX);
-        return '<circle cx="' + sx(d.pos).toFixed(1) + '" cy="' + sy(d.value).toFixed(1) + '" r="' + (bad ? 5 : 3.5) + '" ' +
-          'fill="' + ABC_HEX[d.abc] + '" fill-opacity="' + (bad ? 0.95 : 0.6) + '"' +
-          (bad ? ' stroke="#fff" stroke-width="1.2"' : '') + '><title>' + esc(d.sku + ' · ' + d.location + ' · ABC ' + d.abc + ' · ' + fmtMoney(d.value)) + '</title></circle>';
-      }).join('');
-
-      var axes = '<line x1="' + padL + '" y1="' + (H - padB) + '" x2="' + (W - padR) + '" y2="' + (H - padB) + '" stroke="rgba(255,255,255,0.12)"/>' +
-        '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (H - padB) + '" stroke="rgba(255,255,255,0.12)"/>' +
-        '<text x="' + ((W + padL) / 2) + '" y="' + (H - 4) + '" fill="#71717a" font-size="10" text-anchor="middle">aisle position (1 = dock → 25 = far)</text>' +
-        '<text x="14" y="' + ((H - padB + padT) / 2) + '" fill="#71717a" font-size="10" text-anchor="middle" transform="rotate(-90 14 ' + ((H - padB + padT) / 2) + ')">inventory value →</text>';
-
-      var scatter = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="max-width:' + W + 'px">' + primeShade + farShade + axes + dots + '</svg>';
-
-      function missList(arr, kind) {
-        if (!arr.length) return '<div class="slot-empty">None — slotting looks clean here.</div>';
-        return arr.map(function (d) {
-          return '<div class="misslot">' +
-            '<span class="badge-sm" style="background:' + ABC_HEX[d.abc] + '22;color:' + ABC_HEX[d.abc] + ';border:1px solid ' + ABC_HEX[d.abc] + '55">' + d.abc + '</span>' +
-            '<span class="misslot-sku">' + d.sku + '</span>' +
-            '<span class="misslot-name">' + esc(d.name) + '</span>' +
-            '<span class="misslot-bin" style="color:' + (kind === 'far' ? '#ef4444' : '#f59e0b') + '">' + d.location + '</span>' +
-          '</div>';
+      var rowsHtml = whs.map(function (w) {
+        var ds = DATA.filter(function (d) { return d.warehouse === w; });
+        var hb = { healthy: 0, atrisk: 0, stockout: 0 };
+        var cb = { critical: 0, low: 0, healthy: 0, excess: 0 };
+        ds.forEach(function (d) { hb[d.health]++; cb[d.bucket]++; });
+        var total = ds.length || 1;
+        var seg = COVER_BUCKETS.map(function (b) {
+          var n = cb[b.key]; if (!n) return '';
+          var pct = n / total * 100;
+          return '<span style="width:' + pct + '%;background:' + b.hex + '" title="' + b.label + ': ' + n + ' SKUs">' + (pct > 7 ? n : '') + '</span>';
         }).join('');
-      }
-
-      return '<div class="panel"><div class="panel-head">' +
-        '<div class="panel-title">ABC × slotting quality</div>' +
-        '<div class="panel-note">ABC ranked by inventory value (capital tied up) · ' + slotHealth + '% of A-items sit in the prime zone</div>' +
-        '</div>' +
-        '<div class="slot-layout">' +
-          '<div>' + scatter + '</div>' +
-          '<div>' +
-            '<div class="misslot-col" style="margin-bottom:18px"><h4 style="color:#ef4444">↑ Move closer — A-items parked far from the dock</h4>' + missList(aFar, 'far') + '</div>' +
-            '<div class="misslot-col"><h4 style="color:#f59e0b">↓ Free up prime space — low-value C-items near the dock</h4>' + missList(cPrime, 'prime') + '</div>' +
+        var hex = WH_HEX[w] || '#6b7280';
+        return '<div class="hc-row">' +
+          '<div class="hc-name"><span class="wh-dot" style="background:' + hex + '"></span>' + w + '</div>' +
+          '<div class="hc-health">' +
+            chip(hb.healthy, '#22c55e') + chip(hb.atrisk, '#f59e0b') + chip(hb.stockout, '#ef4444') +
           '</div>' +
+          '<div class="cover-bar">' + seg + '</div>' +
+        '</div>';
+      }).join('');
+      function chip(n, hex) { return '<span class="hc-chip" style="background:' + hex + '22;color:' + hex + '">' + n + '</span>'; }
+
+      return '<div class="panel"><div class="panel-head"><div class="panel-title">Stock health &amp; days of cover</div>' +
+        '<div class="panel-note">health chips: healthy / at-risk / stockout · cover from trailing-12-month sales velocity</div></div>' +
+        rowsHtml +
+        '<div class="legend" style="margin-top:14px">' +
+          COVER_BUCKETS.map(function (b) { return '<div class="legend-item"><span class="legend-sw" style="background:' + b.hex + '"></span>' + b.label + (b.key === 'excess' ? ' (overstock)' : '') + '</div>'; }).join('') +
         '</div></div>';
     }
 
-    /* ── PANEL 4 — Reserved → Available pressure ── */
-    function reservedPressure() {
+    /* ── PANEL 3 — Excess & dead stock ── */
+    function excessPanel() {
+      var ds = rows().filter(function (d) { return d.excessVal > 0; }).sort(function (a, b) { return b.excessVal - a.excessVal; });
+      var totalExcess = ds.reduce(function (s, d) { return s + d.excessVal; }, 0);
+      var deadCount = ds.filter(function (d) { return d.isDead; }).length;
+      var top = ds.slice(0, 12);
+
+      var body = top.length ? top.map(function (d) {
+        var coverTxt = d.isDead ? '<span style="color:#ef4444">no recent sales</span>' : (d.cover === Infinity ? '∞' : Math.round(d.cover) + 'd');
+        return '<tr>' +
+          '<td><span class="t-sku">' + d.sku + '</span></td>' +
+          '<td class="t-name">' + esc(d.name) + '</td>' +
+          '<td><span class="badge-sm" style="background:' + (WH_HEX[d.warehouse] || '#6b7280') + '22;color:' + (WH_HEX[d.warehouse] || '#9ca3af') + '">' + d.warehouse.replace('Warehouse ', 'WH ') + '</span></td>' +
+          '<td class="r t-mono">' + d.stock.toLocaleString() + '</td>' +
+          '<td class="r t-mono">' + coverTxt + '</td>' +
+          '<td class="r t-mono">' + Math.round(d.excessUnits).toLocaleString() + '</td>' +
+          '<td class="r t-mono" style="font-weight:700;color:#f59e0b">' + fmtMoney(d.excessVal) + '</td>' +
+          (d.isDead ? '<td><span class="badge-sm" style="background:#ef444422;color:#ef4444">DEAD</span></td>' : '<td><span class="badge-sm" style="background:#f59e0b22;color:#f59e0b">EXCESS</span></td>') +
+        '</tr>';
+      }).join('') : '<tr><td colspan="8" class="empty">No excess stock in this selection — capital is working efficiently.</td></tr>';
+
+      return '<div class="panel"><div class="panel-head"><div class="panel-title">Excess &amp; dead stock</div>' +
+        '<div class="panel-note">' + fmtMoney(totalExcess) + ' trapped across ' + ds.length + ' SKUs' + (deadCount ? ' · ' + deadCount + ' dead (no sales in 12mo)' : '') + ' · clearance / write-off candidates</div></div>' +
+        '<table class="tbl"><thead><tr><th>SKU</th><th>Item</th><th>Site</th><th class="r">On hand</th><th class="r">Cover</th><th class="r">Excess u</th><th class="r">Capital trapped</th><th></th></tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    /* ── PANEL 4 — Inbound pipeline (open POs) ── */
+    function inboundPanel() {
+      var ps = posRows().slice().sort(function (a, b) { return (a.eta || '') < (b.eta || '') ? -1 : 1; });
+      var totalUnits = ps.reduce(function (s, p) { return s + p.qty; }, 0);
+      var coversShort = ps.filter(function (p) { return p.covers === 'shortage'; }).length;
+      var toExcess = ps.filter(function (p) { return p.covers === 'excess'; }).length;
+
+      var STc = { 'Pending': '#71717a', 'Confirmed': '#60a5fa', 'In Transit': '#a78bfa', 'Shipped': '#22c55e', 'Awaiting Customs': '#f59e0b' };
+      var COV = {
+        shortage: ['#22c55e', 'covers shortage'], excess: ['#f59e0b', 'adds to excess'],
+        healthy: ['#71717a', 'replenishing healthy'], unknown: ['#4b5563', 'SKU not in stock file']
+      };
+      var body = ps.length ? ps.map(function (p) {
+        var st = STc[p.status] || '#71717a'; var cv = COV[p.covers] || COV.unknown;
+        return '<tr>' +
+          '<td class="t-mono" style="font-size:11px;color:#9ca3af">' + esc(p.po) + '</td>' +
+          '<td><span class="t-sku">' + esc(p.sku) + '</span></td>' +
+          '<td class="t-name">' + esc(p.name) + '</td>' +
+          '<td><span class="badge-sm" style="background:' + (WH_HEX[p.warehouse] || '#6b7280') + '22;color:' + (WH_HEX[p.warehouse] || '#9ca3af') + '">' + p.warehouse.replace('Warehouse ', 'WH ') + '</span></td>' +
+          '<td class="r t-mono">' + p.qty.toLocaleString() + '</td>' +
+          '<td class="r t-mono">' + fmtMoney(p.value) + '</td>' +
+          '<td class="t-mono" style="font-size:11px">' + esc(p.eta || '—') + '</td>' +
+          '<td><span class="badge-sm" style="background:' + st + '22;color:' + st + '">' + esc(p.status) + '</span></td>' +
+          '<td><span class="badge-sm" style="background:' + cv[0] + '22;color:' + cv[0] + '">' + cv[1] + '</span></td>' +
+        '</tr>';
+      }).join('') : '<tr><td colspan="9" class="empty">No open purchase orders for this selection.</td></tr>';
+
+      return '<div class="panel"><div class="panel-head"><div class="panel-title">Inbound pipeline — open POs</div>' +
+        '<div class="panel-note">' + ps.length + ' POs · ' + totalUnits.toLocaleString() + ' units inbound · ' + coversShort + ' cover a shortage' + (toExcess ? ' · ' + toExcess + ' add to already-excess stock' : '') + '</div></div>' +
+        '<div class="panel-note" style="margin:-6px 0 14px">ETA dates reflect the demo dataset\'s window. Coverage flags compare each PO\'s SKU to its current stock position.</div>' +
+        '<table class="tbl"><thead><tr><th>PO</th><th>SKU</th><th>Item</th><th>Site</th><th class="r">Qty</th><th class="r">Value</th><th>ETA</th><th>Status</th><th>Impact</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+    }
+
+    /* ── PANEL 5 — Reserved → Available (ATP) pressure ── */
+    function atpPanel() {
       var ds = rows();
       var onhandSum = ds.reduce(function (s, d) { return s + d.onhand; }, 0);
       var resSum = ds.reduce(function (s, d) { return s + d.reserved; }, 0);
       var ratio = onhandSum > 0 ? Math.round(resSum / onhandSum * 100) : 0;
+      var stressed = ds.filter(function (d) { return d.reserved > 0; }).sort(function (a, b) { return b.resRatio - a.resRatio; }).slice(0, 10);
 
-      var stressed = ds.filter(function (d) { return d.reserved > 0; })
-        .sort(function (a, b) { return b.resRatio - a.resRatio; }).slice(0, 10);
-
-      var list = stressed.map(function (d) {
+      var body = stressed.length ? stressed.map(function (d) {
         var resPct = (d.resRatio * 100).toFixed(0);
         var availPct = d.onhand > 0 ? (d.available / d.onhand * 100) : 0;
-        var tight = d.available <= d.safety ? ['#ef4444', 'BELOW SAFETY'] : d.available <= d.reorder ? ['#f59e0b', 'BELOW REORDER'] : null;
-        return '<div class="atp-row">' +
-          '<span class="atp-sku">' + d.sku + '</span>' +
-          '<span class="atp-name">' + esc(d.name) + '</span>' +
-          '<div class="atp-bar" title="Reserved ' + resPct + '% of on-hand">' +
-            '<div class="atp-bar-res" style="width:' + resPct + '%"></div>' +
-            '<div class="atp-bar-avail" style="width:' + availPct.toFixed(0) + '%"></div>' +
-          '</div>' +
-          '<span class="atp-nums">' + d.reserved.toLocaleString() + ' res / ' + d.available.toLocaleString() + ' avail</span>' +
-          (tight ? '<span class="atp-flag" style="background:' + tight[0] + '22;color:' + tight[0] + '">' + tight[1] + '</span>'
-                 : '<span class="atp-flag" style="background:rgba(34,197,94,0.12);color:#22c55e">OK</span>') +
-        '</div>';
-      }).join('');
+        var tight = d.available <= d.safety ? ['#ef4444', 'BELOW SAFETY'] : d.available <= d.reorder ? ['#f59e0b', 'BELOW REORDER'] : ['#22c55e', 'OK'];
+        return '<tr>' +
+          '<td><span class="t-sku">' + d.sku + '</span></td>' +
+          '<td class="t-name">' + esc(d.name) + '</td>' +
+          '<td style="width:34%"><div class="atp-bar" title="Reserved ' + resPct + '% of on-hand"><div class="atp-bar-res" style="width:' + resPct + '%"></div><div class="atp-bar-avail" style="width:' + availPct.toFixed(0) + '%"></div></div></td>' +
+          '<td class="r t-mono">' + d.reserved.toLocaleString() + ' res / ' + d.available.toLocaleString() + ' avail</td>' +
+          '<td><span class="badge-sm" style="background:' + tight[0] + '22;color:' + tight[0] + '">' + tight[1] + '</span></td>' +
+        '</tr>';
+      }).join('') : '<tr><td colspan="5" class="empty">No reserved stock recorded for this selection.</td></tr>';
 
-      if (!stressed.length) list = '<div class="slot-empty">No reserved stock recorded for this selection.</div>';
-
-      return '<div class="panel"><div class="panel-head">' +
-        '<div class="panel-title">Reserved → available pressure</div>' +
-        '<div class="panel-note">' + ratio + '% of on-hand committed · available-to-promise = on-hand − reserved</div>' +
-        '</div>' +
-        '<div class="legend" style="margin-bottom:12px">' +
-          legendItems([['#f59e0b', 'Reserved (committed)'], ['rgba(34,197,94,0.35)', 'Available to promise']]) +
-        '</div>' + list + '</div>';
+      return '<div class="panel"><div class="panel-head"><div class="panel-title">Reserved → available pressure</div>' +
+        '<div class="panel-note">' + ratio + '% of on-hand committed · available to promise = on-hand − reserved</div></div>' +
+        '<div class="legend" style="margin-bottom:10px"><div class="legend-item"><span class="legend-sw" style="background:#f59e0b"></span>Reserved (committed)</div><div class="legend-item"><span class="legend-sw" style="background:rgba(34,197,94,0.35)"></span>Available to promise</div></div>' +
+        '<table class="tbl"><thead><tr><th>SKU</th><th>Item</th><th>Committed vs available</th><th class="r">Units</th><th>ATP</th></tr></thead><tbody>' + body + '</tbody></table></div>';
     }
 
-    function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-
-    /* ── Public API for inline handlers ── */
-    window.WH = {
-      select: function (w) { selected = w; renderFilter(); render(); },
-      heat: function (m) { heatMode = m; render(); }
-    };
-
+    window.WH = { select: function (w) { selected = w; renderFilter(); render(); } };
     load();
   })();
   </script>
