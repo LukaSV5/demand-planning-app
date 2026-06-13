@@ -4556,9 +4556,15 @@
       setCount('tc-blind',    skus.filter(function(d){ return !d.fc_model; }).length);
       setCount('tc-uncertain',skus.filter(function(d){ return d.fc_wape!=null&&d.fc_wape>30; }).length);
 
+      /* Data-quality counts that depend on the joined SKU table */
+      if (!_dq) _dqReset();
+      _dq.skusNoSales  = skus.filter(function(d){ var h = sales[d.sku] || sales[(d.sku||'').toUpperCase()]; return !h || !h.values || !h.values.length; }).length;
+      _dq.missingPrice = skus.filter(function(d){ return !(d.price > 0); }).length;
+
       /* Publish to the store — the subscriber re-renders the replenishment
          table, sidebar badges, and dashboard from current state. */
       Store.set({ skus: skus, salesBySKU: window._monthlySalesBySKU, routing: window._skuRouting, suppliers: window._suppliersBySKU });
+      renderDataQuality();
     }
     /* Exposed so the forecast auto-router (separate script scope) can
        re-enrich the table once per-SKU best models are known. */
@@ -4805,14 +4811,58 @@
       renderGenericTable('outbounds', 'out-tbody', 'Search outbound orders…', data, cols, 'Outbound lines');
     }
 
+    /* ── Data-quality report ─────────────────────────────────────────────────
+       Bad/missing data is skipped gracefully (never crashes the engine) but
+       the user is TOLD what was dropped, instead of silently seeing an empty or
+       partial app. _dq accumulates across aggregation + enrichment; the banner
+       renders only when there's something to flag. ──────────────────────────── */
+    var _dq = null, _dqDismissed = false;
+    function _dqReset() { _dq = { salesRows: 0, salesSkipped: 0, skipReasons: {}, skusNoSales: 0, missingPrice: 0, notes: [] }; }
+    function _dqSkip(reason) { if (!_dq) return; _dq.salesSkipped++; _dq.skipReasons[reason] = (_dq.skipReasons[reason] || 0) + 1; }
+
+    function renderDataQuality() {
+      var triage = document.getElementById('triage-bar');
+      var bar = document.getElementById('data-quality-banner');
+      var issues = [];
+      if (_dq) {
+        if (_dq.salesSkipped > 0) {
+          var rs = Object.keys(_dq.skipReasons).map(function (k) { return _dq.skipReasons[k].toLocaleString() + ' ' + k; }).join(', ');
+          issues.push('<b>' + _dq.salesSkipped.toLocaleString() + '</b> sales rows skipped (' + rs + ')');
+        }
+        if (_dq.skusNoSales > 0)  issues.push('<b>' + _dq.skusNoSales + '</b> SKUs with no sales history');
+        if (_dq.missingPrice > 0) issues.push('<b>' + _dq.missingPrice + '</b> SKUs missing a purchase price');
+        _dq.notes.forEach(function (n) { issues.push(n); });
+      }
+      if (!issues.length || _dqDismissed) { if (bar) bar.style.display = 'none'; return; }
+      if (!bar) {
+        bar = document.createElement('div');
+        bar.id = 'data-quality-banner';
+        if (triage && triage.parentNode) triage.parentNode.insertBefore(bar, triage);
+        else return; /* view not built yet — will render on next pass */
+      }
+      bar.style.cssText = 'display:flex;align-items:center;gap:9px;padding:8px 16px;background:rgba(245,158,11,0.08);' +
+        'border-bottom:1px solid rgba(245,158,11,0.22);font-size:11.5px;color:#f59e0b;flex-shrink:0;';
+      bar.innerHTML =
+        '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+        '<span style="color:var(--text-1);font-weight:600;">Data quality</span>' +
+        '<span style="color:var(--text-2);">' + issues.join(' &nbsp;·&nbsp; ') + '</span>' +
+        '<button onclick="window._dqDismiss()" title="Dismiss" style="margin-left:auto;background:none;border:none;color:#f59e0b;cursor:pointer;font-size:13px;line-height:1;flex-shrink:0;">&#x2715;</button>';
+    }
+    window._dqDismiss = function () { _dqDismissed = true; var b = document.getElementById('data-quality-banner'); if (b) b.style.display = 'none'; };
+    window.getDataQuality = function () { return _dq; };   /* programmatic access to the latest report */
+
     /* ── Aggregate sales rows → monthly qty per SKU for forecast models ── */
     function aggregateMonthlySales(data) {
+      _dqReset();
+      _dq.salesRows = (data || []).length;
       var bySkuMonth = {};
       data.forEach(function(row) {
         var sku   = col(row, ['StockCode','SKU','ProductCode','ItemCode','Code']);
         var date  = col(row, ['InvoiceDate','Date','OrderDate','SaleDate']);
         var qty   = parseFloat(col(row, ['Quantity','Qty','Units','Sales','UnitsSold'])) || 0;
-        if (!sku || !date || qty <= 0) return;
+        if (!sku)       { _dqSkip('missing SKU'); return; }
+        if (!date)      { _dqSkip('missing date'); return; }
+        if (qty <= 0)   { _dqSkip('zero/negative qty'); return; }
         /* Normalise date to YYYY-MM regardless of input format */
         var month = (function(d) {
           d = String(d).trim();
@@ -4829,7 +4879,7 @@
           if (ys) return ys[1] + '-' + ys[2];
           return d.substring(0, 7); /* best-effort fallback */
         })(date);
-        if (!/^\d{4}-\d{2}$/.test(month)) return; /* skip unparseable dates */
+        if (!/^\d{4}-\d{2}$/.test(month)) { _dqSkip('unparseable date'); return; }
         if (!bySkuMonth[sku]) bySkuMonth[sku] = {};
         bySkuMonth[sku][month] = (bySkuMonth[sku][month] || 0) + qty;
       });
@@ -4838,6 +4888,10 @@
         var months = Object.keys(bySkuMonth[sku]).sort();
         result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m]; }) };
       });
+      /* Schema gate: rows present but nothing aggregated → columns weren't recognised */
+      if (_dq.salesRows > 0 && Object.keys(result).length === 0) {
+        _dq.notes.push('Couldn\'t recognise SKU / date / quantity columns in the sales file.');
+      }
       window._monthlySalesBySKU = result;
       /* Feed the cross-SKU global model (XGBoost trains lazily inside models.js) */
       if (typeof Models !== 'undefined' && Models.setGlobalSales) Models.setGlobalSales(result);
