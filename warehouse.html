@@ -294,12 +294,19 @@
             markRestored();
             return;
           }
+          /* Uploaded data exists but has no stock file — show demo with a notice
+             so the user knows their real data wasn't used on this page. */
+          var hasUpload = saved.files && saved.files.length > 0;
+          if (hasUpload) {
+            loadDemo(true);
+            return;
+          }
         }
-        loadDemo();   /* nothing usable stored → bundled demo */
+        loadDemo(false);   /* nothing stored → bundled demo, no notice */
       }).catch(function () { loadDemo(); });
     }
 
-    function loadDemo() {
+    function loadDemo(showUploadNotice) {
       Promise.all([
         fetch('stock_levels.csv').then(function (r) { if (!r.ok) throw new Error('stock_levels.csv'); return r.text(); }),
         fetch('suppliers.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; }),
@@ -307,6 +314,14 @@
         fetch('purchase_orders.csv').then(function (r) { return r.ok ? r.text() : ''; }).catch(function () { return ''; })
       ]).then(function (res) {
         build(parseCSV(res[0]).rows, res[1] ? parseCSV(res[1]).rows : [], res[2] ? parseCSV(res[2]).rows : [], res[3] ? parseCSV(res[3]).rows : []);
+        if (showUploadNotice) {
+          var banner = document.createElement('div');
+          banner.style.cssText = 'margin:12px 24px 0;padding:12px 18px;border-radius:10px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);font-size:13px;color:#fbbf24;display:flex;align-items:center;gap:10px;';
+          banner.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
+            + '<span>Your uploaded dataset doesn\'t include a stock / inventory file — showing <strong>demo data</strong>. Upload a file with stock-level columns (StockCode, OnHand, ReorderPoint…) to see your own inventory.</span>';
+          var content = document.getElementById('content');
+          if (content) content.parentNode.insertBefore(banner, content);
+        }
       }).catch(function (err) {
         document.getElementById('content').innerHTML =
           '<div class="state">Could not load <code>stock_levels.csv</code> (' + esc(err.message || String(err)) + ').<br>' +

@@ -1106,7 +1106,10 @@ const Models = (() => {
 
     let dataSum = 0;
     for (let i = 0; i < n; i++) dataSum += data[i];
-    const key = [modelKey, n, data[0], data[n - 1], dataSum,
+    // Sample 3 interior points so series with the same length/endpoints/sum
+    // but different interiors don't share a cache slot.
+    const q1 = data[Math.floor(n * 0.25)], q2 = data[Math.floor(n * 0.5)], q3 = data[Math.floor(n * 0.75)];
+    const key = [modelKey, n, data[0], q1, q2, q3, data[n - 1], dataSum,
                  JSON.stringify(params), horizon, maxOrigins].join('|');
     if (_wfCache.has(key)) return _wfCache.get(key);
 
