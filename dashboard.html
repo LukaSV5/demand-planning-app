@@ -277,12 +277,14 @@
     .search-input:focus { border-color: rgba(45,212,191,0.5); }
     .toolbar-btn {
       display: flex; align-items: center; gap: 6px;
-      background: var(--surface-2); border: 1px solid var(--border-2);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)), var(--surface-2);
+      border: 1px solid var(--border-2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
       border-radius: 8px; padding: 6px 12px; cursor: pointer;
       font-size: 12px; color: var(--text-2); font-weight: 500;
-      transition: border-color 0.15s, color 0.15s;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
     }
-    .toolbar-btn:hover { border-color: rgba(255,255,255,0.18); color: var(--text-1); }
+    .toolbar-btn:hover { border-color: rgba(45,212,191,0.35); color: var(--text-1); }
     .toolbar-btn svg { opacity: 0.6; }
     .toolbar-spacer { flex: 1; }
 
@@ -447,12 +449,14 @@
     .sp-row-label { flex:1;font-size:12px;color:#9ca3af; }
     .sp-row-file  { font-size:10px;color:#374151;font-style:italic; }
 
-    /* Dashboard KPI cards */
-    .kpi-card { flex:1;background:var(--surface);padding:16px 20px;display:flex;flex-direction:column;gap:4px;min-width:0; }
+    /* Dashboard KPI cards — subtle top-lit glass surface for depth */
+    .kpi-card { flex:1;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0) 62%),var(--surface);box-shadow:inset 0 1px 0 rgba(255,255,255,0.045);padding:16px 20px;display:flex;flex-direction:column;gap:4px;min-width:0;transition:background 0.18s; }
+    .kpi-card:hover { background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0) 62%),var(--surface-2); }
     .kpi-label { font-size:10px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:var(--text-2); }
     .kpi-value { font-size:24px;font-weight:800;color:var(--text-1);letter-spacing:-0.02em;line-height:1.1; }
     .kpi-sub   { font-size:11px;color:var(--text-2); }
-    .health-card { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px 12px;background:var(--surface);border-radius:0; }
+    .health-card { flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:18px 12px;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0) 62%),var(--surface);box-shadow:inset 0 1px 0 rgba(255,255,255,0.045);border-radius:0;transition:background 0.18s; }
+    .health-card:hover { background:linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0) 62%),var(--surface-2); }
     .health-count { font-size:28px;font-weight:800;letter-spacing:-0.02em; }
     .health-label { font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase; }
     .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
@@ -1232,12 +1236,16 @@
       letter-spacing: 0.03em;
     }
     .fc-mpill:hover { background: rgba(45,212,191,0.12); color: #e8eaf0; border-color: rgba(45,212,191,0.3); }
-    .fc-mpill.active { background: rgba(45,212,191,0.2); color: #99f6e4; border-color: rgba(45,212,191,0.5); }
+    .fc-mpill.active { background: rgba(45,212,191,0.2); color: #99f6e4; border-color: rgba(45,212,191,0.5); box-shadow: 0 0 14px rgba(45,212,191,0.28); }
     .fc-metric-card {
       flex: 1; padding: 12px 18px;
       border-right: 1px solid rgba(255,255,255,0.06);
       display: flex; flex-direction: column; gap: 2px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0) 70%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.035);
+      transition: background 0.18s;
     }
+    .fc-metric-card:hover { background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0) 70%); }
     .fc-metric-label { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4b5563; }
     .fc-metric-value { font-size: 20px; font-weight: 800; color: #e8eaf0; letter-spacing: -0.02em; }
     .fc-metric-sub   { font-size: 10px; color: #374151; }
