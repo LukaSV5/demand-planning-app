@@ -35,14 +35,18 @@ onmessage = function (e) {
           postMessage({ type: 'skuError', sku: sku, message: 'insufficient history' });
           continue;
         }
-        var sel = Models.autoSelect(series.values);
+        // Calendar month of values[0] so the engine aligns XGBoost seasonality
+        // to this SKU's own series (its index 0 rarely equals the global axis).
+        var m0 = (series.months && series.months.length)
+          ? (parseInt(String(series.months[0]).slice(5, 7), 10) || null) : null;
+        var sel = Models.autoSelect(series.values, null, { month0: m0 });
         if (!sel || !sel.best) {
           postMessage({ type: 'skuError', sku: sku, message: 'no model could be validated' });
           continue;
         }
         // Walk-forward results are memoized inside Models, so re-running the
         // winner here for its forecast + intervals costs only the final fit.
-        var run  = Models.run(sel.best, series.values, {}, sel.horizon || 6);
+        var run  = Models.run(sel.best, series.values, { month0: m0 }, sel.horizon || 6);
         var meta = Models.getMeta(sel.best) || {};
         var top  = sel.results[0] || {};
         postMessage({

@@ -1579,6 +1579,10 @@
         params.__autopilot = true;
       }
 
+      /* Calendar month of values[0] — lets the engine align XGBoost's seasonal
+         features to this (possibly sliced / mid-axis) series. */
+      params.month0 = (months && months.length) ? (parseInt(String(months[0]).slice(5,7),10) || null) : null;
+
       /* ── Run model ── */
       var result;
       try {
@@ -1662,7 +1666,8 @@
       /* Defer so the button label paints before the grid searches block the thread */
       setTimeout(function() {
         var sel = null;
-        try { sel = Models.autoSelect(values); }
+        var m0 = (slice.months && slice.months.length) ? (parseInt(String(slice.months[0]).slice(5,7),10) || null) : null;
+        try { sel = Models.autoSelect(values, null, { month0: m0 }); }
         catch (e) { console.warn('Best Fit failed:', e); }
         finally {
           if (btn) { btn.textContent = '★ Best Fit'; btn.disabled = false; }
@@ -2186,9 +2191,10 @@
             var sku = toRoute[i++];
             try {
               var series = bySKU[sku];
-              var sel = Models.autoSelect(series.values);
+              var m0 = (series.months && series.months.length) ? (parseInt(String(series.months[0]).slice(5,7),10) || null) : null;
+              var sel = Models.autoSelect(series.values, null, { month0: m0 });
               if (sel && sel.best) {
-                var run  = Models.run(sel.best, series.values, {}, sel.horizon || 6);
+                var run  = Models.run(sel.best, series.values, { month0: m0 }, sel.horizon || 6);
                 var meta = Models.getMeta(sel.best) || {};
                 var top  = sel.results[0] || {};
                 _onRouted({ sku: sku, sel: sel, best: sel.best, name: meta.name || sel.best,
@@ -5018,7 +5024,11 @@
       data.forEach(function(row) {
         var sku   = col(row, ['StockCode','SKU','ProductCode','ItemCode','Code']);
         var date  = col(row, ['InvoiceDate','Date','OrderDate','SaleDate']);
-        var qty   = parseFloat(col(row, ['Quantity','Qty','Units','Sales','UnitsSold'])) || 0;
+        /* Strip thousand-separator commas (",NNN" groups) before parsing so
+           "1,250" reads as 1250, not 1. A lone "1,25" (decimal comma) is left
+           untouched and parses as before. */
+        var qtyRaw = col(row, ['Quantity','Qty','Units','Sales','UnitsSold']);
+        var qty   = parseFloat(String(qtyRaw).replace(/,(?=\d{3}(?:\D|$))/g, '')) || 0;
         if (!sku)       { _dqSkip('missing SKU'); return; }
         if (!date)      { _dqSkip('missing date'); return; }
         if (qty <= 0)   { _dqSkip('zero/negative qty'); return; }
@@ -5027,12 +5037,15 @@
           d = String(d).trim();
           /* YYYY-MM-DD or YYYY-MM-DDThh:mm:ss */
           if (/^\d{4}-\d{2}/.test(d)) return d.substring(0, 7);
-          /* DD/MM/YYYY or D/M/YYYY */
-          var dm = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-          if (dm) return dm[3] + '-' + dm[2].padStart(2,'0');
-          /* MM/DD/YYYY — ambiguous, treat as DD/MM if day>12 is impossible */
-          var md = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-          if (md) return md[3] + '-' + md[1].padStart(2,'0');
+          /* x/y/YYYY — disambiguate DD/MM vs MM/DD by range:
+             first field >12 ⇒ it's the day (DD/MM); second field >12 ⇒ it's
+             the day (MM/DD); otherwise ambiguous, default to DD/MM. */
+          var dmy = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (dmy) {
+            var f1 = parseInt(dmy[1], 10), f2 = parseInt(dmy[2], 10);
+            var mo = (f1 > 12) ? f2 : (f2 > 12) ? f1 : f2;
+            return dmy[3] + '-' + String(mo).padStart(2, '0');
+          }
           /* YYYY/MM/DD */
           var ys = d.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
           if (ys) return ys[1] + '-' + ys[2];
@@ -5042,10 +5055,25 @@
         if (!bySkuMonth[sku]) bySkuMonth[sku] = {};
         bySkuMonth[sku][month] = (bySkuMonth[sku][month] || 0) + qty;
       });
+      /* Contiguous YYYY-MM axis from first..last observed month (cap 50 yrs). */
+      function _monthRange(first, last) {
+        var out = [], y = parseInt(first.slice(0,4),10), m = parseInt(first.slice(5,7),10);
+        var ey = parseInt(last.slice(0,4),10), em = parseInt(last.slice(5,7),10);
+        while ((y < ey || (y === ey && m <= em)) && out.length < 600) {
+          out.push(y + '-' + String(m).padStart(2,'0'));
+          if (++m > 12) { m = 1; y++; }
+        }
+        return out;
+      }
       var result = {};
       Object.keys(bySkuMonth).forEach(function(sku) {
-        var months = Object.keys(bySkuMonth[sku]).sort();
-        result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m]; }) };
+        var present = Object.keys(bySkuMonth[sku]).sort();
+        if (!present.length) return;
+        /* Zero-fill interior gaps so absent months stay on the calendar —
+           keeps lag-12 seasonality intact and lets the engine count genuine
+           zero-demand months instead of silently closing the gap. */
+        var months = _monthRange(present[0], present[present.length - 1]);
+        result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m] || 0; }) };
       });
       /* Schema gate: rows present but nothing aggregated → columns weren't recognised */
       if (_dq.salesRows > 0 && Object.keys(result).length === 0) {

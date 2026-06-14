@@ -725,11 +725,17 @@ const Models = (() => {
 
   //  Features at forecast origin t (last observed index) for target index
   //  targetIdx, on the scaled series s. Requires t >= 11.
-  function _xgbFeatures(s, t, targetIdx, cutoff) {
+  //  baseMonth (1..12) is the calendar month of s[0]; pass it when s is a
+  //  caller-supplied series whose index 0 may not align with the global axis
+  //  (e.g. a per-SKU series or a History-Horizon suffix slice). Omit it for
+  //  training on the global pool, where _calMonth(globalIdx) is correct.
+  function _xgbFeatures(s, t, targetIdx, cutoff, baseMonth) {
     let m12 = 0;
     for (let j = t - 11; j <= t; j++) m12 += s[j];
     m12 /= 12;
-    const cm = _calMonth(targetIdx);
+    const cm = (baseMonth != null)
+      ? ((baseMonth - 1 + targetIdx) % 12 + 12) % 12 + 1
+      : _calMonth(targetIdx);
     return [
       s[t], s[t - 1], s[t - 2], s[t - 5], s[t - 11],   // lag1, lag2, lag3, lag6, lag12
       (s[t] + s[t - 1] + s[t - 2]) / 3,                // mean of last 3
@@ -920,12 +926,21 @@ const Models = (() => {
     const set = _xgbModels(Math.min(params.__cutoff || n, n));
     const s   = data.map(v => v / scale);
 
+    // Calendar month of data[0]. The caller (dashboard/worker) passes month0
+    // because `data` is this SKU's own series (or a suffix slice) and its
+    // index 0 rarely aligns with the global axis origin. Without it the
+    // seasonal sin/cos features would be phase-shifted. Fall back to the
+    // global month0 only when the caller hasn't told us.
+    const baseMonth = (params.month0 != null)
+      ? params.month0
+      : (_globalSales ? _globalSales.month0 : 1);
+
     const origin = n - 1;
     const forecast = [];
     for (let i = 0; i < horizon; i++) {
       const hStep = i + 1;
       const model = set.models[Math.min(hStep, XGB_MAX_H) - 1];  // steps > 6 reuse the h=6 model
-      const feat  = _xgbFeatures(s, origin, origin + hStep, set.cutoff);
+      const feat  = _xgbFeatures(s, origin, origin + hStep, set.cutoff, baseMonth);
       forecast.push(Math.max(0, _gbmPredict(model, feat) * scale));
     }
 
@@ -933,7 +948,7 @@ const Models = (() => {
     const inS = new Array(n).fill(null);
     const m1  = set.models[0];
     for (let t = 12; t < n; t++) {
-      inS[t] = Math.max(0, _gbmPredict(m1, _xgbFeatures(s, t - 1, t, set.cutoff)) * scale);
+      inS[t] = Math.max(0, _gbmPredict(m1, _xgbFeatures(s, t - 1, t, set.cutoff, baseMonth)) * scale);
     }
 
     return {
@@ -959,14 +974,19 @@ const Models = (() => {
   function ensemble(data, params = {}, horizon = 6) {
     const n = data.length;
     const innerOrigins = params.__innerOrigins || 6;
-    // Largest ranking horizon walk-forward can score on this series (Lmin >= 18).
-    const hRank = Math.min(6, n - 18);
+    // Largest ranking horizon walk-forward can score on this series
+    // (needs at least WF_MIN_TRAIN training points before the scored horizon).
+    const hRank = Math.min(6, n - WF_MIN_TRAIN);
+
+    // Only month0 is cross-cutting (xgboost seasonality); other params are
+    // model-specific autopilot and must not leak between members.
+    const memberParams = (params.month0 != null) ? { month0: params.month0 } : {};
 
     const ranked = [];
     if (hRank >= 1) {
       for (const k of ENSEMBLE_MEMBERS) {
         let wf = null;
-        try { wf = walkForward(k, data, {}, { horizon: hRank, maxOrigins: innerOrigins }); }
+        try { wf = walkForward(k, data, memberParams, { horizon: hRank, maxOrigins: innerOrigins }); }
         catch (e) { wf = null; }
         if (wf && wf.metrics.wape != null && isFinite(wf.metrics.wape)) {
           ranked.push({ model: k, wape: wf.metrics.wape });
@@ -984,9 +1004,23 @@ const Models = (() => {
 
     const inv  = top.map(t => 1 / Math.max(t.wape, 1e-6));
     const wSum = inv.reduce((s, v) => s + v, 0);
-    const weights = inv.map(v => v / wSum);
+    let weights = inv.map(v => v / wSum);
 
-    const fits = top.map(t => _fitModel(t.model, data, {}, horizon));
+    // Cap any single member's share so a near-perfect member (WAPE → 0, e.g. a
+    // flat series snaive nails) can't collapse the "blend" to one model.
+    // At most one weight can exceed the cap (they sum to 1); spill its excess
+    // onto the others in proportion to their headroom, then they still sum to 1.
+    if (top.length > 1) {
+      const CAP = 0.70;
+      const excess = weights.reduce((s, w) => s + Math.max(0, w - CAP), 0);
+      if (excess > 1e-9) {
+        const headroom = weights.map(w => Math.max(0, CAP - w));
+        const hSum = headroom.reduce((s, v) => s + v, 0) || 1;
+        weights = weights.map((w, i) => Math.min(w, CAP) + excess * (headroom[i] / hSum));
+      }
+    }
+
+    const fits = top.map(t => _fitModel(t.model, data, memberParams, horizon));
 
     const forecast = new Array(horizon).fill(0);
     for (let i = 0; i < horizon; i++) {
@@ -1052,6 +1086,13 @@ const Models = (() => {
 
   const _wfCache = new Map();
 
+  // Smallest training window a walk-forward origin may use: one full seasonal
+  // cycle (12) + 1 target. Below this, seasonal lags can't be formed. The old
+  // floor of 18 needlessly denied validation to 19–24-month series (with
+  // horizon 6 it required n >= 24), pushing them onto the weaker in-sample
+  // Gaussian interval instead of an empirical band.
+  const WF_MIN_TRAIN = 13;
+
   function walkForward(modelKey, data, params, opts) {
     if (!MODEL_META[modelKey]) throw new Error('Unknown model: ' + modelKey);
     params = params || {};
@@ -1060,7 +1101,7 @@ const Models = (() => {
     const maxOrigins = Math.max(1, opts.maxOrigins || 8);
     const n = data ? data.length : 0;
 
-    const Lmin = Math.max(18, n - horizon - maxOrigins + 1);
+    const Lmin = Math.max(WF_MIN_TRAIN, n - horizon - maxOrigins + 1);
     if (n - horizon < Lmin) return null;
 
     let dataSum = 0;
@@ -1259,14 +1300,15 @@ const Models = (() => {
   //  Walk-forward-validates every registered model (including the ensemble)
   //  and ranks by WAPE ascending. Models that cannot be validated are skipped.
 
-  function autoSelect(data, keys) {
+  function autoSelect(data, keys, params) {
     keys = keys || allKeys();
+    params = params || {};
     const results = [];
     let origins = null, horizon = null;
 
     keys.forEach(k => {
       let wf = null;
-      try { wf = walkForward(k, data, {}, { horizon: 6, maxOrigins: 8 }); }
+      try { wf = walkForward(k, data, params, { horizon: 6, maxOrigins: 8 }); }
       catch (e) { wf = null; }
       if (!wf || wf.metrics.wape == null) return;
       if (origins == null) { origins = wf.origins; horizon = wf.horizon; }
