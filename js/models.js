@@ -1161,7 +1161,7 @@ const Models = (() => {
       };
     }
     if (_wfCache.size > 400) _wfCache.clear();
-    _wfCache.set(key, out);
+    if (out || modelKey !== 'chronos') _wfCache.set(key, out);   // Chronos may simply not be fetched yet
     return out;
   }
 
@@ -1333,6 +1333,79 @@ const Models = (() => {
     };
   }
 
+  // ── Chronos-2 (pretrained AI, served by chronos_server.py on this PC) ────────
+  //
+  //  The model cannot run in the browser, and models here are synchronous. So
+  //  chronosPrefetch() asks the local server for forecasts of every series the
+  //  engine is about to request, caches them by fingerprint, and chronos() then
+  //  just looks them up. Walk-forward fits on data.slice(0, L) for many L, so
+  //  we prefetch every prefix with L >= WF_MIN_TRAIN (plus the full series).
+  //  Nothing contacts the server until the user clicks Chronos-2 (opt-in).
+
+  const CHRONOS_URL = 'http://127.0.0.1:8765';
+  const _chronosCache = new Map();           // fingerprint -> {p10,p50,p90}
+  let _chronosOn = false;                    // set once the server has answered
+
+  function _fingerprint(values) {
+    const s = values.map(v => String(Math.round(v * 100) / 100)).join(',');
+    let h = 0x811c9dc5;
+    for (let i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    return values.length + ':' + (h >>> 0).toString(16).padStart(8, '0');
+  }
+
+  function chronosSeriesFor(values) {
+    const n = values.length;
+    const out = [];
+    for (let L = Math.max(3, WF_MIN_TRAIN); L < n; L++) out.push(values.slice(0, L));
+    if (n >= 3) out.push(values);
+    return out;
+  }
+
+  function chronosReady(values) {
+    return chronosSeriesFor(values).every(s => _chronosCache.has(_fingerprint(s)));
+  }
+
+  function chronosIsOn() { return _chronosOn; }
+
+  // Resolves { ok:true } once every needed series is cached, else { ok:false, error }.
+  async function chronosPrefetch(values) {
+    const need = chronosSeriesFor(values).filter(s => !_chronosCache.has(_fingerprint(s)));
+    if (!need.length) { _chronosOn = true; return { ok: true }; }
+    try {
+      for (let i = 0; i < need.length; i += 64) {
+        const chunk = need.slice(i, i + 64);
+        const res = await fetch(CHRONOS_URL + '/forecast', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ series: chunk })
+        });
+        if (!res.ok) throw new Error('server returned ' + res.status);
+        const j = await res.json();
+        if (!j.forecasts || j.forecasts.length !== chunk.length) throw new Error('bad reply');
+        chunk.forEach((s, k) => _chronosCache.set(_fingerprint(s), j.forecasts[k]));
+      }
+      _chronosOn = true;
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: 'Chronos server not reachable. Start it with: py chronos_server.py' };
+    }
+  }
+
+  function chronos(data, params, horizon) {
+    const rec = _chronosCache.get(_fingerprint(data));
+    if (!rec) throw new Error('No Chronos forecast cached for this series (call Models.chronosPrefetch first)');
+    const h = Math.min(horizon, rec.p50.length);
+    return {
+      inSample : new Array(data.length).fill(null),   // zero-shot model: no fitted history
+      forecast : rec.p50.slice(0, h),
+      autoParams: { source: 'Chronos-2 (local server)' },
+      fallback : null
+    };
+  }
+
   // ── Model registry ────────────────────────────────────────────────────────────
 
   const MODEL_META = {
@@ -1405,12 +1478,23 @@ const Models = (() => {
         title: 'Ensemble — top-3 blend',
         body: 'Walk-forward-validates every other model on this SKU, keeps the three with the lowest WAPE, and blends their forecasts with weights proportional to 1/WAPE. Combining diverse models usually beats any single one — the M-competitions\' most robust finding.'
       }
+    },
+    chronos: {
+      name: 'Chronos-2 (pretrained AI)', tag: 'Chronos', tagColor: '#fb923c',
+      fn: chronos,
+      autopilot: false,
+      params: [],
+      explain: {
+        title: 'Chronos-2 — pretrained AI',
+        body: 'Amazon\'s pretrained time-series foundation model: it has already learned demand patterns from a huge range of series, so it forecasts each SKU <em>zero-shot</em>, with no fitting. It runs on a small local server (<code>py chronos_server.py</code>), so it needs that server running on this PC. Scored with the same walk-forward test as every other model; the prediction band comes from those same walk-forward errors.'
+      }
     }
   };
 
   function getMeta(modelKey) { return MODEL_META[modelKey] || null; }
   function allKeys()         { return Object.keys(MODEL_META); }
 
-  return { run, getMeta, allKeys, backtest, autoSelect, walkForward, setGlobalSales, computeMetrics };
+  return { run, getMeta, allKeys, backtest, autoSelect, walkForward, setGlobalSales, computeMetrics,
+           chronosReady, chronosPrefetch, chronosIsOn };
 
 })();

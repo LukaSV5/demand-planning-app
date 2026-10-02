@@ -12,3 +12,7 @@ desktop.ini
 # ── Python cache ──
 *.pyc
 __pycache__/
+
+# ── Local Claude settings ──
+.claude/settings.local.json
+chronos_batch.js

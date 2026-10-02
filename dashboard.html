@@ -1549,6 +1549,14 @@
       if (_runTimer) { clearTimeout(_runTimer); _runTimer = null; }
       _runTimer = setTimeout(_runNow, 80);
     }
+    /* Small status line (reuses the Best Fit result panel) */
+    function _showNotice(msg, color) {
+      var panel = document.getElementById('fc-bestfit-result');
+      if (!panel) return;
+      if (!msg) { panel.style.display = 'none'; return; }
+      panel.style.display = 'block';
+      panel.innerHTML = '<strong style="color:' + color + ';">' + msg + '</strong>';
+    }
     function _runNow() {
       _runTimer = null;
       if (typeof Models === 'undefined') return;
@@ -1568,6 +1576,18 @@
       var slice  = _histSlice(skuData);
       var values = slice.values;
       var months = slice.months;
+
+      /* ── Chronos: fetch forecasts from the local server first (async) ── */
+      if (_model === 'chronos' && !Models.chronosReady(values)) {
+        _showNotice('Asking the Chronos server for forecasts…', '#fb923c');
+        var reqSku = _sku;
+        Models.chronosPrefetch(values).then(function(r) {
+          if (_sku !== reqSku || _model !== 'chronos') return;   /* user moved on */
+          if (r.ok) { _showNotice(null); _runNow(); }
+          else      { _showNotice(r.error, '#f59e0b'); }
+        });
+        return;
+      }
 
       /* ── Forecast horizon ── */
       var horizon = parseInt((document.getElementById('fc-horizon') || {}).value) || 6;
@@ -1661,6 +1681,11 @@
       /* Cached? Switch back to the winner instantly. */
       var cacheKey = _sku + '|' + slice.hist + '|' + values.length;
       var cached = _bestFitCache[cacheKey];
+      /* A ranking cached before Chronos was switched on doesn't include it — redo it */
+      if (cached && Models.chronosIsOn() &&
+          !cached.results.some(function(r) { return r.model === 'chronos'; })) {
+        cached = null;
+      }
       if (cached) {
         _renderBestFitPanel(cached);
         selectModel(cached.best);
@@ -1671,8 +1696,9 @@
       var btn = document.getElementById('fc-best-btn');
       if (btn) { btn.textContent = 'Testing ' + (modelCount || 'all') + ' models…'; btn.disabled = true; }
 
-      /* Defer so the button label paints before the grid searches block the thread */
-      setTimeout(function() {
+      /* Include Chronos only if the user has already used it (opt-in); the label paints first */
+      var pre = Models.chronosIsOn() ? Models.chronosPrefetch(values) : Promise.resolve();
+      pre.then(function() { return new Promise(function(done) { setTimeout(done, 30); }); }).then(function() {
         var sel = null;
         var m0 = (slice.months && slice.months.length) ? (parseInt(String(slice.months[0]).slice(5,7),10) || null) : null;
         try { sel = Models.autoSelect(values, null, { month0: m0 }); }
@@ -1688,10 +1714,10 @@
           }
           return;
         }
-        _bestFitCache[cacheKey] = sel;
+        if (!Models.chronosIsOn() || Models.chronosReady(values)) _bestFitCache[cacheKey] = sel;   /* don't cache a ranking made without Chronos */
         _renderBestFitPanel(sel);
         selectModel(sel.best);
-      }, 30);
+      });
     }
 
     /* ── Chart ── */
