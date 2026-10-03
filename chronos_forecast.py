@@ -46,8 +46,9 @@ def holdout_for(n):
 
 
 def fmt(v):
-    """Mirror of JS String(Math.round(v*100)/100)."""
-    v = round(float(v) + 0.0, 2)
+    """Mirror of JS String(Math.round(v*100)/100): round half UP (JS), not
+    half-to-even (Python's round), so 0.125 -> "0.13" in both."""
+    v = math.floor(float(v) * 100 + 0.5) / 100 + 0.0
     return str(int(v)) if v == int(v) else repr(v)
 
 
@@ -67,11 +68,21 @@ def monthly_series(csv_path):
     df["Quantity"] = pd.to_numeric(df["Quantity"], errors="coerce").fillna(0)
     df = df[df["Quantity"] > 0]
     df["month"] = df["InvoiceDate"].str.strip().str[:7]
+    df = df[df["month"].str.match(r"^\d{4}-\d{2}$", na=False)]
     grouped = df.groupby(["StockCode", "month"], sort=True)["Quantity"].sum()
-    out = defaultdict(list)
-    for (sku, _month), qty in grouped.items():   # sorted by sku then month
-        out[sku].append(float(qty))
-    return dict(out)
+    if grouped.empty:
+        return {}
+    # Like the dashboard: each SKU runs from its first sale to the dataset's
+    # last month, with months without sales filled with 0.
+    last = grouped.index.get_level_values(1).max()
+    by_sku = defaultdict(dict)
+    for (sku, month), qty in grouped.items():
+        by_sku[sku][month] = float(qty)
+    out = {}
+    for sku, months in by_sku.items():
+        rng = pd.period_range(min(months), last, freq="M").strftime("%Y-%m")
+        out[sku] = [months.get(m, 0.0) for m in rng]
+    return out
 
 
 def collect_jobs(series_by_sku):
@@ -113,6 +124,7 @@ def predict_batch(pipeline, series_list):
             arr = arr.T                          # -> (horizon, quantiles)
         if arr.shape != (HORIZON, len(QUANTILES)):
             raise RuntimeError(f"Unexpected output shape {arr.shape}")
+        arr = np.nan_to_num(arr, nan=0.0, posinf=0.0, neginf=0.0)  # never send NaN/inf
         arr = np.maximum(arr, 0)                 # demand cannot be negative
         out.append({
             "p10": [round(float(x), 2) for x in arr[:, 0]],

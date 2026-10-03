@@ -226,8 +226,8 @@
 
     /* gradient banner */
     .banner {
-      height: 80px; flex-shrink: 0;
-      background: linear-gradient(135deg, #1a0a3e 0%, #2d1060 40%, #1a0a3e 100%);
+      height: 44px; flex-shrink: 0;
+      background: linear-gradient(135deg, #04201d 0%, #0a3330 40%, #04201d 100%);
       position: relative; overflow: hidden;
     }
     .banner::after {
@@ -407,6 +407,7 @@
     }
     .badge-healthy  { background: rgba(34,197,94,0.12);  color: #22c55e; }
     .badge-atrisk   { background: rgba(245,158,11,0.12); color: #f59e0b; }
+    .badge-order    { background: rgba(56,189,248,0.12); color: #38bdf8; }
     .badge-stockout { background: rgba(239,68,68,0.12);  color: #ef4444; }
     .badge-warning  { background: rgba(245,158,11,0.12); color: #f59e0b; }
     .badge-risk     { background: rgba(239,68,68,0.12);  color: #ef4444; }
@@ -503,6 +504,9 @@
   </style>
   <!-- Chart.js for forecast visualisation -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="js/fx.js"></script>
+  <link rel="stylesheet" href="css/site.css">
+  <script src="js/site-nav.js" defer></script>
 </head>
 <body>
 
@@ -722,7 +726,7 @@
               <th class="sortable right">Safety Stock</th>
               <th class="sortable center">Lead Time (days)</th>
               <th class="sortable right">MOQ</th>
-              <th class="sortable right">Purchase Price</th>
+              <th class="sortable right">Purchase Price (USD)</th>
               <th class="sortable right">To Order Qty</th>
               <th class="sortable center">Health</th>
               <th class="sortable center">Replenish Date</th>
@@ -912,7 +916,7 @@
     </div>
 
     <!-- KPI stat row -->
-    <div style="display:flex;gap:1px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--border);">
+    <div class="db-kpi-row" style="display:flex;gap:1px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--border);">
       <div class="kpi-card">
         <div class="kpi-label">Total SKUs</div>
         <div class="kpi-value" id="db-total-skus">—</div>
@@ -921,7 +925,7 @@
       <div class="kpi-card">
         <div class="kpi-label">Inventory Value</div>
         <div class="kpi-value" id="db-inv-value">—</div>
-        <div class="kpi-sub" id="db-inv-value-sub">stock × purchase price</div>
+        <div class="kpi-sub" id="db-inv-value-sub" title="EUR/GBP converted at ECB rates of 2 Oct 2026 (js/fx.js)">stock × purchase price · USD</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Items to Reorder</div>
@@ -936,7 +940,7 @@
     </div>
 
     <!-- Charts row -->
-    <div style="display:flex;gap:1px;flex-shrink:0;height:220px;border-bottom:1px solid var(--border);background:var(--border);">
+    <div class="db-charts-row" style="display:flex;gap:1px;flex-shrink:0;height:220px;border-bottom:1px solid var(--border);background:var(--border);">
       <div style="width:220px;flex-shrink:0;background:var(--surface);padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
         <div style="font-size:10px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-2);">Health Distribution</div>
         <div style="flex:1;position:relative;min-height:0;"><canvas id="db-health-chart"></canvas></div>
@@ -963,7 +967,7 @@
     </div>
 
     <!-- Health summary + top reorder table -->
-    <div style="flex:1;display:flex;overflow:hidden;min-height:0;">
+    <div class="db-split-row" style="flex:1;display:flex;overflow:hidden;min-height:0;">
 
       <!-- Left: health breakdown -->
       <div style="width:220px;flex-shrink:0;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;">
@@ -973,7 +977,11 @@
             <div class="health-count" id="db-h-healthy" style="color:#22c55e;">—</div>
             <div class="health-label" style="color:#22c55e;">Healthy</div>
           </div>
-          <div class="health-card">
+          <div class="health-card" title="Below the reorder point after open POs — place an order">
+            <div class="health-count" id="db-h-order" style="color:#38bdf8;">—</div>
+            <div class="health-label" style="color:#38bdf8;">Order now</div>
+          </div>
+          <div class="health-card" title="Free stock at or below safety stock">
             <div class="health-count" id="db-h-atrisk" style="color:#f59e0b;">—</div>
             <div class="health-label" style="color:#f59e0b;">At Risk</div>
           </div>
@@ -1583,7 +1591,7 @@
         var reqSku = _sku;
         Models.chronosPrefetch(values).then(function(r) {
           if (_sku !== reqSku || _model !== 'chronos') return;   /* user moved on */
-          if (r.ok) { _showNotice(null); _runNow(); }
+          if (r.ok) { var bf = _cachedBestFit(); if (bf) _renderBestFitPanel(bf); else _showNotice(null); _runNow(); }
           else      { _showNotice(r.error, '#f59e0b'); }
         });
         return;
@@ -1610,6 +1618,7 @@
       /* Calendar month of values[0] — lets the engine align XGBoost's seasonal
          features to this (possibly sliced / mid-axis) series. */
       params.month0 = (months && months.length) ? (parseInt(String(months[0]).slice(5,7),10) || null) : null;
+      params.start  = (months && months.length) ? String(months[0]) : null;   /* global-axis position */
 
       /* ── Run model ── */
       var result;
@@ -1638,19 +1647,20 @@
     function _renderBestFitPanel(sel) {
       var panel = document.getElementById('fc-bestfit-result');
       if (!panel || !sel || !sel.results || !sel.results.length) return;
+      var bestRow = sel.results.filter(function(r) { return r.model === sel.best; })[0] || sel.results[0];
       var wfLabel = 'walk-forward' +
         (sel.origins ? ' · ' + sel.origins + ' origins' : '') +
         (sel.horizon ? ' × ' + sel.horizon + 'mo' : '');
       panel.style.display = 'block';
       panel.innerHTML =
-        '<strong style="color:#22c55e;">★ Best fit: ' + sel.results[0].name + '</strong>' +
+        '<strong style="color:#22c55e;">★ Best fit: ' + bestRow.name + '</strong>' +
         '<span style="color:#4b5563;"> · ' + wfLabel + '</span>' +
-        '<div style="font-size:9.5px;color:#4b5563;margin:2px 0 6px;">Ranked by WAPE · MASE — click any model to switch</div>' +
+        '<div style="font-size:9.5px;color:#4b5563;margin:2px 0 6px;">Ranked by WAPE · MASE — the blend is kept unless a single model wins clearly. Click any model to switch</div>' +
         sel.results.map(function(r, i) {
           var wape = (r.wape != null && isFinite(r.wape)) ? Number(r.wape).toFixed(1) + '%' : '—';
           var mase = (r.mase != null && isFinite(r.mase)) ? Number(r.mase).toFixed(2) : '—';
           return '<div class="fc-bf-row" data-model="' + r.model + '" onclick="ForecastDashboard.selectModel(\'' + r.model + '\')">' +
-            '<span>' + (i + 1) + '. ' + r.name + (i === 0 ? ' ★' : '') + '</span>' +
+            '<span>' + (i + 1) + '. ' + r.name + (r.model === sel.best ? ' ★' : '') + '</span>' +
             '<span style="color:#4b5563;font-family:monospace;" title="WAPE · MASE">' + wape + ' · ' + mase + '</span>' +
             '</div>';
         }).join('');
@@ -1697,11 +1707,17 @@
       if (btn) { btn.textContent = 'Testing ' + (modelCount || 'all') + ' models…'; btn.disabled = true; }
 
       /* Include Chronos only if the user has already used it (opt-in); the label paints first */
+      var reqSku = _sku;
       var pre = Models.chronosIsOn() ? Models.chronosPrefetch(values) : Promise.resolve();
       pre.then(function() { return new Promise(function(done) { setTimeout(done, 30); }); }).then(function() {
+        if (_sku !== reqSku) {                         /* user opened another SKU meanwhile */
+          if (btn) { btn.textContent = '★ Best Fit'; btn.disabled = false; }
+          return;
+        }
         var sel = null;
         var m0 = (slice.months && slice.months.length) ? (parseInt(String(slice.months[0]).slice(5,7),10) || null) : null;
-        try { sel = Models.autoSelect(values, null, { month0: m0 }); }
+        var st = (slice.months && slice.months.length) ? String(slice.months[0]) : null;
+        try { sel = Models.autoSelect(values, null, { month0: m0, start: st }); }
         catch (e) { console.warn('Best Fit failed:', e); }
         finally {
           if (btn) { btn.textContent = '★ Best Fit'; btn.disabled = false; }
@@ -1911,6 +1927,12 @@
 
       /* WAPE — honest out-of-sample headline */
       set('fc-v-wape', (v && v.wape != null && isFinite(v.wape)) ? Number(v.wape).toFixed(1) + '%' : null);
+      var wapeEl = document.getElementById('fc-v-wape');
+      if (wapeEl) {
+        wapeEl.style.color = (v && v.mase != null && isFinite(v.mase))
+          ? (v.mase < 1 ? '#22c55e' : '#f59e0b')       /* same verdict as the banner */
+          : '#e8eaf0';
+      }
       var wapeSub = document.getElementById('fc-v-wape-sub');
       if (wapeSub) {
         wapeSub.textContent = v
@@ -2141,15 +2163,19 @@
            upgrade to forecast-driven numbers before the long tail.
        (3) Pre-filter trivial series (near-zero / flat) straight to seasonal
            naive — the 6-model sweep can't beat it, so don't spend the compute. */
-    var _ROUTING_KEY = 'routing:v1';
+    var _ROUTING_KEY = 'routing:v2';   /* bump when the engine changes: old saved picks are stale */
 
+    /* FNV-1a over every SKU, month and value — a corrected re-upload that
+       only changes middle months must not reuse the old saved routing. */
     function _routingSig(bySKU) {
-      var keys = Object.keys(bySKU).sort(), pts = 0, checksum = 0;
+      var keys = Object.keys(bySKU).sort(), h = 0x811c9dc5, pts = 0;
+      function mix(str) { for (var j = 0; j < str.length; j++) { h ^= str.charCodeAt(j); h = Math.imul(h, 0x01000193); } }
       for (var i = 0; i < keys.length; i++) {
-        var v = bySKU[keys[i]].values;
-        pts += v.length; checksum += (v[v.length - 1] || 0) + (v[0] || 0);
+        var e = bySKU[keys[i]];
+        pts += e.values.length;
+        mix(keys[i] + '|' + (e.months[0] || '') + '|' + e.values.join(',') + ';');
       }
-      return keys.length + ':' + pts + ':' + Math.round(checksum);
+      return keys.length + ':' + pts + ':' + (h >>> 0).toString(16);
     }
     function _persistRouting(sig) {
       if (!window._IDB) return;
@@ -2175,9 +2201,9 @@
     }
     function _routeTrivial(sku, series) {
       try {
-        var run = Models.run('snaive', series.values, {}, 6);
         var meta = Models.getMeta('snaive') || {};
-        var sel = { best: 'snaive', horizon: 6, results: [{ wape: null, mase: null }] };
+        var run = Models.run('snaive', series.values, {}, 6);
+        var sel = { best: 'snaive', horizon: 6, results: [{ model: 'snaive', name: meta.name || 'Seasonal naive', wape: null, mase: null }] };
         window._skuRouting[sku] = { sku: sku, sel: sel, best: 'snaive',
           name: meta.name || 'Seasonal naive', tag: meta.tag || 'snaive', tagColor: meta.tagColor || '#9ca3af',
           wape: null, mase: null, forecast: run.forecast, lower: run.lower, upper: run.upper, horizon: 6 };
@@ -2185,9 +2211,12 @@
       } catch (e) { /* leave unrouted */ }
     }
 
+    var _routingGen = 0;
     function startAutoRouting() {
       var bySKU = window._monthlySalesBySKU;
       if (!bySKU || typeof Models === 'undefined') return;
+      var gen = ++_routingGen;        /* a newer upload cancels older routing loops */
+      _bestFitCache = {};             /* rankings from the previous dataset are stale */
       var allSkus = Object.keys(bySKU);
       if (!allSkus.length) return;
       var sig = _routingSig(bySKU);
@@ -2221,20 +2250,15 @@
         function mainThreadFallback() {
           var i = 0;
           (function next() {
+            if (gen !== _routingGen) return;                /* superseded by a newer upload */
             if (i >= toRoute.length) { finish(); return; }
             var sku = toRoute[i++];
             try {
               var series = bySKU[sku];
-              var m0 = (series.months && series.months.length) ? (parseInt(String(series.months[0]).slice(5,7),10) || null) : null;
-              var sel = Models.autoSelect(series.values, null, { month0: m0 });
-              if (sel && sel.best) {
-                var run  = Models.run(sel.best, series.values, { month0: m0 }, sel.horizon || 6);
-                var meta = Models.getMeta(sel.best) || {};
-                var top  = sel.results[0] || {};
-                _onRouted({ sku: sku, sel: sel, best: sel.best, name: meta.name || sel.best,
-                            tag: meta.tag || sel.best, tagColor: meta.tagColor || '#5eead4',
-                            wape: top.wape, mase: top.mase, forecast: run.forecast,
-                            lower: run.lower, upper: run.upper, horizon: sel.horizon || 6 }, state);
+              if (series && series.values && series.values.length >= 3) {
+                var out = Models.route(series.values, series.months);
+                out.sku = sku;
+                _onRouted(out, state);
               }
             } catch (e) { /* skip SKU */ }
             setTimeout(next, 30);
@@ -2247,6 +2271,7 @@
           _routingWorker.onmessage = function(e) {
             var msg = e.data || {};
             if (msg.type === 'ready')  _routingWorker.postMessage({ type: 'route', skus: toRoute });
+            if (gen !== _routingGen) return;
             if (msg.type === 'routed') _onRouted(msg, state);
             if (msg.type === 'done')   { finish(); _routingWorker.terminate(); _routingWorker = null; }
           };
@@ -2551,14 +2576,25 @@
     function readExcelFull(file, callback) {
       var reader = new FileReader();
       reader.onload = function(e) {
-        var wb  = XLSX.read(e.target.result, { type: 'array' });
+        /* cellDates: date cells come back as Date objects instead of Excel
+           serial numbers (45366…), which no date parser would recognise. */
+        var wb  = XLSX.read(e.target.result, { type: 'array', cellDates: true });
         var ws  = wb.Sheets[wb.SheetNames[0]];
         var raw = XLSX.utils.sheet_to_json(ws, { header: 1 });
         var headers = (raw[0] || []).map(String);
         var data = [];
+        function cellStr(v) {
+          if (v == null) return '';
+          if (v instanceof Date && !isNaN(v)) {
+            /* +12h guards against the sheet's midnight landing on the previous day */
+            var d = new Date(v.getTime() + 12 * 3600000);
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          }
+          return String(v);
+        }
         for (var i = 1; i < raw.length; i++) {
           var row = {};
-          headers.forEach(function(h, j) { row[h] = raw[i][j] != null ? String(raw[i][j]) : ''; });
+          headers.forEach(function(h, j) { row[h] = cellStr(raw[i][j]); });
           data.push(row);
         }
         callback(headers, data.length, data);
@@ -2581,13 +2617,10 @@
       }
 
       files.forEach(function(file) {
-        /* Skip duplicates */
-        if (uploadedFiles.some(function(u) { return u.file.name === file.name; })) {
-          onOneDone();
-          return;
-        }
         parseFile(file, function(headers, rowCount, data) {
           if (headers.length) {  // guard against failed/empty parses
+            /* Same file name dropped again (e.g. a corrected export) → replace it */
+            uploadedFiles = uploadedFiles.filter(function(u) { return u.file.name !== file.name; });
             uploadedFiles.push({ file: file, headers: headers, rows: rowCount, data: data });
           }
           onOneDone();
@@ -2778,7 +2811,7 @@
       { key:'safety',   label:'Safety Stock',     align:'right',  sortable:true  },
       { key:'leadtime', label:'Lead Time (days)', align:'center', sortable:true  },
       { key:'moq',      label:'MOQ',              align:'right',  sortable:true  },
-      { key:'price',    label:'Purchase Price',   align:'right',  sortable:true  },
+      { key:'price',    label:'Purchase Price (USD)', align:'right',  sortable:true  },
       { key:'toorder',  label:'Replenishment Qty', align:'right',  sortable:true  },
       { key:'health',   label:'Health',           align:'center', sortable:false },
       { key:'repdate',  label:'Replenish Date',   align:'center', sortable:false }
@@ -3529,6 +3562,7 @@
 
       var HCFG = {
         healthy:  { cls:'badge-healthy',  label:'Healthy'  },
+        order:    { cls:'badge-order',    label:'Order now' },
         atrisk:   { cls:'badge-atrisk',   label:'At Risk'  },
         stockout: { cls:'badge-stockout', label:'Stockout' }
       };
@@ -3610,7 +3644,7 @@
         }
       }
 
-      var HEALTH_ACCENT = { stockout:'#ef4444', atrisk:'#f59e0b', healthy:'#22c55e' };
+      var HEALTH_ACCENT = { stockout:'#ef4444', atrisk:'#f59e0b', order:'#38bdf8', healthy:'#22c55e' };
       function buildRow(d) {
         var cells = '<td onclick="event.stopPropagation()" style="border-left:2px solid ' + (HEALTH_ACCENT[d.health] || 'transparent') + ';"><input type="checkbox" class="cb"/></td>';
         visCols.forEach(function(c) { cells += cell(c.key, d); });
@@ -3964,15 +3998,16 @@
 
       /* 1 ── Health doughnut */
       var healthy  = skus.filter(function(d){ return d.health === 'healthy'; }).length;
+      var orderNow = skus.filter(function(d){ return d.health === 'order'; }).length;
       var atrisk   = skus.filter(function(d){ return d.health === 'atrisk'; }).length;
       var stockout = skus.filter(function(d){ return d.health === 'stockout'; }).length;
       _dbChart('db-health-chart', {
         type: 'doughnut',
         data: {
-          labels: ['Healthy', 'At Risk', 'Stockout'],
+          labels: ['Healthy', 'Order now', 'At Risk', 'Stockout'],
           datasets: [{
-            data: [healthy, atrisk, stockout],
-            backgroundColor: ['rgba(34,197,94,0.75)', 'rgba(245,158,11,0.75)', 'rgba(239,68,68,0.75)'],
+            data: [healthy, orderNow, atrisk, stockout],
+            backgroundColor: ['rgba(34,197,94,0.75)', 'rgba(56,189,248,0.75)', 'rgba(245,158,11,0.75)', 'rgba(239,68,68,0.75)'],
             borderColor: '#13161e', borderWidth: 2
           }]
         },
@@ -4156,6 +4191,7 @@
       var invVal   = skus.reduce(function(s,d){ return s + (d.stock||0)*(d.price||0); }, 0);
       var reorders = skus.filter(function(d){ return (d.to_order||0) > 0; });
       var healthy  = skus.filter(function(d){ return d.health === 'healthy'; }).length;
+      var orderNow = skus.filter(function(d){ return d.health === 'order'; }).length;
       var atrisk   = skus.filter(function(d){ return d.health === 'atrisk'; }).length;
       var stockout = skus.filter(function(d){ return d.health === 'stockout'; }).length;
 
@@ -4163,16 +4199,17 @@
       set('db-total-skus-sub', skus.length + ' products tracked');
       set('db-inv-value',    '$' + invVal.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}));
       set('db-reorder-count', reorders.length.toLocaleString());
-      set('db-reorder-sub',  reorders.length + ' items need ordering');
+      set('db-reorder-sub',  'forecast demand + safety stock, after open POs');
       set('db-sales-skus',   salesSkus > 0 ? salesSkus.toLocaleString() : '—');
       set('db-sales-sub',    salesSkus > 0 ? salesSkus + ' SKUs with history' : 'upload sales_history.csv');
       set('db-h-healthy',  healthy.toLocaleString());
+      set('db-h-order',    orderNow.toLocaleString());
       set('db-h-atrisk',   atrisk.toLocaleString());
       set('db-h-stockout', stockout.toLocaleString());
 
       renderDashboardCharts(skus);
 
-      var HCFG = { healthy:'badge-healthy', atrisk:'badge-atrisk', stockout:'badge-stockout' };
+      var HCFG = { healthy:'badge-healthy', order:'badge-order', atrisk:'badge-atrisk', stockout:'badge-stockout' };
       var tbody = document.getElementById('db-reorder-body');
       if (!tbody) return;
       var items = reorders.slice().sort(function(a,b){ return (b.to_order||0)-(a.to_order||0); }).slice(0,50);
@@ -4187,7 +4224,7 @@
           '<td style="padding:9px 14px;font-size:12px;color:#9ca3af;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escHtml(d.name) + '</td>' +
           '<td style="padding:9px 14px;text-align:right;font-weight:600;font-size:12px;">' + (d.stock||0).toLocaleString() + '</td>' +
           '<td style="padding:9px 14px;text-align:right;font-weight:800;font-size:12px;color:#5eead4;">' + (d.to_order||0).toLocaleString() + '</td>' +
-          '<td style="padding:9px 14px;text-align:center;"><span class="badge ' + hc + '"><span class="badge-dot"></span>' + (d.health==='atrisk'?'At Risk':d.health.charAt(0).toUpperCase()+d.health.slice(1)) + '</span></td>' +
+          '<td style="padding:9px 14px;text-align:center;"><span class="badge ' + hc + '"><span class="badge-dot"></span>' + (d.health==='atrisk'?'At Risk':d.health==='order'?'Order now':d.health.charAt(0).toUpperCase()+d.health.slice(1)) + '</span></td>' +
           '<td style="padding:9px 14px;text-align:center;font-size:11px;color:#6b7280;">' + (d.replenish_date||'—') + '</td>' +
         '</tr>';
       }).join('');
@@ -4683,16 +4720,25 @@
 
         /* Recompute derived fields */
         var monthly = d.monthly_sales || 0;
-        d.cover_days = monthly > 0 ? Math.floor(d.stock / (monthly / 30)) : '—';
+        var avail   = (d.available != null) ? d.available : d.stock;
+        d.on_order  = Math.round((window._openPOBySKU || {})[key] || 0);
+        d.cover_days = monthly > 0 ? Math.floor(avail / (monthly / 30)) : '—';
 
-        /* Reorder point = safety stock + demand during lead time */
+        /* Reorder point = safety stock + demand during lead time.
+           Inventory position = free stock + open purchase orders, so stock
+           already on its way isn't ordered twice. */
         var leadDemand   = monthly * ((d.lead_time || 14) / 30);
         var reorderPoint = (d.safety_stock || 0) + leadDemand;
-        var raw          = Math.max(0, Math.ceil(reorderPoint - d.stock));
+        var position     = avail + d.on_order;
+        var raw          = Math.max(0, Math.ceil(reorderPoint - position));
         d.to_order       = (raw > 0 && d.moq > 1) ? Math.ceil(raw / d.moq) * d.moq : raw;
 
-        d.health = d.stock <= 0 ? 'stockout'
-                 : (d.safety_stock > 0 && d.stock <= d.safety_stock) ? 'atrisk'
+        /* stockout → at risk (≤ safety stock) → order now (below reorder
+           point after open POs) → healthy. Splitting the last two keeps "at
+           risk" a real warning instead of most of the catalogue. */
+        d.health = avail <= 0 ? 'stockout'
+                 : (d.safety_stock > 0 && avail <= d.safety_stock) ? 'atrisk'
+                 : raw > 0 ? 'order'
                  : 'healthy';
         d.replenish_date = d.to_order > 0
           ? new Date(today.getTime() + (d.lead_time || 14) * 86400000)
@@ -4777,9 +4823,30 @@
       /* Always auto-route files into the rich dedicated views
          (replenishment, purchase-orders, suppliers). These have fixed renderers
          that do their own data processing and are not driven by chips. */
+      window._openPOBySKU = {};
+      /* Sales files are combined BEFORE aggregation — routing them one by one
+         let each file overwrite the previous one's history. Exact duplicate
+         rows across files (overlapping exports) are counted once. */
+      var salesFiles = [], salesRows = [], salesHeaders = [], seenRows = {}, dupRows = 0;
       uploadedFiles.forEach(function(f) {
-        if (f.data && f.data.length) routeData(f.headers, f.data);
+        if (!f.data || !f.data.length) return;
+        var cat = detectCategory(f.headers);
+        if (cat && cat.id === 'sales') { salesFiles.push(f); return; }
+        routeData(f.headers, f.data);
       });
+      salesFiles.forEach(function(f, fi) {
+        f.headers.forEach(function(h) { if (salesHeaders.indexOf(h) === -1) salesHeaders.push(h); });
+        var local = {};
+        f.data.forEach(function(r) {
+          var k = salesFiles.length > 1 ? JSON.stringify(r) : null;
+          if (k && seenRows[k] && !local[k]) { dupRows++; return; }   /* seen in an earlier file */
+          if (k) { local[k] = true; }
+          salesRows.push(r);
+        });
+        Object.keys(local).forEach(function(k) { seenRows[k] = true; });
+      });
+      if (salesRows.length) routeData(salesHeaders, salesRows);
+      if (dupRows && _dq && _dq.notes) _dq.notes.push(dupRows + ' duplicate sales rows appeared in more than one file and were counted once.');
 
       /* Join supplier terms + sales velocity onto the SKU table */
       enrichLoadedSKUs();
@@ -4841,6 +4908,7 @@
       }
 
       if (cat.id === 'po') {
+        buildOpenPOLookup(data);   /* powers replenishment even if the PO view is cleared */
         if (shouldRender('purchase-orders')) renderPO(data, assignedCols('purchase-orders'));
         else clearDynamicView('purchase-orders');
         if (shouldRender('inbounds')) renderInbounds(data, assignedCols('inbounds'));
@@ -4859,6 +4927,19 @@
         aggregateMonthlySales(data);
         if (shouldRender('outbounds')) renderOutbounds(data, assignedCols('outbounds'));
       }
+    }
+
+    /* Open purchase-order quantity per SKU (anything not received/cancelled) */
+    function buildOpenPOLookup(data) {
+      window._openPOBySKU = window._openPOBySKU || {};
+      (data || []).forEach(function(r) {
+        var sku = String(col(r, ['SKU','StockCode','ItemCode','ProductCode']) || '').toUpperCase();
+        if (!sku) return;
+        var status = String(col(r, ['Status','POStatus','State']) || '').toLowerCase();
+        if (/receiv|deliver|cancel|closed|complete|reject/.test(status)) return;
+        var qty = parseFloat(String(col(r, ['OrderedQty','OrderedQuantity','Quantity','Qty']) || '').replace(/,(?=\d{3}(?:\D|$))/g, '')) || 0;
+        if (qty > 0) window._openPOBySKU[sku] = (window._openPOBySKU[sku] || 0) + qty;
+      });
     }
 
     /* ── Column-mapper helpers for the dedicated (rich) views ────────────── */
@@ -4898,7 +4979,10 @@
           supplier: col(r, ['Supplier','Vendor']),
           lead:     parseFloat(col(r, ['LeadTime']))            || 0,
           moq:      parseFloat(col(r, ['MOQ','MinimumOrder']))  || 0,
-          price:    parseFloat(col(r, ['PurchasePrice','CostPrice'])) || 0
+          /* converted to USD (js/fx.js) so stock value adds up across currencies */
+          price:    (window.FX ? window.FX.toUSD(parseFloat(col(r, ['PurchasePrice','CostPrice'])) || 0, col(r, ['Currency']))
+                               : (parseFloat(col(r, ['PurchasePrice','CostPrice'])) || 0)),
+          currency: col(r, ['Currency']) || ''
         };
       });
     }
@@ -5055,9 +5139,55 @@
       _dqReset();
       _dq.salesRows = (data || []).length;
       var bySkuMonth = {};
+      var DATE_COLS = ['InvoiceDate','Date','OrderDate','SaleDate'];
+
+      /* Decide day/month order ONCE for the whole file: a first field > 12
+         anywhere means day-first; a second field > 12 means month-first.
+         Judging row by row silently swapped 03/04 and 04/03 in US files. */
+      var sawDayFirst = false, sawMonthFirst = false, sawAmbiguous = false;
+      (data || []).forEach(function(row) {
+        var m = String(col(row, DATE_COLS) || '').trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})\b/);
+        if (!m) return;
+        var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+        if (a > 12) sawDayFirst = true; else if (b > 12) sawMonthFirst = true; else sawAmbiguous = true;
+      });
+      var monthFirst = sawMonthFirst && !sawDayFirst;
+      if (sawDayFirst && sawMonthFirst) {
+        _dq.notes.push('Dates mix day-first and month-first formats — treated as day-first (DD/MM). Check the date column.');
+      } else if (sawAmbiguous && !sawDayFirst && !sawMonthFirst) {
+        _dq.notes.push('Date order (DD/MM vs MM/DD) could not be determined from the data — assumed DD/MM.');
+      }
+
+      function toMonth(d) {
+        d = String(d).trim();
+        var m;
+        /* ISO-like: YYYY-MM-DD, YYYY-M-D, YYYY/MM/DD, YYYY.MM.DD, YYYY-MM */
+        if ((m = d.match(/^(\d{4})[\-\/.](\d{1,2})(?:[\-\/.]\d{1,2})?(?:\b|T|\s|$)/))) {
+          var mo = parseInt(m[2], 10);
+          return (mo >= 1 && mo <= 12) ? m[1] + '-' + String(mo).padStart(2, '0') : null;
+        }
+        /* x/y/YYYY, x.y.YYYY, x-y-YYYY and 2-digit years */
+        if ((m = d.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})\b/))) {
+          var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+          var mon = monthFirst ? a : b;
+          if (!monthFirst && a <= 12 && b > 12) mon = a;      /* this row can only be MM/DD */
+          var yr = m[3].length === 2 ? 2000 + parseInt(m[3], 10) : parseInt(m[3], 10);
+          return (mon >= 1 && mon <= 12) ? yr + '-' + String(mon).padStart(2, '0') : null;
+        }
+        /* Excel serial day number (e.g. 45366 = 2024-03-15) */
+        if (/^\d{5}(\.\d+)?$/.test(d)) {
+          var serial = parseFloat(d);
+          if (serial > 20000 && serial < 80000) {
+            var dt = new Date(Date.UTC(1899, 11, 30) + Math.round(serial) * 86400000);
+            return dt.getUTCFullYear() + '-' + String(dt.getUTCMonth() + 1).padStart(2, '0');
+          }
+        }
+        return null;
+      }
+
       data.forEach(function(row) {
         var sku   = col(row, ['StockCode','SKU','ProductCode','ItemCode','Code']);
-        var date  = col(row, ['InvoiceDate','Date','OrderDate','SaleDate']);
+        var date  = col(row, DATE_COLS);
         /* Strip thousand-separator commas (",NNN" groups) before parsing so
            "1,250" reads as 1250, not 1. A lone "1,25" (decimal comma) is left
            untouched and parses as before. */
@@ -5066,26 +5196,9 @@
         if (!sku)       { _dqSkip('missing SKU'); return; }
         if (!date)      { _dqSkip('missing date'); return; }
         if (qty <= 0)   { _dqSkip('zero/negative qty'); return; }
-        /* Normalise date to YYYY-MM regardless of input format */
-        var month = (function(d) {
-          d = String(d).trim();
-          /* YYYY-MM-DD or YYYY-MM-DDThh:mm:ss */
-          if (/^\d{4}-\d{2}/.test(d)) return d.substring(0, 7);
-          /* x/y/YYYY — disambiguate DD/MM vs MM/DD by range:
-             first field >12 ⇒ it's the day (DD/MM); second field >12 ⇒ it's
-             the day (MM/DD); otherwise ambiguous, default to DD/MM. */
-          var dmy = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
-          if (dmy) {
-            var f1 = parseInt(dmy[1], 10), f2 = parseInt(dmy[2], 10);
-            var mo = (f1 > 12) ? f2 : (f2 > 12) ? f1 : f2;
-            return dmy[3] + '-' + String(mo).padStart(2, '0');
-          }
-          /* YYYY/MM/DD */
-          var ys = d.match(/^(\d{4})\/(\d{2})\/(\d{2})/);
-          if (ys) return ys[1] + '-' + ys[2];
-          return d.substring(0, 7); /* best-effort fallback */
-        })(date);
-        if (!/^\d{4}-\d{2}$/.test(month)) { _dqSkip('unparseable date'); return; }
+        /* Normalise date to YYYY-MM (file-wide day/month order, see above) */
+        var month = toMonth(date);
+        if (!month) { _dqSkip('unparseable date'); return; }
         if (!bySkuMonth[sku]) bySkuMonth[sku] = {};
         bySkuMonth[sku][month] = (bySkuMonth[sku][month] || 0) + qty;
       });
@@ -5100,13 +5213,19 @@
         return out;
       }
       var result = {};
+      /* Every series runs to the dataset's last month, so a SKU that stopped
+         selling shows its trailing zero months instead of a stale sales rate. */
+      var lastMonth = '';
+      Object.keys(bySkuMonth).forEach(function(sku) {
+        Object.keys(bySkuMonth[sku]).forEach(function(m) { if (m > lastMonth) lastMonth = m; });
+      });
       Object.keys(bySkuMonth).forEach(function(sku) {
         var present = Object.keys(bySkuMonth[sku]).sort();
         if (!present.length) return;
         /* Zero-fill interior gaps so absent months stay on the calendar —
            keeps lag-12 seasonality intact and lets the engine count genuine
            zero-demand months instead of silently closing the gap. */
-        var months = _monthRange(present[0], present[present.length - 1]);
+        var months = _monthRange(present[0], lastMonth);
         result[sku] = { months: months, values: months.map(function(m) { return bySkuMonth[sku][m] || 0; }) };
       });
       /* Schema gate: rows present but nothing aggregated → columns weren't recognised */
@@ -5308,6 +5427,11 @@
         var sku      = col(r, ['SKU','StockCode','ItemCode','ProductCode','Code','ProductId','Item']);
         var name     = col(r, ['Description','ProductName','ItemName','Name','Title','Item','Product']);
         var onhand   = parseFloat(col(r, ['OnHand','Stock','Inventory','Available','QtyOnHand','CurrentStock','Balance'])) || 0;
+        /* Reserved units are already promised to customers — plan on what's free */
+        var availRaw = col(r, ['Available','AvailableQty','FreeStock','ATP']);
+        var reserved = parseFloat(col(r, ['Reserved','Allocated','Committed'])) || 0;
+        var avail    = (availRaw !== '' && availRaw != null && !isNaN(parseFloat(availRaw)))
+                     ? parseFloat(availRaw) : Math.max(0, onhand - reserved);
         var safety   = parseFloat(col(r, ['SafetyStock','Safety','MinStock','SS','SafetyLevel'])) || 0;
         var reorder  = parseFloat(col(r, ['ReorderPoint','ReorderQty','Reorder','ReorderLevel'])) || safety * 2;
         var lead     = parseFloat(col(r, ['LeadTime','Lead','LeadDays','DeliveryDays','Days','LT'])) || 14;
@@ -5317,11 +5441,12 @@
 
         // Math.floor so 13.6 days shows as 13d (amber) rather than rounding up to 14d (green).
         // A stock that runs out in 13.6 days should trigger an amber warning, not a false green.
-        var coverDays    = (monthly > 0) ? Math.floor(onhand / (monthly / 30)) : '—';
-        var raw          = Math.max(0, reorder - onhand);
+        var coverDays    = (monthly > 0) ? Math.floor(avail / (monthly / 30)) : '—';
+        var raw          = Math.max(0, reorder - avail);
         var toOrder      = (moq > 1) ? Math.ceil(raw / moq) * moq : raw;
-        var health       = onhand <= 0 ? 'stockout'
-                         : (safety > 0 && onhand <= safety) ? 'atrisk'
+        var health       = avail <= 0 ? 'stockout'
+                         : (safety > 0 && avail <= safety) ? 'atrisk'
+                         : raw > 0 ? 'order'
                          : 'healthy';
         var repDate      = toOrder > 0
           ? new Date(today.getTime() + lead * 86400000)
@@ -5332,6 +5457,7 @@
           sku:           sku   || '—',
           name:          name  || '—',
           stock:         Math.round(onhand),
+          available:     Math.round(avail),
           cover_days:    coverDays,
           monthly_sales: Math.round(monthly),
           safety_stock:  Math.round(safety),

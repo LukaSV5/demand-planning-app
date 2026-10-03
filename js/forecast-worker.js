@@ -31,32 +31,16 @@ onmessage = function (e) {
       var sku = skus[i];
       try {
         var series = _bySKU[sku];
-        if (!series || !series.values || series.values.length < 12) {
+        if (!series || !series.values || series.values.length < 3) {
           postMessage({ type: 'skuError', sku: sku, message: 'insufficient history' });
           continue;
         }
-        // Calendar month of values[0] so the engine aligns XGBoost seasonality
-        // to this SKU's own series (its index 0 rarely equals the global axis).
-        var m0 = (series.months && series.months.length)
-          ? (parseInt(String(series.months[0]).slice(5, 7), 10) || null) : null;
-        var sel = Models.autoSelect(series.values, null, { month0: m0 });
-        if (!sel || !sel.best) {
-          postMessage({ type: 'skuError', sku: sku, message: 'no model could be validated' });
-          continue;
-        }
-        // Walk-forward results are memoized inside Models, so re-running the
-        // winner here for its forecast + intervals costs only the final fit.
-        var run  = Models.run(sel.best, series.values, { month0: m0 }, sel.horizon || 6);
-        var meta = Models.getMeta(sel.best) || {};
-        var top  = sel.results[0] || {};
-        postMessage({
-          type: 'routed', sku: sku, sel: sel,
-          best: sel.best, name: meta.name || sel.best,
-          tag: meta.tag || sel.best, tagColor: meta.tagColor || '#a78bfa',
-          wape: top.wape, mase: top.mase,
-          forecast: run.forecast, lower: run.lower, upper: run.upper,
-          horizon: sel.horizon || 6
-        });
+        // Models.route picks the model (walk-forward), runs it, and falls back
+        // to Theta / seasonal naive when the series is too short to validate.
+        var out = Models.route(series.values, series.months);
+        out.type = 'routed';
+        out.sku  = sku;
+        postMessage(out);
         count++;
       } catch (err) {
         postMessage({ type: 'skuError', sku: sku, message: String(err && err.message || err) });

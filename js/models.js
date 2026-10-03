@@ -124,11 +124,12 @@ const Models = (() => {
   }
 
   //  MASE denominator: in-sample MAE of the seasonal naive (lag-12 when the
-  //  series has >= 24 points, else lag-1) over the FULL series. One consistent
-  //  scale per series so models can be ranked against each other.
+  //  series has >= 13 points, else lag-1). walkForward passes only the
+  //  training part (data before the first validation origin), per Hyndman's
+  //  definition, so the scale never includes the months being scored.
   function _maseScale(data) {
     const n = data.length;
-    const m = n >= 24 ? 12 : 1;
+    const m = n >= 13 ? 12 : 1;
     let s = 0, c = 0;
     for (let t = m; t < n; t++) { s += Math.abs(data[t] - data[t - m]); c++; }
     return c > 0 ? s / c : 0;
@@ -300,6 +301,9 @@ const Models = (() => {
     let si = null;
     if (n >= 24 && _acf(data, 12) > 1.645 * Math.sqrt(1 / n)) {
       si = _classicalSeasonal(data, 'mul');
+      // An index near 0 (a month that almost never sells) would divide any
+      // sale in that month by ~0 and blow up the trend line. Stay unseasonal.
+      if (Math.min.apply(null, si) < 0.1) si = null;
     }
     const y = si ? data.map((v, t) => v / si[t % 12]) : data.slice();
 
@@ -729,7 +733,9 @@ const Models = (() => {
   //  caller-supplied series whose index 0 may not align with the global axis
   //  (e.g. a per-SKU series or a History-Horizon suffix slice). Omit it for
   //  training on the global pool, where _calMonth(globalIdx) is correct.
-  function _xgbFeatures(s, t, targetIdx, cutoff, baseMonth) {
+  //  off = global-axis index of s[0], so the relative-position feature matches
+  //  the training pool when s is a per-SKU suffix slice.
+  function _xgbFeatures(s, t, targetIdx, cutoff, baseMonth, off) {
     let m12 = 0;
     for (let j = t - 11; j <= t; j++) m12 += s[j];
     m12 /= 12;
@@ -742,7 +748,7 @@ const Models = (() => {
       m12,                                             // mean of last 12
       Math.sin(2 * Math.PI * cm / 12),
       Math.cos(2 * Math.PI * cm / 12),
-      t / cutoff                                       // relative position
+      (t + (off || 0)) / cutoff                        // relative position (global axis)
     ];
   }
 
@@ -867,23 +873,27 @@ const Models = (() => {
           y.push(s[t + h]);
         }
       }
-      models.push(_gbmTrain(X, y));
+      const mdl = _gbmTrain(X, y);
+      mdl.ok = X.length >= 2 * XGB_MIN_LEAF;           // false → too little history for this step
+      models.push(mdl);
     }
     return { cutoff, models };
   }
 
-  //  Cache per cutoff signature (months + SKU count + axis length). Partial-
-  //  history fits (walk-forward internals) may reuse a model trained at a
-  //  cutoff up to 3 months EARLIER — strictly less data, so never leaks; it
-  //  just bounds retraining cost. The full-history fit is always exact.
-  function _xgbModels(cutoffReq) {
+  //  Cache per cutoff signature (months + SKU count + axis length). Walk-forward
+  //  fits (allowNear) may reuse a model trained at a cutoff up to 3 months
+  //  EARLIER — strictly less data, so never leaks; it just bounds retraining
+  //  cost. Every other fit trains at the exact cutoff, so results never depend
+  //  on what was run before.
+  function _xgbModels(cutoffReq, allowNear) {
     const g = _globalSales;
     const cutoff = Math.max(13, Math.min(cutoffReq, g.axis.length));
     const sig = c => c + '|' + g.skuCount + '|' + g.axis.length;
     const exact = _xgbModelCache.get(sig(cutoff));
     if (exact) return exact;
-    if (cutoff < g.axis.length) {
+    if (allowNear && cutoff < g.axis.length) {
       for (let back = 1; back <= 3; back++) {
+        if (cutoff - back < 19) break;                 // keep every step trainable
         const near = _xgbModelCache.get(sig(cutoff - back));
         if (near) return near;
       }
@@ -922,9 +932,29 @@ const Models = (() => {
       };
     }
 
-    // Walk-forward passes __cutoff = Lmin so ONE model set serves all origins.
-    const set = _xgbModels(Math.min(params.__cutoff || n, n));
+    // Where data[0] sits on the global axis. Callers pass params.start
+    // ('YYYY-MM' of data[0]); without it we assume the series starts at the
+    // axis origin. cutoff = months of global history visible at the origin, so
+    // a "Last 24 Months" slice still trains on the pool up to its own end.
+    let off = 0;
+    if (params.start && _globalSales) {
+      const i = _globalSales.axis.indexOf(params.start);
+      if (i > 0) off = i;
+    }
+    const set = _xgbModels(off + n, !!params.__wf);
     const s   = data.map(v => v / scale);
+
+    // Step models trained on too few rows would predict ~0. Use the nearest
+    // shorter step that is trainable; if none is, fall back to Theta.
+    const stepModel = h => {
+      for (let k = Math.min(h, XGB_MAX_H); k >= 1; k--) if (set.models[k - 1].ok) return set.models[k - 1];
+      return null;
+    };
+    if (!stepModel(1)) {
+      const r = theta(data, {}, horizon);
+      r.fallback = { model: 'theta', reason: 'too little pooled history for gradient boosting — used Theta' };
+      return r;
+    }
 
     // Calendar month of data[0]. The caller (dashboard/worker) passes month0
     // because `data` is this SKU's own series (or a suffix slice) and its
@@ -939,16 +969,16 @@ const Models = (() => {
     const forecast = [];
     for (let i = 0; i < horizon; i++) {
       const hStep = i + 1;
-      const model = set.models[Math.min(hStep, XGB_MAX_H) - 1];  // steps > 6 reuse the h=6 model
-      const feat  = _xgbFeatures(s, origin, origin + hStep, set.cutoff, baseMonth);
+      const model = stepModel(hStep);                           // steps > 6 reuse the h=6 model
+      const feat  = _xgbFeatures(s, origin, origin + hStep, set.cutoff, baseMonth, off);
       forecast.push(Math.max(0, _gbmPredict(model, feat) * scale));
     }
 
     // One-step-ahead in-sample fits from the h=1 model.
     const inS = new Array(n).fill(null);
-    const m1  = set.models[0];
+    const m1  = stepModel(1);
     for (let t = 12; t < n; t++) {
-      inS[t] = Math.max(0, _gbmPredict(m1, _xgbFeatures(s, t - 1, t, set.cutoff, baseMonth)) * scale);
+      inS[t] = Math.max(0, _gbmPredict(m1, _xgbFeatures(s, t - 1, t, set.cutoff, baseMonth, off)) * scale);
     }
 
     return {
@@ -980,7 +1010,9 @@ const Models = (() => {
 
     // Only month0 is cross-cutting (xgboost seasonality); other params are
     // model-specific autopilot and must not leak between members.
-    const memberParams = (params.month0 != null) ? { month0: params.month0 } : {};
+    const memberParams = {};
+    if (params.month0 != null) memberParams.month0 = params.month0;
+    if (params.start != null)  memberParams.start  = params.start;
 
     const ranked = [];
     if (hRank >= 1) {
@@ -1108,8 +1140,7 @@ const Models = (() => {
     for (let i = 0; i < n; i++) dataSum += data[i];
     // Sample 3 interior points so series with the same length/endpoints/sum
     // but different interiors don't share a cache slot.
-    const q1 = data[Math.floor(n * 0.25)], q2 = data[Math.floor(n * 0.5)], q3 = data[Math.floor(n * 0.75)];
-    const key = [modelKey, n, data[0], q1, q2, q3, data[n - 1], dataSum,
+    const key = [modelKey, _fingerprint(data), dataSum,
                  JSON.stringify(params), horizon, maxOrigins].join('|');
     if (_wfCache.has(key)) return _wfCache.get(key);
 
@@ -1120,14 +1151,15 @@ const Models = (() => {
     // inner member validations. Derived from modelKey, so the memo key
     // (original params) stays unique.
     const fitParams =
-      modelKey === 'xgboost'  ? Object.assign({}, params, { __cutoff: Lmin }) :
+      modelKey === 'xgboost'  ? Object.assign({}, params, { __wf: true }) :
       modelKey === 'ensemble' ? Object.assign({}, params, { __innerOrigins: 4 }) :
       params;
 
     const residualsByHorizon = Array.from({ length: horizon }, () => []);
-    let sumAbs = 0, sumSq = 0, sumAct = 0, cnt = 0, originCount = 0;
+    let sumAbs = 0, sumSq = 0, sumAct = 0, cnt = 0, originCount = 0, attempted = 0;
 
     for (let L = Lmin; L <= n - 1; L += step) {
+      attempted++;
       const hEff = Math.min(horizon, n - L);
       let fit;
       try { fit = _fitModel(modelKey, data.slice(0, L), fitParams, hEff); }
@@ -1147,7 +1179,7 @@ const Models = (() => {
     let out = null;
     if (originCount > 0 && cnt > 0) {
       const mae   = sumAbs / cnt;
-      const scale = _maseScale(data);
+      const scale = _maseScale(data.slice(0, Lmin));  // training part only — no validation targets
       out = {
         metrics: {
           wape: sumAct > 1e-12 ? round2((sumAbs / sumAct) * 100) : null,
@@ -1161,7 +1193,8 @@ const Models = (() => {
       };
     }
     if (_wfCache.size > 400) _wfCache.clear();
-    if (out || modelKey !== 'chronos') _wfCache.set(key, out);   // Chronos may simply not be fetched yet
+    // Chronos forecasts may not be fetched yet: only memoize a complete result.
+    if (modelKey !== 'chronos' || (out && originCount === attempted)) _wfCache.set(key, out);
     return out;
   }
 
@@ -1194,6 +1227,10 @@ const Models = (() => {
   function run(modelKey, data, params, horizon) {
     params  = params || {};
     horizon = horizon || 6;
+    // One NaN/Infinity would poison every model's arithmetic; treat it as 0.
+    if (Array.isArray(data) && data.some(v => !Number.isFinite(v))) {
+      data = data.map(v => (Number.isFinite(v) ? v : 0));
+    }
 
     const meta = MODEL_META[modelKey];
     if (!meta) throw new Error('Unknown model: ' + modelKey);
@@ -1303,6 +1340,37 @@ const Models = (() => {
   //  Walk-forward-validates every registered model (including the ensemble)
   //  and ranks by WAPE ascending. Models that cannot be validated are skipped.
 
+  // ── Route one SKU: pick + run its model (shared by the worker and the page) ──
+  //
+  //  months[0] ('YYYY-MM') gives the calendar month and the global-axis start.
+  //  Series too short to validate (or with nothing to score) still get a
+  //  forecast: Theta, or seasonal naive when the series is all zeros.
+  function route(values, months) {
+    const p = {};
+    if (months && months.length) {
+      p.month0 = parseInt(String(months[0]).slice(5, 7), 10) || null;
+      p.start  = String(months[0]);
+    }
+    let sel = null;
+    try { sel = autoSelect(values, null, p); } catch (e) { sel = null; }
+    if (!sel || !sel.best) {
+      const fb = values.some(v => v > 0) ? 'theta' : 'snaive';
+      sel = { best: fb, origins: null, horizon: 6, unvalidated: true,
+              results: [{ model: fb, name: MODEL_META[fb].name, wape: null, mase: null, mae: null }] };
+    }
+    const horizon = sel.horizon || 6;
+    const r    = run(sel.best, values, p, horizon);
+    const meta = MODEL_META[sel.best] || {};
+    const top  = sel.results.find(x => x.model === sel.best) || {};
+    return {
+      sel, best: sel.best, name: meta.name || sel.best, tag: meta.tag || sel.best,
+      tagColor: meta.tagColor || '#a78bfa', wape: top.wape, mase: top.mase,
+      forecast: r.forecast, lower: r.lower, upper: r.upper, horizon
+    };
+  }
+
+  const PICK_MARGIN = 6;   // WAPE points a single model must beat the blend by (tuned on 2 blind holdouts)
+
   function autoSelect(data, keys, params) {
     keys = keys || allKeys();
     params = params || {};
@@ -1325,8 +1393,17 @@ const Models = (() => {
     });
 
     results.sort((a, b) => a.wape - b.wape);
+
+    // Picking the minimum of ~8 noisy walk-forward scores is optimistic: on a
+    // blind holdout the raw winner did worse than simply always blending. So
+    // the blend stays the pick unless a single model beats it by a clear
+    // margin (WAPE points). results stays sorted so the ranking is unchanged.
+    let best = results.length ? results[0].model : null;
+    const blend = results.find(r => r.model === 'ensemble');
+    if (blend && best !== 'ensemble' && results[0].wape > blend.wape - PICK_MARGIN) best = 'ensemble';
+
     return {
-      best   : results.length ? results[0].model : null,
+      best   : best,
       origins: origins,
       horizon: horizon,
       results: results
@@ -1356,10 +1433,19 @@ const Models = (() => {
     return values.length + ':' + (h >>> 0).toString(16).padStart(8, '0');
   }
 
+  // Exactly the training slices walkForward() will ask for, for every horizon
+  // the UI offers (3 / 6 / 12; Best Fit uses 6), plus the full series.
   function chronosSeriesFor(values) {
     const n = values.length;
-    const out = [];
-    for (let L = Math.max(3, WF_MIN_TRAIN); L < n; L++) out.push(values.slice(0, L));
+    const Ls = new Set();
+    for (const H of [3, 6, 12]) {
+      const maxOrigins = 8;
+      const Lmin = Math.max(WF_MIN_TRAIN, n - H - maxOrigins + 1);
+      if (n - H < Lmin) continue;
+      const step = Math.max(1, Math.ceil(((n - 1) - Lmin + 1) / maxOrigins));
+      for (let L = Lmin; L <= n - 1; L += step) Ls.add(L);
+    }
+    const out = Array.from(Ls).sort((a, b) => a - b).map(L => values.slice(0, L));
     if (n >= 3) out.push(values);
     return out;
   }
@@ -1397,10 +1483,11 @@ const Models = (() => {
   function chronos(data, params, horizon) {
     const rec = _chronosCache.get(_fingerprint(data));
     if (!rec) throw new Error('No Chronos forecast cached for this series (call Models.chronosPrefetch first)');
-    const h = Math.min(horizon, rec.p50.length);
+    const forecast = rec.p50.slice(0, horizon);
+    while (forecast.length < horizon) forecast.push(forecast[forecast.length - 1] || 0);  // beyond 12: hold last
     return {
       inSample : new Array(data.length).fill(null),   // zero-shot model: no fitted history
-      forecast : rec.p50.slice(0, h),
+      forecast,
       autoParams: { source: 'Chronos-2 (local server)' },
       fallback : null
     };
@@ -1495,6 +1582,6 @@ const Models = (() => {
   function allKeys()         { return Object.keys(MODEL_META); }
 
   return { run, getMeta, allKeys, backtest, autoSelect, walkForward, setGlobalSales, computeMetrics,
-           chronosReady, chronosPrefetch, chronosIsOn };
+           chronosReady, chronosPrefetch, chronosIsOn, route };
 
 })();

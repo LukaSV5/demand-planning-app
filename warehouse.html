@@ -142,6 +142,9 @@
       .hc-row { grid-template-columns: 1fr; gap: 8px; }
     }
   </style>
+  <script src="js/fx.js"></script>
+  <link rel="stylesheet" href="css/site.css">
+  <script src="js/site-nav.js" defer></script>
 </head>
 <body>
 
@@ -219,6 +222,11 @@
     }
     function num(v) { var n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
     function esc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+    /* Prices and PO values arrive in several currencies (EUR/GBP/USD in the
+       demo data). Everything is converted to USD before it is added up. */
+    /* Rates live in js/fx.js (shared with the dashboard). */
+    var FX_UNKNOWN = (window.FX && window.FX.unknown) || {};
+    function toUSD(v, cur) { return window.FX ? window.FX.toUSD(v, cur) : v; }
     function fmtMoney(v) { if (v >= 1e6) return '$' + (v / 1e6).toFixed(2) + 'M'; if (v >= 1e3) return '$' + (v / 1e3).toFixed(0) + 'k'; return '$' + Math.round(v); }
     /* Strict threshold palette: good (green) → caution (amber) → trouble (red). Spot trouble without reading numbers. */
     function thr(v, warnAt, badAt) { return v >= badAt ? '#ef4444' : v >= warnAt ? '#f59e0b' : '#22c55e'; }
@@ -346,7 +354,10 @@
       var priceBySKU = {}, leadBySKU = {};
       supRows.forEach(function (r) {
         var sku = (col(r, ['SKU', 'StockCode']) || '').toUpperCase();
-        if (sku) { priceBySKU[sku] = num(col(r, ['PurchasePrice', 'CostPrice', 'Price'])); leadBySKU[sku] = num(col(r, ['LeadTime', 'Lead'])) || 14; }
+        if (sku) {
+          priceBySKU[sku] = toUSD(num(col(r, ['PurchasePrice', 'CostPrice', 'Price'])), col(r, ['Currency']));
+          leadBySKU[sku] = num(col(r, ['LeadTime', 'Lead'])) || 14;
+        }
       });
 
       var velMonthly = aggregateVelocity(salesRows);
@@ -354,8 +365,8 @@
       DATA = stockRows.map(function (r) {
         var sku = col(r, ['SKU', 'StockCode']);
         var key = (sku || '').toUpperCase();
-        var stk = num(col(r, ['Stock']));
-        var onhand = num(col(r, ['OnHand', 'Stock']));
+        var stk = num(col(r, ['Stock', 'OnHand', 'QtyOnHand', 'Inventory']));
+        var onhand = num(col(r, ['OnHand', 'Stock', 'QtyOnHand']));
         var reserved = num(col(r, ['Reserved']));
         var availRaw = col(r, ['Available']);
         var avail = availRaw !== '' ? num(availRaw) : Math.max(0, onhand - reserved);
@@ -385,13 +396,16 @@
 
       /* Open POs joined to each SKU's warehouse + shortage flag */
       var whBySKU = {}; DATA.forEach(function (d) { whBySKU[d.sku.toUpperCase()] = d; });
-      POS = poRows.map(function (r) {
+      POS = poRows.filter(function (r) {
+        /* Received / cancelled / closed POs are no longer inbound */
+        return !/receiv|deliver|cancel|closed|complete|reject/i.test(String(col(r, ['Status']) || ''));
+      }).map(function (r) {
         var sku = col(r, ['SKU', 'StockCode']);
         var d = whBySKU[(sku || '').toUpperCase()];
         return {
           po: col(r, ['PONumber', 'PurchaseOrder']), sku: sku, name: col(r, ['Description']) || (d ? d.name : ''),
           qty: num(col(r, ['OrderedQty', 'OrderedQuantity', 'Qty'])), eta: col(r, ['ExpectedDelivery', 'DeliveryDate']),
-          status: col(r, ['Status']) || '—', value: num(col(r, ['TotalValue'])),
+          status: col(r, ['Status']) || '—', value: toUSD(num(col(r, ['TotalValue'])), col(r, ['Currency'])),
           warehouse: d ? d.warehouse : 'Unassigned',
           covers: d ? (d.belowReorder ? 'shortage' : (d.excessUnits > 0 ? 'excess' : 'healthy')) : 'unknown'
         };
@@ -418,17 +432,47 @@
       var kQty  = findKey(['Quantity', 'Qty', 'Units', 'UnitsSold', 'Sales']);
       var kDate = findKey(['InvoiceDate', 'OrderDate', 'SaleDate', 'Date']);
       if (!kCode || !kQty) return vel;
-      var maxDate = '';
-      if (kDate) for (var i = 0; i < rows.length; i++) { var dt = '' + (rows[i][kDate] || ''); if (dt > maxDate) maxDate = dt; }
-      var cutoff = maxDate ? (parseInt(maxDate.slice(0, 4), 10) - 1) + maxDate.slice(4) : '';
+
+      /* Same date rules as the dashboard: one day/month order per file. */
+      var dayFirst = false, monthFirst = false;
+      if (kDate) rows.forEach(function (r) {
+        var m = String(r[kDate] || '').trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})\b/);
+        if (m) { if (+m[1] > 12) dayFirst = true; else if (+m[2] > 12) monthFirst = true; }
+      });
+      var mFirst = monthFirst && !dayFirst;
+      function toMonth(d) {
+        d = String(d || '').trim(); var m;
+        if ((m = d.match(/^(\d{4})[\-\/.](\d{1,2})/))) return +m[2] >= 1 && +m[2] <= 12 ? m[1] + '-' + ('0' + +m[2]).slice(-2) : null;
+        if ((m = d.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})\b/))) {
+          var mon = mFirst ? +m[1] : +m[2];
+          if (!mFirst && +m[1] <= 12 && +m[2] > 12) mon = +m[1];
+          var yr = m[3].length === 2 ? 2000 + +m[3] : +m[3];
+          return mon >= 1 && mon <= 12 ? yr + '-' + ('0' + mon).slice(-2) : null;
+        }
+        return null;
+      }
+      function qtyOf(v) { return parseFloat(String(v == null ? '' : v).replace(/,(?=\d{3}(?:\D|$))/g, '')) || 0; }
+
+      /* Trailing 12 calendar months ending at the latest month in the file
+         (e.g. Jan–Dec 2024 when the last sale is in Dec 2024). */
+      var mk = rows.map(function (r) { return kDate ? toMonth(r[kDate]) : null; });
+      var maxM = ''; mk.forEach(function (m) { if (m && m > maxM) maxM = m; });
+      var startM = '';
+      if (maxM) {
+        var y = +maxM.slice(0, 4), mo = +maxM.slice(5, 7) - 11;
+        while (mo < 1) { mo += 12; y--; }
+        startM = y + '-' + ('0' + mo).slice(-2);
+      }
       var months = {};
       for (var j = 0; j < rows.length; j++) {
-        var r = rows[j], dv = '' + (r[kDate] || '');
-        if (cutoff && kDate && dv < cutoff) continue;
+        var r = rows[j], m = mk[j];
+        if (kDate && (!m || (startM && m < startM))) continue;
+        var q = qtyOf(r[kQty]);
+        if (q <= 0) continue;                          /* returns / blank rows don't add demand */
         var code = ('' + (r[kCode] || '')).toUpperCase();
         if (!code) continue;
-        vel[code] = (vel[code] || 0) + (parseFloat(r[kQty]) || 0);
-        if (kDate && dv) months[dv.slice(0, 7)] = 1;   /* distinct YYYY-MM in window */
+        vel[code] = (vel[code] || 0) + q;
+        if (m) months[m] = 1;                          /* distinct YYYY-MM in window */
       }
       var nMonths = Math.min(12, Math.max(1, Object.keys(months).length || 12));
       Object.keys(vel).forEach(function (k) { vel[k] = vel[k] / nMonths; });
@@ -447,8 +491,8 @@
       var el = document.getElementById('wh-filter');
       var pills = ['<button class="wh-pill ' + (selected === 'all' ? 'active' : '') + '" onclick="WH.select(\'all\')">All warehouses</button>'];
       warehouses().forEach(function (w) {
-        pills.push('<button class="wh-pill ' + (selected === w ? 'active' : '') + '" onclick="WH.select(\'' + w + '\')">' +
-          '<span class="wh-dot" style="background:' + (WH_HEX[w] || '#6b7280') + '"></span>' + w + '</button>');
+        pills.push('<button class="wh-pill ' + (selected === w ? 'active' : '') + '" data-wh="' + esc(w) + '" onclick="WH.select(this.dataset.wh)">' +
+          '<span class="wh-dot" style="background:' + (WH_HEX[w] || '#6b7280') + '"></span>' + esc(w) + '</button>');
       });
       el.innerHTML = pills.join('');
     }
@@ -472,7 +516,7 @@
       return '<div class="netbar">' +
         card('Working capital', fmtMoney(totalVal), ds.length + ' SKUs · ' + scope) +
         card('Trapped in excess', fmtMoney(excessVal), Math.round(excessPct) + '% of capital', thr(excessPct, 5, 15)) +
-        card('Below reorder', atrisk + '', 'SKUs needing attention', thr(belowPct, 10, 25)) +
+        card('Below reorder point', atrisk + '', 'free stock ≤ the stock file\'s reorder point', thr(belowPct, 10, 25)) +
         card('Inbound on order', fmtMoney(openPOval), posRows().length + ' open POs') +
       '</div>';
       function card(lbl, val, sub, color) {
@@ -496,9 +540,9 @@
         var mix = cats.map(function (cat) { return '<span style="width:' + (byCat[cat] / value * 100).toFixed(1) + '%;background:' + catColor(cat) + '" title="' + esc(cat) + ': ' + fmtMoney(byCat[cat]) + '"></span>'; }).join('');
         var hex = WH_HEX[w] || '#6b7280';
 
-        return '<div class="score-card ' + (selected === w ? 'active' : '') + '" onclick="WH.select(\'' + w + '\')">' +
+        return '<div class="score-card ' + (selected === w ? 'active' : '') + '" data-wh="' + esc(w) + '" onclick="WH.select(this.dataset.wh)">' +
           '<div class="score-card-accent" style="background:' + hex + '"></div>' +
-          '<div class="score-card-name"><span class="wh-dot" style="background:' + hex + '"></span>' + w + '</div>' +
+          '<div class="score-card-name"><span class="wh-dot" style="background:' + hex + '"></span>' + esc(w) + '</div>' +
           '<div class="score-value">' + fmtMoney(value) + '</div>' +
           '<div class="score-value-sub">working capital · ' + ds.length + ' SKUs · ' + units.toLocaleString() + ' units</div>' +
           '<div class="cap-split"><div class="cap-bar">' +
@@ -515,7 +559,7 @@
       }).join('');
 
       return '<div class="panel"><div class="panel-head"><div class="panel-title">Working capital by site</div>' +
-        '<div class="panel-note">value = stock × purchase price · productive vs excess (stock beyond ' + EXCESS_COVER_DAYS + ' days of cover)</div></div>' +
+        '<div class="panel-note">value = stock × purchase price, in USD (EUR/GBP converted at ECB rates of 2 Oct 2026' + (Object.keys(FX_UNKNOWN).length ? '; not converted: ' + esc(Object.keys(FX_UNKNOWN).join(', ')) : '') + ') · productive vs excess (stock beyond ' + EXCESS_COVER_DAYS + ' days of cover)</div></div>' +
         '<div class="score-grid">' + cards + '</div></div>';
     }
 
@@ -559,17 +603,17 @@
       var daily = d.monthly / 30;
       if (d.isDead) {
         return '<div class="tt-h">' + d.sku + ' — dead stock</div>' +
-          '<div class="tt-row"><span>30-day velocity</span><span>0 units</span></div>' +
+          '<div class="tt-row"><span>Avg monthly sales (12 mo)</span><span>0 units</span></div>' +
           '<div class="tt-row"><span>On hand</span><span>' + d.stock.toLocaleString() + ' u</span></div>' +
-          '<div class="tt-row"><span>Purchase price</span><span>$' + d.price.toFixed(2) + '</span></div>' +
+          '<div class="tt-row"><span>Purchase price (USD)</span><span>$' + d.price.toFixed(2) + '</span></div>' +
           '<div class="tt-calc">' + d.stock.toLocaleString() + ' u × $' + d.price.toFixed(2) + ' = ' + fmtMoney(d.excessVal) + ' dead capital</div>';
       }
       var target = Math.round(daily * EXCESS_COVER_DAYS);
       return '<div class="tt-h">' + d.sku + ' — why it&#39;s excess</div>' +
-        '<div class="tt-row"><span>30-day velocity</span><span>' + Math.round(d.monthly).toLocaleString() + ' u/mo (' + daily.toFixed(1) + '/day)</span></div>' +
+        '<div class="tt-row"><span>Avg monthly sales (12 mo)</span><span>' + Math.round(d.monthly).toLocaleString() + ' u/mo (' + daily.toFixed(1) + '/day)</span></div>' +
         '<div class="tt-row"><span>' + EXCESS_COVER_DAYS + '-day target</span><span>' + target.toLocaleString() + ' u</span></div>' +
         '<div class="tt-row"><span>On hand</span><span>' + d.stock.toLocaleString() + ' u</span></div>' +
-        '<div class="tt-row"><span>Purchase price</span><span>$' + d.price.toFixed(2) + '</span></div>' +
+        '<div class="tt-row"><span>Purchase price (USD)</span><span>$' + d.price.toFixed(2) + '</span></div>' +
         '<div class="tt-calc">(' + d.stock.toLocaleString() + ' − ' + target.toLocaleString() + ') × $' + d.price.toFixed(2) + ' = ' + fmtMoney(d.excessVal) + ' trapped</div>';
     }
 
@@ -611,7 +655,9 @@
         shortage: ['#22c55e', 'covers shortage'], excess: ['#f59e0b', 'adds to excess'],
         healthy: ['#71717a', 'replenishing healthy'], unknown: ['#4b5563', 'SKU not in stock file']
       };
-      var body = ps.length ? ps.map(function (p) {
+      var LIMIT = 10, hidden = (!showAllPOs && ps.length > LIMIT) ? ps.length - LIMIT : 0;
+      var shown = hidden ? ps.slice(0, LIMIT) : ps;
+      var body = ps.length ? shown.map(function (p) {
         var st = STc[p.status] || '#71717a'; var cv = COV[p.covers] || COV.unknown;
         return '<tr>' +
           '<td class="t-mono" style="font-size:11px;color:#9ca3af">' + esc(p.po) + '</td>' +
@@ -629,7 +675,11 @@
       return '<div class="panel"><div class="panel-head"><div class="panel-title">Inbound pipeline — open POs</div>' +
         '<div class="panel-note">' + ps.length + ' POs · ' + totalUnits.toLocaleString() + ' units inbound · ' + coversShort + ' cover a shortage' + (toExcess ? ' · ' + toExcess + ' add to already-excess stock' : '') + '</div></div>' +
         '<div class="panel-note" style="margin:-6px 0 14px">ETA dates reflect the demo dataset\'s window. Coverage flags compare each PO\'s SKU to its current stock position.</div>' +
-        '<table class="tbl"><thead><tr><th>PO</th><th>SKU</th><th>Item</th><th>Site</th><th class="r">Qty</th><th class="r">Value</th><th>ETA</th><th>Status</th><th>Impact</th></tr></thead><tbody>' + body + '</tbody></table></div>';
+        '<table class="tbl"><thead><tr><th>PO</th><th>SKU</th><th>Item</th><th>Site</th><th class="r">Qty</th><th class="r">Value</th><th>ETA</th><th>Status</th><th>Impact</th></tr></thead><tbody>' + body + '</tbody></table>' +
+        (ps.length > LIMIT
+          ? '<button class="wh-pill" style="margin-top:12px" onclick="WH.togglePOs()">' + (hidden ? 'Show all ' + ps.length + ' POs' : 'Show the next ' + LIMIT + ' only') + '</button>'
+          : '') +
+        '</div>';
     }
 
     /* ── PANEL 5 — Reserved → Available (ATP) pressure ── */
@@ -678,7 +728,11 @@
       });
     }
 
-    window.WH = { select: function (w) { selected = w; renderFilter(); render(); } };
+    var showAllPOs = false;
+    window.WH = {
+      select: function (w) { selected = w; renderFilter(); render(); },
+      togglePOs: function () { showAllPOs = !showAllPOs; render(); }
+    };
     initTip();
     load();
   })();

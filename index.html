@@ -498,11 +498,11 @@
       margin-bottom: 30px; text-align: center;
     }
     .ledger-grid {
-      display: grid; grid-template-columns: repeat(5, 1fr);
+      display: grid; grid-template-columns: repeat(4, 1fr);
       gap: 28px; width: 100%; max-width: 1060px; margin-bottom: 28px;
     }
-    @media (max-width: 1000px) { .ledger-grid { grid-template-columns: repeat(2, 1fr); max-width: 560px; } .ledger-grid > :last-child { grid-column: span 2; } }
-    @media (max-width: 560px)  { .ledger-grid { grid-template-columns: 1fr; } .ledger-grid > :last-child { grid-column: auto; } }
+    @media (max-width: 1000px) { .ledger-grid { grid-template-columns: repeat(2, 1fr); max-width: 560px; } }
+    @media (max-width: 560px)  { .ledger-grid { grid-template-columns: 1fr; } }
     .ledger-cell { text-align: center; }
     .ledger-num {
       font-family: var(--mono);
@@ -718,6 +718,8 @@
       * { transition-duration: 0.01ms !important; }
     }
   </style>
+  <link rel="stylesheet" href="css/site.css">
+  <script src="js/site-nav.js" defer></script>
 </head>
 <body>
 
@@ -754,12 +756,12 @@
     <div class="hero-vignette"></div>
     <div class="hero-content">
 
-      <div class="hero-badge"><span class="pulse"></span> Luka Abazadze · Supply Chain &amp; Procurement · 6+ yrs</div>
+      <div class="hero-badge"><span class="pulse"></span> Luka Abazadze · Supply Chain &amp; Procurement · 6+ years</div>
 
       <h1>Bridging Supply Chain Strategy with <em>Technical Execution</em></h1>
 
       <p class="hero-sub">
-        Welcome to the <b>LA Forecasting Lab</b> — an interactive engine that digitizes the exact inventory challenges I've solved across six years in procurement and supply-chain planning: forecasting demand, aligning stock across sites, and turning it into decisions a planner can defend on Monday morning.
+        A working demand-planning tool I built from my own experience in procurement and supply-chain planning. It forecasts demand per product, checks how accurate each forecast really is, and turns the result into order quantities.
       </p>
 
       <div class="hero-actions">
@@ -871,8 +873,8 @@
         <div class="bfe-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-5 3 3 5-7"/></svg>
         </div>
-        <h3>Data-Driven Forecasting</h3>
-        <p>Seven statistical models — from seasonal naive to a global gradient-boosted learner — each backtested by walk-forward validation and routed to its proven winner per SKU. No best-fit theatre; honest out-of-sample error.</p>
+        <h3>Forecasting you can check</h3>
+        <p>Seven forecasting methods run on every product. Each is tested on past months it hasn't seen, and the most accurate one is used.</p>
         <span class="tag">WAPE · MASE · 80% intervals</span>
       </article>
 
@@ -880,8 +882,8 @@
         <div class="bfe-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
         </div>
-        <h3>Physical &amp; Temporal Alignment</h3>
-        <p>Stock lives somewhere and demand happens over time. The Lab aligns both — working capital and excess across three sites, demand across the calendar — so the right units sit in the right place before they're needed.</p>
+        <h3>Stock across sites</h3>
+        <p>Shows where working capital sits across three warehouses, what is excess, and what is about to run short.</p>
         <span class="tag">Working capital · ATP · cover</span>
       </article>
 
@@ -889,101 +891,35 @@
         <div class="bfe-icon">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
         </div>
-        <h3>Actionable Metrics</h3>
-        <p>Every figure ties to a decision a planner can defend: what to reorder and when, what to clear, what's at risk of stocking out. Strategy expressed as numbers — not dashboards for their own sake.</p>
+        <h3>From forecast to order</h3>
+        <p>Every number leads to a decision: what to order, how much, and when.</p>
         <span class="tag">Reorder · safety stock · ATP/MASE</span>
       </article>
 
     </div>
   </section>
 
-  <!-- ── THE PROOF LEDGER — what replaces customer logos ── -->
+  <!-- ── PROOF STRIP — four facts a visitor can check in the app ── -->
   <section class="ledger">
-    <div class="ledger-label">No customer logos. No testimonials. Just things you can check.</div>
-
     <div class="ledger-grid">
       <div class="ledger-cell">
-        <div class="ledger-num">140 <span style="color:var(--text-2);">SKUs</span> · 109,275 <span style="color:var(--text-2);">rows</span></div>
-        <div class="ledger-cap">the demo portfolio: three years of real-shaped retail history, loaded in one click.</div>
+        <div class="ledger-num">140 <span style="color:var(--text-2);">products</span></div>
+        <div class="ledger-cap">3 years of sales history. The demo data loads in one click.</div>
       </div>
       <div class="ledger-cell">
-        <div class="ledger-num">MASE <span class="v">&lt; 1.0</span></div>
-        <div class="ledger-cap">the bar every model must clear: beat copy-last-year or get benched. Failing scores show up red in the app — we don't hide them.</div>
+        <div class="ledger-num"><span class="v">Unseen</span> months</div>
+        <div class="ledger-cap">Each forecast is scored on months it never saw. If it can't beat "same as last year", the page says so.</div>
       </div>
       <div class="ledger-cell">
-        <div class="ledger-num"><span class="v">80%</span></div>
-        <div class="ledger-cap">prediction interval on every forecast — 10th/90th percentiles of real walk-forward residuals, not a decorative cone.</div>
+        <div class="ledger-num"><span class="v">80%</span> range</div>
+        <div class="ledger-cap">On every forecast, so planning uses a realistic range, not a single number.</div>
       </div>
       <div class="ledger-cell">
         <div class="ledger-num">0 <span style="color:var(--text-2);">servers</span></div>
-        <div class="ledger-cap">the entire engine is client-side JavaScript. Right-click → View Source. The methodology isn't a whitepaper; it's the page you're on.</div>
+        <div class="ledger-cap">Runs in your browser. No server, no login.</div>
       </div>
-      <div class="ledger-cell">
-        <div class="ledger-num"><span class="v" id="ledger-fits">0</span></div>
-        <div class="ledger-cap">validation fits run in this tab so far — counted, not claimed. Press play in the <a href="#backtest" style="color:var(--purple-lt);text-decoration:none;">Backtest Theater</a> and watch it climb.</div>
-      </div>
-    </div>
-
-    <p class="ledger-foot">"This is a portfolio build by one analyst, not a venture-backed vendor. Which is exactly why nothing here is taken on faith — your browser just verified it."</p>
-
-    <div class="ledger-links">
-      <a href="#methodology">Read the validation methodology</a>
-      <details class="ledger-storm">
-        <summary>We don't delete the storm →</summary>
-        <div class="storm-body">
-          <b>88% of textbook "outliers" in this data are real November–December peaks.</b>
-          Capping them with IQR fences — the standard "data cleaning" step — would amputate the very
-          signal the models exist to forecast. So we don't. <b>Your spikes are data, not dirt.</b>
-        </div>
-      </details>
-      <a href="mailto:abazadzeluka@outlook.com?subject=Guided%20tour%20of%20the%20forecasting%20workspace">Prefer a guided tour? Email the analyst →</a>
     </div>
   </section>
-
-  <!-- TICKER -->
-  <div class="ticker-wrapper" id="features">
-    <div class="ticker-fade ticker-fade--left"></div>
-    <div class="ticker-fade ticker-fade--right"></div>
-    <div class="ticker-track">
-      <!-- Set A -->
-      <div class="ticker-set">
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet-Style Harmonics</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Auto-ETS Holt-Winters</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>WAPE · MASE · MAE · RMSE</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>80% Prediction Intervals</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PNG</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stockout Prevention</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Walk-Forward Validation</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Inventory Optimisation</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Runs fully in the browser</div>
-      </div>
-      <!-- Set B (identical, for seamless loop) -->
-      <div class="ticker-set">
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Prophet-Style Harmonics</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Auto-ETS Holt-Winters</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><line x1="12" y1="7" x2="5" y2="17"/><line x1="12" y1="7" x2="19" y2="17"/></svg>Global XGBoost Engine</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Theta Method</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>SKU-level Accuracy</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>WAPE · MASE · MAE · RMSE</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Replenishment Planning</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>Safety Stock Calculator</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>Lead Time Analysis</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>80% Prediction Intervals</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export PNG</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Stockout Prevention</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Walk-Forward Validation</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Inventory Optimisation</div>
-        <div class="feature-pill"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Runs fully in the browser</div>
-      </div>
-    </div>
-  </div>
-
 
   <!-- ── MODELS SECTION ── -->
   <section class="models-section">
@@ -991,8 +927,8 @@
     <!-- Header -->
     <div class="uth-head">
       <div class="uth-eyebrow">Under the hood</div>
-      <h2>For the technical leads</h2>
-      <p>The recruiter view stays clean — the engineering detail lives here, one click away. Everything below runs entirely in your browser; nothing hides behind a server.</p>
+      <h2>For technical readers</h2>
+      <p>How the models work, how accuracy is measured, and what runs where.</p>
     </div>
 
     <div class="uth-list">
@@ -1126,8 +1062,8 @@
 
   <!-- ── THE BACKTEST THEATER ── -->
   <section class="bt-section" id="backtest">
-    <h2 class="bt-h2">Don't take the score's word for it.<br/>Watch it being earned.</h2>
-    <p class="bt-sub">This is a real SKU from the demo dataset — <span class="mono" style="color:var(--text-1);">SKU-1061 · Foam Roller 60cm</span> — and the real engine from the workspace: <span class="mono" style="color:var(--text-1);">js/models.js</span>, the same file. Press play.</p>
+    <h2 class="bt-h2">Watch the accuracy test run</h2>
+    <p class="bt-sub">A real product from the demo data (<span class="mono" style="color:var(--text-1);">SKU-1061, Foam Roller 60cm</span>), run through the same code the dashboard uses. Press play to see each forecast scored against what actually sold.</p>
 
     <div class="bt-panel">
       <div class="bt-controls" role="group" aria-label="Pick a model to audit">
@@ -1157,7 +1093,7 @@
       <div class="bt-replen" id="bt-replen"></div>
     </div>
 
-    <p class="bt-footnote">Global XGBoost and the Ensemble are excluded from this stage — they need the full 140-SKU portfolio for context, which lives in the workspace. That exclusion is itself the policy: nothing demos here that wouldn't be honest.</p>
+    <p class="bt-footnote">XGBoost and the Blend need all 140 products to work, so they only run in the dashboard.</p>
 
     <div class="bt-exit">
       <a class="btn-primary" href="dashboard.html" id="bt-exit-cta">Run all 7 models on your own data →</a>
@@ -1167,19 +1103,17 @@
   <!-- ── FINAL CTA ── -->
   <section class="cta-section">
     <div class="cta-inner">
-      <div class="cta-label">One last honest question</div>
-      <h2 class="cta-h2">Your current forecast has an error rate.<br/>Do you know what it is?</h2>
-      <p class="cta-sub">The workspace will tell you in about ninety seconds: load the demo data or your own CSVs, let the worker route every SKU to its proven model, and read the WAPE you'd actually be planning on. No signup, no server, no sales call — unless you want one.<br/><span style="font-size:12.5px;color:#6b7280;">Don't know your WAPE? 30–45% is typical for monthly SKU-level retail.</span></p>
-      <a class="btn-primary" href="dashboard.html">Open the Live Workspace →</a>
-      <p class="cta-checklist">First 90 seconds: press the button · click Load Demo Dataset · open any SKU · press ★ Best Fit</p>
-      <a class="cta-mail" href="mailto:abazadzeluka@outlook.com?subject=Guided%20tour%20of%20the%20forecasting%20workspace">Or email Luka Abazadze — the analyst who built the engine →</a>
-      <div class="cta-sig">static site · client-side engine · view source anytime</div>
-      <div class="cta-charm">Free — it's a portfolio. The price is feedback ✓</div>
+      <h2 class="cta-h2">Let's talk</h2>
+      <p class="cta-sub">I'm open to demand planning, inventory and procurement roles. The quickest way to see how I work is to open the dashboard, load the demo data and press ★ Best Fit on any product.</p>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+        <a class="btn-primary" href="dashboard.html">Open the dashboard →</a>
+        <a class="btn-ghost" href="mailto:abazadzeluka@outlook.com">Email me</a>
+      </div>
     </div>
   </section>
 
   <footer>
-    Demand Planning Lab &middot; Built for learning &amp; experimentation
+    Demand Planning Lab &middot; Built by Luka Abazadze &middot; Tbilisi, Georgia
   </footer>
 
   <!-- ── BACKTEST THEATER ENGINE — the real one ── -->
@@ -1374,12 +1308,22 @@
       var wape = els._wapeVal, mase = els._maseVal;
       board[currentKey] = { wape: wape, mase: mase };
       var name = MODEL_NAMES[currentKey];
+      // Judge "beats the benchmark" against seasonal naive's OWN errors on the
+      // same held-out months. MASE < 1 alone isn't enough: its scale comes from
+      // the whole series, and seasonal naive itself scores just under 1 here.
+      var snAbs = 0;
+      ORIGINS.forEach(function (L) {
+        var h = Math.min(6, n - L);
+        var f = Models.run('snaive', SERIES.slice(0, L), {}, h).forecast;
+        for (var k = 0; k < h; k++) snAbs += Math.abs(SERIES[L + k] - f[k]);
+      });
+      var relMAE = snAbs > 0 ? sumAbs / snAbs : 1;
       if (currentKey === 'snaive') {
         typeOut(els.verdict, '◆ This IS the benchmark: copy-last-year scores WAPE ' + wape.toFixed(1) + '% on this SKU. Every other model must beat this line to earn its complexity.', 'win');
-      } else if (mase < 1) {
-        typeOut(els.verdict, '✓ ' + name + ' beat the seasonal-naive benchmark on ' + cnt + ' held-out forecasts. WAPE ' + wape.toFixed(1) + '% · MASE ' + mase.toFixed(2) + '. This is the number the workspace would route on.', 'win');
+      } else if (relMAE < 1) {
+        typeOut(els.verdict, '✓ ' + name + ' beat the seasonal-naive benchmark on ' + cnt + ' held-out forecasts: ' + Math.round((1 - relMAE) * 100) + '% less error. WAPE ' + wape.toFixed(1) + '% · MASE ' + mase.toFixed(2) + '. This is the number the workspace would route on.', 'win');
       } else {
-        typeOut(els.verdict, '✗ On this SKU, ' + name + ' did not beat copy-last-year (MASE ' + mase.toFixed(2) + '). The workspace would bench it — that’s what Best Fit is for.', 'loss');
+        typeOut(els.verdict, '✗ On this SKU, ' + name + ' did not beat copy-last-year (' + Math.round((relMAE - 1) * 100) + '% more error on the same months). The workspace would bench it — that’s what Best Fit is for.', 'loss');
       }
       renderBoard();
       showReplen(finalRun);

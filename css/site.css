@@ -1,0 +1,101 @@
+/* site.css — shared responsive layer for all four pages.
+   Loaded after each page's own <style>, so it only adds/overrides.
+   Same glass language as the pages: rgba surfaces + backdrop blur. */
+
+/* ── Nav: glass bar once the page scrolls, so content never shows through ── */
+.nav-wrapper { transition: background 0.2s, border-color 0.2s, backdrop-filter 0.2s; border-bottom: 1px solid transparent; }
+.nav-wrapper.is-scrolled {
+  background: rgba(12, 12, 14, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Menu buttons are injected by js/site-nav.js; hidden on wide screens */
+.nav-burger, .nav-sections {
+  display: none;
+  align-items: center; justify-content: center; gap: 6px;
+  height: 36px; min-width: 36px; padding: 0 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e8eaf0; font: 600 12px/1 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+}
+.nav-burger:focus-visible, .nav-sections:focus-visible { outline: 2px solid #2dd4bf; outline-offset: 2px; }
+.sidebar-backdrop { display: none; }
+
+@media (max-width: 760px) {
+  /* Logo left, compact pill right */
+  .nav-wrapper { justify-content: space-between !important; padding: 10px 14px !important; pointer-events: all; }
+  .nav-logo-outer { position: static !important; }
+  .nav-logo-outer span:last-child { display: none; }          /* "Forecasting Lab" — keep the LA mark */
+  .nav-updated { display: none !important; }
+  nav { position: relative; height: 48px !important; padding: 0 6px !important; gap: 6px !important; }
+  .nav-burger { display: inline-flex; }
+  nav .nav-cta { margin-left: 0 !important; padding: 7px 12px !important; }
+
+  /* Links drop down as a glass panel */
+  nav .nav-links {
+    display: none !important;
+    position: absolute; top: calc(100% + 8px); right: 0;
+    flex-direction: column; align-items: stretch !important; gap: 2px;
+    min-width: 230px; padding: 8px;
+    background: rgba(18, 18, 22, 0.94);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.09); border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  }
+  nav.is-open .nav-links { display: flex !important; }
+  nav .nav-links .nav-link { padding: 11px 14px !important; font-size: 14px !important; }
+}
+
+/* ── Dashboard (app shell) on phones: sidebar becomes a slide-out drawer ── */
+@media (max-width: 760px) {
+  .nav-sections { display: inline-flex; }
+  .app-shell { padding-top: 68px !important; }
+  .app-shell .sidebar {
+    position: fixed; top: 0; bottom: 0; left: 0; z-index: 950;
+    width: 264px !important; padding-top: 12px;
+    transform: translateX(-100%);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 24px 0 60px rgba(0, 0, 0, 0.55);
+  }
+  body.sidebar-open .app-shell .sidebar { transform: none; }
+  body.sidebar-open .sidebar-backdrop {
+    display: block; position: fixed; inset: 0; z-index: 940;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+  }
+  .app-shell .main { width: 100%; min-width: 0; }
+
+  /* Toolbars wrap instead of running off-screen; tables scroll sideways */
+  .toolbar, .warehouse-bar, .triage-bar, .action-bar { flex-wrap: wrap; height: auto !important; row-gap: 8px; padding-top: 8px; padding-bottom: 8px; }
+  .toolbar .search-wrap, .toolbar .search-input { min-width: 0; flex: 1 1 100%; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .banner { height: 28px !important; }
+
+  /* Forecast drawer: full screen, panels stacked */
+  #fc-drawer { width: 100vw !important; min-width: 0 !important; }
+  #fc-drawer > div { flex-wrap: wrap; }
+  /* body scrolls as one column: settings, then chart + table */
+  #fc-drawer div:has(> #fc-params-panel) { flex-direction: column; flex-wrap: nowrap !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+  #fc-params-panel { width: 100% !important; min-width: 0 !important; flex: none !important; overflow: visible !important; border-right: none !important; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
+  #fc-params-panel + div { flex: none !important; width: 100%; min-width: 0; min-height: 75vh; }
+}
+
+/* ── Dashboard view on phones: stack the grids, let the view scroll ── */
+@media (max-width: 760px) {
+  #view-dashboard { overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
+  .db-kpi-row { flex-wrap: wrap; }
+  .db-kpi-row .kpi-card { flex: 1 1 calc(50% - 1px) !important; }
+  .db-charts-row { flex-direction: column; height: auto !important; }
+  .db-charts-row > div { width: auto !important; height: 220px; }
+  .db-split-row { flex-direction: column; flex: none !important; overflow: visible !important; }
+  .db-split-row > div:first-child { width: auto !important; }
+  .db-split-row > div:first-child > div:last-child { flex-direction: row !important; }
+
+  /* Forecast drawer header: model buttons wrap in rows under the SKU title */
+  #fc-drawer div:has(> #fc-mpills) { flex: 1 1 100% !important; order: 3; }
+  #fc-drawer .fc-metric-sub { white-space: normal; }
+}

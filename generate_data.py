@@ -15,7 +15,7 @@ random.seed(42)
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ─────────────────────────────────────────────────────────────
-# 1. PRODUCT CATALOGUE  (150 SKUs across 7 categories)
+# 1. PRODUCT CATALOGUE  (140 SKUs across 7 categories)
 # ─────────────────────────────────────────────────────────────
 
 CATALOGUE = {
@@ -222,14 +222,19 @@ MOQ_OPTS   = [10, 20, 25, 50, 100, 150, 200, 250, 500]
 
 sup_rows = []
 for s in skus:
+    supplier = random.choice(SUPPLIERS)
+    random.choice(SUPPLIERS)        # former independent Vendor draw — kept so every other value stays identical
+    lead     = random.choice(LEAD_OPTS)
+    moq      = random.choice(MOQ_OPTS)
+    random.choice(MOQ_OPTS)         # former independent MinimumOrder draw — kept for the same reason
     sup_rows.append({
         'SKU':             s['SKU'],
         'Description':     s['Description'],
-        'Supplier':        random.choice(SUPPLIERS),
-        'Vendor':          random.choice(SUPPLIERS),
-        'LeadTime':        random.choice(LEAD_OPTS),
-        'MOQ':             random.choice(MOQ_OPTS),
-        'MinimumOrder':    random.choice(MOQ_OPTS),
+        'Supplier':        supplier,
+        'Vendor':          supplier,     # one supplier per SKU (was drawn independently)
+        'LeadTime':        lead,
+        'MOQ':             moq,
+        'MinimumOrder':    moq,          # same rule as MOQ (was drawn independently)
         'PurchasePrice':   s['CostPrice'],
         'CostPrice':       s['CostPrice'],
         'PaymentTerms':    random.choice(PAY_TERMS),
@@ -252,6 +257,8 @@ PO_SKUS  = random.sample(skus, 40)
 STATUSES = ['Confirmed', 'In Transit', 'Pending', 'Shipped', 'Awaiting Customs']
 QTY_OPTS = [50, 100, 150, 200, 250, 300, 500, 750, 1000]
 
+SUP_BY_SKU = {r['SKU']: r for r in sup_rows}
+
 po_rows = []
 for i, s in enumerate(PO_SKUS):
     lead = random.randint(7, 45)
@@ -267,8 +274,8 @@ for i, s in enumerate(PO_SKUS):
         'SKU':             s['SKU'],
         'StockCode':       s['SKU'],
         'Description':     s['Description'],
-        'Supplier':        random.choice(SUPPLIERS),
-        'Vendor':          random.choice(SUPPLIERS),
+        'Supplier':        (random.choice(SUPPLIERS), SUP_BY_SKU[s['SKU']]['Supplier'])[1],   # the SKU's own supplier
+        'Vendor':          (random.choice(SUPPLIERS), SUP_BY_SKU[s['SKU']]['Supplier'])[1],
         'OrderedQty':      ordered_qty,
         'OrderedQuantity': ordered_qty,
         'OrderDate':       order_date.strftime('%Y-%m-%d'),
@@ -278,7 +285,7 @@ for i, s in enumerate(PO_SKUS):
         'InTransit':       in_transit,
         'Inbound':         True,
         'TotalValue':      round(ordered_qty * s['CostPrice'], 2),
-        'Currency':        random.choice(CURRENCIES),
+        'Currency':        (random.choice(CURRENCIES), SUP_BY_SKU[s['SKU']]['Currency'])[1],  # supplier's currency
     })
 
 po_df = pd.DataFrame(po_rows)
